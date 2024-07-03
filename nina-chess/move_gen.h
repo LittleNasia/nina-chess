@@ -7,6 +7,7 @@
 
 forceinline void fill_pinmask(size_t square, Bitboard& pinmask, Bitboard pinners)
 {
+	// Evil branch
 	while (pinners)
 	{
 		const Bitboard pinner = pop_bit(pinners);
@@ -16,6 +17,7 @@ forceinline void fill_pinmask(size_t square, Bitboard& pinmask, Bitboard pinners
 
 forceinline void fill_checkmask(size_t square, Bitboard& checkmask, Bitboard checkers)
 {
+	// More evil branches
 	while (checkers)
 	{
 		const Bitboard checker = pop_bit(checkers);
