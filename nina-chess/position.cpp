@@ -84,11 +84,11 @@ Position make_move(const Position& pos, const Move& m)
 	const bool EP = m.to == pos.EP_square && (m.piece == PAWN);
 
 	if (side_to_move == WHITE && castling && !EP)  return make_move<WHITE, true, false>(pos, m);
-	if (side_to_move == BLACK && castling && !EP)  return make_move<BLACK, true, false>(pos, m);
-	if (side_to_move == WHITE && !castling && !EP) return make_move<WHITE, false, false>(pos, m);
-	if (side_to_move == BLACK && !castling && !EP) return make_move<BLACK, false, false>(pos, m);
-	if (side_to_move == WHITE && !castling && EP)  return make_move<WHITE, false, true>(pos, m);
-	if (side_to_move == BLACK && !castling && EP)  return make_move<BLACK, false, true>(pos, m);
+	else if (side_to_move == BLACK && castling && !EP)  return make_move<BLACK, true, false>(pos, m);
+	else if (side_to_move == WHITE && !castling && !EP) return make_move<WHITE, false, false>(pos, m);
+	else if (side_to_move == BLACK && !castling && !EP) return make_move<BLACK, false, false>(pos, m);
+	else if (side_to_move == WHITE && !castling && EP)  return make_move<WHITE, false, true>(pos, m);
+	else if (side_to_move == BLACK && !castling && EP)  return make_move<BLACK, false, true>(pos, m);
 }
 
 
