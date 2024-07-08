@@ -34,7 +34,7 @@ inline void perft(const Position& pos, size_t& nodes, int depth)
 
 
 
-inline size_t test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
+inline size_t test_perft(const bool hideOutput = false, const size_t node_limit = std::numeric_limits<size_t>::max())
 {
 	std::ifstream perft_test_suite("perftsuite.epd");
 	if (!perft_test_suite.is_open())
@@ -56,7 +56,7 @@ inline size_t test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
 		if (token[0] == ';')
 		{
 			curr_depth = token.back() - '0';
-			if (parsing_fen)
+			if (parsing_fen && !hideOutput)
 			{
 				std::cout << "parsing fen " << fen << "\n";
 			}
@@ -83,12 +83,14 @@ inline size_t test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
 		if (expected_nodes < node_limit)
 		{
 			combined_nodes += expected_nodes;
+			if (!hideOutput)
 			std::cout << "testing on depth " << curr_depth << ", expected "
 				<< expected_nodes;// << ", received " <<  << "\n";
 			const auto start = std::chrono::high_resolution_clock::now();
 			perft(*curr_pos, curr_nodes, curr_depth);
 			const auto stop = std::chrono::high_resolution_clock::now();
 			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+			if (!hideOutput)
 			std::cout << ", received " << curr_nodes << "\n";
 			total_duration += float(duration.count()) / 1000000;
 			if (expected_nodes != curr_nodes)
@@ -100,6 +102,7 @@ inline size_t test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
 		}
 	}
 	size_t nps = (size_t)(combined_nodes / total_duration);
+	if(!hideOutput)
 	std::cout << "nps: " << (size_t)(combined_nodes / total_duration) << "\n";
 	return nps;
 }

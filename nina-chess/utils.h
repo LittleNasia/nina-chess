@@ -526,3 +526,23 @@ inline constexpr Piece promotion_pieces[4] =
 	ROOK,
 	QUEEN
 };
+
+forceinline constexpr uint32_t get_col_from_file(const char file)
+{
+	int col = file - 'a';
+	// "h" file is actually column number 0 internally
+	col = board_cols - (col + 1);
+	return col;
+}
+
+forceinline constexpr uint32_t get_row_from_rank(const char rank)
+{
+	return rank - '1';
+}
+
+forceinline constexpr uint32_t square_index_from_square_name(const char* square_name)
+{
+	uint32_t row = get_row_from_rank(square_name[1]);
+	uint32_t col = get_col_from_file(square_name[0]);
+	return two_d_to_one_d(row, col);
+}
