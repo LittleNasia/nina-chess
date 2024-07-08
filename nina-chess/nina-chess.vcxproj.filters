@@ -21,6 +21,12 @@
     <ClCompile Include="position.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bench_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="position.h">
@@ -39,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
