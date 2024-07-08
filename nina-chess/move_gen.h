@@ -76,13 +76,13 @@ struct MoveInfo
 	{
 
 	}
-	constexpr MoveInfo(const Piece piece,const size_t piece_index, const Bitboard moves) :
+	constexpr MoveInfo(const Piece piece,const uint32_t piece_index, const Bitboard moves) :
 		piece(piece), piece_index(piece_index), moves(moves)
 	{
 
 	}
 	Piece piece;
-	size_t piece_index;
+	uint32_t piece_index;
 	Bitboard moves;
 };
 
@@ -143,14 +143,14 @@ struct MoveList
 private:
 	bool doing_promotion = false;
 	Piece curr_promotion_piece = PAWN;
-	size_t num_moves = 0;
-	size_t curr_move = 0;
+	uint32_t num_moves = 0;
+	uint32_t curr_move = 0;
 };
 
 MoveList move_list;
 
 template<PieceType piece_type, Color color>
-forceinline void write_moves(MoveList& moves, Bitboard moves_mask, size_t piece_index)
+forceinline void write_moves(MoveList& moves, Bitboard moves_mask, uint32_t piece_index)
 {
 	constexpr auto moving_piece = piece_type;
 	if(moves_mask)
@@ -249,7 +249,7 @@ forceinline void write_knight_moves(MoveList& move_list, Bitboard movable_knight
 	while (movable_knights)
 	{
 		const Bitboard curr_knight = pop_bit(movable_knights);
-		const size_t knight_index = bit_index(curr_knight);
+		const uint32_t knight_index = bit_index(curr_knight);
 		Bitboard curr_knight_moves = knight_moves[knight_index];
 		if constexpr (check && unblockable_check)
 		{
@@ -323,7 +323,7 @@ forceinline MoveList& generate_moves(const Position& Position)
 		fill_pinmask(king_index, rook_pinmask, rook_pinners);
 	}
 
-	const size_t num_checkers = popcnt(rook_checkers | bishop_checkers | knight_checkers | pawn_checkers);
+	const uint32_t num_checkers = popcnt(rook_checkers | bishop_checkers | knight_checkers | pawn_checkers);
 
 	// king can always move, unless she can't
 	Bitboard legal_king_moves = get_king_moves(king_index, attacked_squares) & ~curr_pieces.pieces;
@@ -391,7 +391,7 @@ forceinline MoveList& generate_moves(const Position& Position)
 
 	if constexpr (hasEP)
 	{
-		const size_t EP_index = bit_index(Position.EP_square);
+		const uint32_t EP_index = bit_index(Position.EP_square);
 		const Bitboard victim = EP_victims_lookup[EP_index];
 		// move the EP pawn and remove the target, see if king is attacked by a slider
 		const Bitboard victim_removed = Position.occupied ^ victim;
@@ -466,16 +466,16 @@ forceinline MoveList& generate_moves(const Position& position)
 }
 
 template<Color color>
-forceinline size_t fill_moves(MoveList moves, Move* all_moves)
+forceinline uint32_t fill_moves(MoveList moves, Move* all_moves)
 {
-	size_t curr_move_index = 0;
-	for (size_t move_id = 0; move_id < moves.get_num_moves(); move_id++)
+	uint32_t curr_move_index = 0;
+	for (uint32_t move_id = 0; move_id < moves.get_num_moves(); move_id++)
 	{
 		auto& legal_moves = moves.moves[move_id];
 		while (legal_moves.moves)
 		{
 			const Bitboard legal_move = pop_bit(legal_moves.moves);
-			const size_t target_index = bit_index(legal_move);
+			const uint32_t target_index = bit_index(legal_move);
 			if (legal_move & promotion_rank<color>() && legal_moves.piece == PAWN)
 			{
 				for (const auto promotion_piece : promotion_pieces)

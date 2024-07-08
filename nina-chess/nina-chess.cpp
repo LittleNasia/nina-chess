@@ -112,7 +112,14 @@ void do_thing(const Position& pos)
 #include <chrono>
 int main()
 {
-    test_perft(8031647685 + 1);
+    constexpr size_t total_runs = 1;
+    size_t total_nps = 0;
+    for (size_t run = 0; run < total_runs; run++)
+    {
+        size_t perft_result = test_perft();
+        total_nps += perft_result;
+    }
+    std::cout << total_nps / (total_runs) << std::endl;
     return 0;
     Position pos;// = parse_fen("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/5q2/P2P1RPP/q2Q1K2 w kq - 0 3");
     //do_thing(pos);

@@ -43,7 +43,7 @@ inline constexpr Bitboard bishop_pext_xray_masks[num_board_squares] = {
 0x40810204000, 0xa1020400000, 0x142240000000, 0x284402000000, 0x500804020000, 0x201008040200, 0x402010080400, 0x2040810204000,
 0x4081020400000, 0xa102040000000, 0x14224000000000, 0x28440200000000, 0x50080402000000, 0x20100804020000, 0x40201008040200, };
 
-inline constexpr Bitboard rook_pext_table_offsets[num_board_squares] = {
+inline constexpr uint32_t rook_pext_table_offsets[num_board_squares] = {
 0, 4096, 6144, 8192, 10240, 12288, 14336, 16384,
 20480, 22528, 23552, 24576, 25600, 26624, 27648, 28672,
 30720, 32768, 33792, 34816, 35840, 36864, 37888, 38912,
@@ -54,7 +54,7 @@ inline constexpr Bitboard rook_pext_table_offsets[num_board_squares] = {
 81920, 86016, 88064, 90112, 92160, 94208, 96256, 98304,
 };
 
-inline constexpr Bitboard bishop_pext_table_offsets[num_board_squares] = {
+inline constexpr uint32_t bishop_pext_table_offsets[num_board_squares] = {
 0, 64, 96, 128, 160, 192, 224, 256,
 320, 352, 384, 416, 448, 480, 512, 544,
 576, 608, 640, 768, 896, 1024, 1152, 1184,

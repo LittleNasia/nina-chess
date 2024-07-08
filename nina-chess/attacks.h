@@ -1,7 +1,7 @@
 #pragma once
-#include "utils.h"
 #include "bitmasks.h"
 #include "position.h"
+#include "utils.h"
 
 template <Color color>
 forceinline constexpr Bitboard get_pawn_advances(const Bitboard pawns)
@@ -120,8 +120,8 @@ forceinline Bitboard get_king_attacks(Bitboard pieces)
 
 forceinline Bitboard get_single_bishop_attacks(const Bitboard piece, const Bitboard occupied)
 {
-    const size_t index = bit_index(piece);
-    const size_t offset = bishop_pext_table_offsets[index];
+    const uint32_t index = bit_index(piece);
+    const uint32_t offset = bishop_pext_table_offsets[index];
     const Bitboard xray_attacks = bishop_pext_xray_masks[index];
     const size_t pext_value = pext(occupied, xray_attacks);
     return bishop_pext_table[offset + pext_value];
@@ -129,8 +129,8 @@ forceinline Bitboard get_single_bishop_attacks(const Bitboard piece, const Bitbo
 
 forceinline Bitboard get_single_rook_attacks(const Bitboard piece, const Bitboard occupied)
 {
-    const size_t index = bit_index(piece);
-    const size_t offset = rook_pext_table_offsets[index];
+    const uint32_t index = bit_index(piece);
+    const uint32_t offset = rook_pext_table_offsets[index];
     const Bitboard xray_attacks = rook_pext_xray_masks[index];
     const size_t pext_value = pext(occupied, xray_attacks);
     return rook_pext_table[offset + pext_value];

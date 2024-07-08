@@ -9,7 +9,9 @@ inline constexpr size_t board_cols = 8;
 inline constexpr size_t num_board_squares = 64;
 inline constexpr size_t max_ply = 512;
 
-#define forceinline __forceinline
+// TODO determine which functions should be forceinlined and which shouldnt
+// forceinlining everything doesn't seem to give performance benefits anymore
+#define forceinline inline
 
 enum
 {
@@ -62,7 +64,7 @@ using CastlingType = uint32_t;
 inline constexpr Bitboard empty_bitboard = 0ULL;
 inline constexpr Bitboard full_bitboard = 0xffffffffffffffffULL;
 
-forceinline constexpr size_t two_d_to_one_d(size_t row, size_t col)
+forceinline constexpr uint32_t two_d_to_one_d(uint32_t row, uint32_t col)
 {
 	return row * board_cols + col;
 }
@@ -72,19 +74,19 @@ forceinline size_t pext(Bitboard b, Bitboard mask)
 	return _pext_u64(b, mask);
 }
 
-forceinline size_t popcnt(Bitboard bb)
+forceinline uint32_t popcnt(Bitboard bb)
 {
 	return __popcnt64(bb);
 }
 
-forceinline size_t pop_bit(Bitboard& bb)
+forceinline Bitboard pop_bit(Bitboard& bb)
 {
 	uint64_t lsb = _blsi_u64(bb);
 	bb ^= lsb;
 	return lsb;
 }
 
-forceinline size_t bit_index(const Bitboard bb)
+forceinline uint32_t bit_index(const Bitboard bb)
 {
 	return _tzcnt_u64(bb);
 }

@@ -1,8 +1,8 @@
 #pragma once
+#include "utils.h"
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include "utils.h"
 
 struct Side
 {
@@ -233,7 +233,7 @@ inline void print_board(const Position& curr_pos)
 	std::cout << "side_to_move " << (curr_pos.side_to_move == WHITE ? "WHITE" : "BLACK");
 }
 
-inline constexpr size_t get_col_from_file(const char file)
+inline constexpr uint32_t get_col_from_file(const char file)
 {
 	int col = file - 'a';
 	// "h" file is actually column number 0 internally
@@ -241,15 +241,15 @@ inline constexpr size_t get_col_from_file(const char file)
 	return col;
 }
 
-inline constexpr size_t get_row_from_rank(const char rank)
+inline constexpr uint32_t get_row_from_rank(const char rank)
 {
 	return rank - '1';
 }
 
-inline constexpr size_t square_index_from_square_name(const char* square_name)
+inline constexpr uint32_t square_index_from_square_name(const char* square_name)
 {
-	size_t row = get_row_from_rank(square_name[1]);
-	size_t col = get_col_from_file(square_name[0]);
+	uint32_t row = get_row_from_rank(square_name[1]);
+	uint32_t col = get_col_from_file(square_name[0]);
 	return two_d_to_one_d(row, col);
 }
 

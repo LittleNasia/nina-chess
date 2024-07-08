@@ -1,9 +1,9 @@
 #pragma once
-#include "position.h"
 #include "move_gen.h"
+#include "position.h"
+#include <chrono>
 #include <fstream>
 #include <limits>
-#include <chrono>
 
 
 
@@ -16,7 +16,7 @@ void perft(const Position& pos, size_t& nodes, int depth)
 	}
 	auto& moves = generate_moves(pos);
 	Move all_moves[100];
-	size_t num_moves;
+	uint32_t num_moves;
 	if (pos.side_to_move == WHITE)
 	{
 		num_moves = fill_moves<WHITE>(moves, all_moves);
@@ -25,7 +25,7 @@ void perft(const Position& pos, size_t& nodes, int depth)
 	{
 		num_moves = fill_moves<BLACK>(moves, all_moves);
 	}
-	for (int move_id = 0; move_id < num_moves; move_id++)
+	for (uint32_t move_id = 0; move_id < num_moves; move_id++)
 	{
 		const auto new_pos = make_move(pos, all_moves[move_id]);
 		perft(new_pos, nodes, depth - 1);
@@ -34,7 +34,7 @@ void perft(const Position& pos, size_t& nodes, int depth)
 
 
 
-inline bool test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
+inline size_t test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
 {
 	std::ifstream perft_test_suite("perftsuite.epd");
 	if (!perft_test_suite.is_open())
@@ -58,7 +58,7 @@ inline bool test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
 			curr_depth = token.back() - '0';
 			if (parsing_fen)
 			{
-				std::cout << "parsing fen " << fen << "\n";
+				//std::cout << "parsing fen " << fen << "\n";
 			}
 			parsing_fen = false;
 			delete curr_pos;
@@ -83,13 +83,13 @@ inline bool test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
 		if (expected_nodes < node_limit)
 		{
 			combined_nodes += expected_nodes;
-			std::cout << "testing on depth " << curr_depth << ", expected "
-				<< expected_nodes;// << ", received " <<  << "\n";
+			//std::cout << "testing on depth " << curr_depth << ", expected "
+			//	<< expected_nodes;// << ", received " <<  << "\n";
 			const auto start = std::chrono::high_resolution_clock::now();
 			perft(*curr_pos, curr_nodes, curr_depth);
 			const auto stop = std::chrono::high_resolution_clock::now();
 			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-			std::cout << ", received " << curr_nodes << "\n";
+			//std::cout << ", received " << curr_nodes << "\n";
 			total_duration += float(duration.count()) / 1000000;
 			if (expected_nodes != curr_nodes)
 			{
@@ -99,6 +99,7 @@ inline bool test_perft(size_t node_limit = std::numeric_limits<size_t>::max())
 			}
 		}
 	}
-	std::cout << "nps: " << (size_t)(combined_nodes / total_duration) << "\n";
-	return true;
+	size_t nps = (size_t)(combined_nodes / total_duration);
+	//std::cout << "nps: " << (size_t)(combined_nodes / total_duration) << "\n";
+	return nps;
 }
