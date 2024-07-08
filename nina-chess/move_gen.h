@@ -91,6 +91,7 @@ struct MoveList
 	// there's a maximum of 64 pieces on a Position
 	// it contains a bitmask of moves for each piece
 	MoveInfo moves[32];
+	forceinline constexpr MoveList() = default;
 	forceinline void push_move(const MoveInfo&& move)
 	{
 		moves[num_moves++] = move;
@@ -147,7 +148,7 @@ private:
 	uint32_t curr_move = 0;
 };
 
-MoveList move_list;
+inline MoveList move_list;
 
 template<PieceType piece_type, Color color>
 forceinline void write_moves(MoveList& moves, Bitboard moves_mask, uint32_t piece_index)
