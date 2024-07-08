@@ -1,11 +1,10 @@
-// chess_move_gen_test.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+#include <iostream>
+
 #include "move_gen.h"
 #include "perft.h"
 #include "position.h"
+#include "targets.h"
 #include "utils.h"
-#include <cstdint>
-#include <iostream>
 
 // this value has been calculated by checking how many combinations of possible blockers exist
 // for all the possible rook placements
@@ -109,27 +108,10 @@ void do_thing(const Position& pos)
         do_thing(make_move(pos, all_moves[move_id_to_play]));
     }
 }
-#include <chrono>
+
+#if _UCI
 int main()
 {
-    constexpr size_t total_runs = 1;
-    size_t total_nps = 0;
-    for (size_t run = 0; run < total_runs; run++)
-    {
-        size_t perft_result = test_perft();
-        total_nps += perft_result;
-    }
-    std::cout << total_nps / (total_runs) << std::endl;
-    return 0;
-    Position pos;// = parse_fen("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/5q2/P2P1RPP/q2Q1K2 w kq - 0 3");
-    //do_thing(pos);
-    size_t nodes = 0;
-    const auto start = std::chrono::high_resolution_clock::now();
-    perft(pos, nodes, 7);
-    const auto stop = std::chrono::high_resolution_clock::now();
-    const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-
-    std::cout << "perft result:" << nodes << "\n";
-    std::cout << "time taken:" << duration.count() << "\n";
-    std::cout << "nps: " << nodes / ((duration.count()) / 1000000 + 1) << "\n";
+    
 }
+#endif
