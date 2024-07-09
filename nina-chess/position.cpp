@@ -1,5 +1,7 @@
-#include "attacks.h"
 #include "position.h"
+
+#include <iostream>
+#include <sstream>
 
 void print_board(const Position& curr_pos)
 {

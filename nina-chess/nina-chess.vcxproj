@@ -298,8 +298,12 @@
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="move_gen.h" />
+    <ClInclude Include="side.h" />
     <ClInclude Include="targets.h" />
     <ClInclude Include="utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="position.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

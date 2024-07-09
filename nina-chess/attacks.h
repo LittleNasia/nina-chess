@@ -1,7 +1,8 @@
 #pragma once
-#include "bitmasks.h"
-#include "position.h"
 #include "utils.h"
+
+#include "bitmasks.h"
+#include "side.h"
 
 template <Color color>
 forceinline constexpr Bitboard get_pawn_advances(const Bitboard pawns)

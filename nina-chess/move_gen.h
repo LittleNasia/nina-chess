@@ -1,9 +1,9 @@
 #pragma once
+#include "utils.h"
+
 #include "attacks.h"
 #include "bitmasks.h"
 #include "position.h"
-#include "utils.h"
-
 
 forceinline void fill_pinmask(size_t square, Bitboard& pinmask, Bitboard pinners)
 {

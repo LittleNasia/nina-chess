@@ -1,10 +1,13 @@
 #pragma once
-#include "move_gen.h"
-#include "position.h"
+#include "utils.h"
+
 #include <chrono>
 #include <fstream>
+#include <iostream>
 #include <limits>
 
+#include "move_gen.h"
+#include "position.h"
 
 
 inline void perft(const Position& pos, size_t& nodes, int depth)

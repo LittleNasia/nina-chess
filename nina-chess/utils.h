@@ -439,6 +439,28 @@ forceinline constexpr Bitboard kingside_castling_rook_dest()
 	}
 }
 
+forceinline constexpr CastlingType update_castling_rights(const Bitboard white_rooks, const Bitboard black_rooks)
+{
+	CastlingType castling_perms = 0b1111;
+	if (!(kingside_castling_rook<WHITE>() & white_rooks))
+	{
+		castling_perms &= ~0b0001;
+	}
+	if (!(queenside_castling_rook<WHITE>() & white_rooks))
+	{
+		castling_perms &= ~0b0010;
+	}
+	if (!(kingside_castling_rook<BLACK>() & black_rooks))
+	{
+		castling_perms &= ~0b0100;
+	}
+	if (!(queenside_castling_rook<BLACK>() & black_rooks))
+	{
+		castling_perms &= ~0b1000;
+	}
+	return castling_perms;
+}
+
 struct Move
 {
 	Bitboard from = 0;
