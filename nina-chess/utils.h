@@ -463,11 +463,36 @@ forceinline constexpr CastlingType update_castling_rights(const Bitboard white_r
 
 struct Move
 {
-	Bitboard from = 0;
-	Bitboard to = 0;
-	Piece piece = 0;
-	Piece promotion_piece = PIECE_TYPE_NONE;
-	forceinline constexpr operator bool() { return from; }
+public:
+	inline static constexpr uint32_t index_from_offset = 0;
+	inline static constexpr uint32_t index_from_mask = 0b111111 << index_from_offset;
+
+	inline static constexpr uint32_t index_to_offset = index_from_offset + 6;
+	inline static constexpr uint32_t index_to_mask = 0b111111 << index_to_offset;
+
+	inline static constexpr uint32_t piece_offset = index_to_offset + 6;
+	inline static constexpr uint32_t piece_mask = 0b1111 << piece_offset;
+
+	inline static constexpr uint32_t promotion_piece_offset = piece_offset + 4;
+	inline static constexpr uint32_t promotion_piece_mask = 0b1111 << promotion_piece_offset;
+
+
+	forceinline constexpr Bitboard from() const { return 1ULL << (encodedMove & index_from_mask); }
+	forceinline constexpr Bitboard to() const { return 1ULL << ((encodedMove & index_to_mask) >> index_to_offset); }
+	forceinline constexpr Piece piece() const { return (encodedMove & piece_mask) >> piece_offset; }
+	forceinline constexpr Piece promotion_piece() const { return (encodedMove & promotion_piece_mask) >> promotion_piece_offset; }
+	forceinline constexpr operator bool() const { return from(); }
+
+	forceinline constexpr Move() : Move(0, 0, 0, PIECE_TYPE_NONE)
+	{}
+
+	forceinline constexpr Move(const uint32_t from, const uint32_t to, const Piece piece, const Piece promotion_piece = PIECE_TYPE_NONE):
+		encodedMove{ (from << index_from_offset) | (to << index_to_offset) | (piece << piece_offset) | (promotion_piece << promotion_piece_offset) }
+	{
+	}
+
+private:
+	uint32_t encodedMove;
 };
 
 template<Color color>

@@ -79,25 +79,15 @@ void do_thing(const Position& pos)
 {
     while (true)
     {
-        auto moves = generate_moves(pos);
-        Move all_moves[100];
-        size_t num_moves;
-        if (pos.side_to_move == WHITE)
-        {
-            num_moves = fill_moves<WHITE>(moves, all_moves);
-        }
-        else
-        {
-            num_moves = fill_moves<BLACK>(moves, all_moves);
-        }
+        const auto& moves = generate_moves(pos);
         print_board(pos);
         std::cout << "enter the depth of perft\n";
         int depth = 1;
         std::cin >> depth;
-        for (int move_id = 0; move_id < num_moves; move_id++)
+        for (int move_id = 0; move_id < moves.get_num_moves(); move_id++)
         {
-            const auto& curr_move = all_moves[move_id];
-            std::cout << "move index " << move_id << "move " << square_names[bit_index(curr_move.from)] << " " << square_names[bit_index(curr_move.to)];
+            const auto& curr_move = moves.moves[move_id];
+            std::cout << "move index " << move_id << "move " << square_names[bit_index(curr_move.from())] << " " << square_names[bit_index(curr_move.to())];
             size_t nodes = 0;
             perft(make_move(pos, curr_move), nodes, depth);
             std::cout << " nodes: " << nodes << "\n";
@@ -105,7 +95,7 @@ void do_thing(const Position& pos)
         std::cout << "please enter index of move to play ";
         int move_id_to_play;
         std::cin >> move_id_to_play;
-        do_thing(make_move(pos, all_moves[move_id_to_play]));
+        do_thing(make_move(pos, moves.moves[move_id_to_play]));
     }
 }
 

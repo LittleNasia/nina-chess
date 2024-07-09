@@ -50,5 +50,13 @@
     <ClInclude Include="targets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="side.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="position.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

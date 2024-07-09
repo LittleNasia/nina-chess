@@ -5,7 +5,7 @@
 
 int main()
 {
-	if (!test_perft())
+	if (!test_perft(false, 8031647685ULL - 1))
 		return 1;
 }
 

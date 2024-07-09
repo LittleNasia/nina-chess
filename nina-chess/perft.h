@@ -17,20 +17,11 @@ inline void perft(const Position& pos, size_t& nodes, int depth)
 		nodes++;
 		return;
 	}
-	auto& moves = generate_moves(pos);
-	Move all_moves[100];
-	uint32_t num_moves;
-	if (pos.side_to_move == WHITE)
+	const auto& moves = generate_moves(pos);
+
+	for (uint32_t move_id = 0; move_id < moves.get_num_moves(); move_id++)
 	{
-		num_moves = fill_moves<WHITE>(moves, all_moves);
-	}
-	else
-	{
-		num_moves = fill_moves<BLACK>(moves, all_moves);
-	}
-	for (uint32_t move_id = 0; move_id < num_moves; move_id++)
-	{
-		const auto new_pos = make_move(pos, all_moves[move_id]);
+		const auto new_pos = make_move(pos, moves.moves[move_id]);
 		perft(new_pos, nodes, depth - 1);
 	}
 }

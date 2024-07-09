@@ -70,29 +70,11 @@ forceinline constexpr Bitboard get_king_moves(const size_t king_index, const Bit
 	return king_moves[king_index] & ~attacked_squares;
 }
 
-struct MoveInfo
-{
-	constexpr MoveInfo() : piece(0), piece_index(0), moves(0)
-	{
-
-	}
-	constexpr MoveInfo(const Piece piece,const uint32_t piece_index, const Bitboard moves) :
-		piece(piece), piece_index(piece_index), moves(moves)
-	{
-
-	}
-	Piece piece;
-	uint32_t piece_index;
-	Bitboard moves;
-};
-
 struct MoveList
 {
-	// there's a maximum of 64 pieces on a Position
-	// it contains a bitmask of moves for each piece
-	MoveInfo moves[32];
+	Move moves[100];
 	forceinline constexpr MoveList() = default;
-	forceinline void push_move(const MoveInfo&& move)
+	forceinline void push_move(const Move&& move)
 	{
 		moves[num_moves++] = move;
 	}
@@ -100,62 +82,21 @@ struct MoveList
 	{
 		num_moves = 0;
 	}
-	forceinline constexpr size_t get_num_moves() const { return num_moves; }
-	template <Color color>
-	forceinline Move get_next_move()
-	{
-	parse_move:
-		if (curr_move >= num_moves)
-		{
-			return { 0,0,0,0 };
-		}
-		auto& curr_piece_moves = moves[curr_move];
-		if (doing_promotion && curr_promotion_piece > QUEEN)
-		{
-			doing_promotion = false;
-			curr_promotion_piece = PAWN;
-			pop_bit(curr_piece_moves.moves);
-		}
-		if (curr_piece_moves.moves)
-		{
-			const Bitboard legal_move = pop_bit(curr_piece_moves.moves);
-			const size_t target_index = bit_index(legal_move);
-			if (legal_move & promotion_rank<color>() && curr_piece_moves.piece == PAWN)
-			{
-				curr_piece_moves.moves |= legal_move;
-				if (!doing_promotion)
-				{
-					doing_promotion = true;
-					curr_promotion_piece = KNIGHT;
-				}
-				return { (1ULL << curr_piece_moves.piece_index), legal_move, curr_piece_moves.piece, curr_promotion_piece++ };
-			}
-			else
-			{
-				return { (1ULL << curr_piece_moves.piece_index), legal_move, curr_piece_moves.piece };
-			}
-		}
-		else
-		{
-			curr_move++;
-			goto parse_move;
-		}
-	}
+	forceinline constexpr uint32_t get_num_moves() const { return num_moves; }
 private:
-	bool doing_promotion = false;
-	Piece curr_promotion_piece = PAWN;
 	uint32_t num_moves = 0;
-	uint32_t curr_move = 0;
 };
-
-inline MoveList move_list;
 
 template<PieceType piece_type, Color color>
 forceinline void write_moves(MoveList& moves, Bitboard moves_mask, uint32_t piece_index)
 {
 	constexpr auto moving_piece = piece_type;
-	if(moves_mask)
-		moves.push_move({ moving_piece, piece_index, moves_mask });
+	while (moves_mask)
+	{
+		const Bitboard move = pop_bit(moves_mask);
+		const uint32_t move_target = bit_index(move);
+		moves.push_move({ piece_index, move_target, moving_piece });
+	}
 }
 
 template<Color color>
@@ -172,8 +113,22 @@ forceinline void write_pawn_moves(MoveList& moves, const Bitboard left_pawn_capt
 		curr_pawn_moves |= get_pawn_right_attacks<color>(pawn) & right_pawn_captures;
 		curr_pawn_moves |= get_pawn_advances<color>(pawn) & legal_pawn_advances;
 		curr_pawn_moves |= get_double_advance_target<color>(pawn) & pawn_double_advances;
-		if(curr_pawn_moves)
-			moves.push_move({ moving_piece, piece_index, curr_pawn_moves });
+		while (curr_pawn_moves)
+		{
+			const Bitboard move = pop_bit(curr_pawn_moves);
+			const uint32_t move_target = bit_index(move);
+
+			if (move & promotion_rank<color>())
+			{
+				for (const auto promotion_piece : promotion_pieces)
+				{
+					moves.push_move({ piece_index, move_target, moving_piece, promotion_piece });
+				}
+			}
+			else
+				moves.push_move({ piece_index, move_target, moving_piece });
+		}
+			
 	}
 }  
 
@@ -261,13 +216,19 @@ forceinline void write_knight_moves(MoveList& move_list, Bitboard movable_knight
 			curr_knight_moves &= (bishop_checkmask | rook_checkmask);
 		}
 		curr_knight_moves &= ~allies;
-		if(curr_knight_moves)
-			move_list.push_move({ moving_piece, knight_index, curr_knight_moves });
+		
+		while (curr_knight_moves)
+		{
+			const Bitboard move = pop_bit(curr_knight_moves);
+			const uint32_t move_target = bit_index(move);
+
+			move_list.push_move({ knight_index, move_target, moving_piece });
+		}
 	}
 }
 
 template<Color color, size_t castling, bool hasEP>
-forceinline MoveList& generate_moves(const Position& Position)
+forceinline MoveList& generate_moves(MoveList& move_list, const Position& Position)
 {
 	constexpr auto opposite_color = get_opposite_color<color>();
 	const auto& curr_pieces = Position.get_side<color>();
@@ -439,59 +400,31 @@ forceinline MoveList& generate_moves(const Position& Position)
 	return move_list;
 }
 
-forceinline MoveList& generate_moves(const Position& position)
+forceinline MoveList generate_moves(const Position& position)
 {
-	move_list.reset();
+	MoveList move_list;
 	const bool EP = position.EP_square;
 	const Color color = position.side_to_move;
 	const CastlingType castling = position.get_curr_castling();
 
-
-		 if (color == WHITE && castling == 0b11 && !EP) return generate_moves<WHITE, 0b11, false>(position);
-	else if (color == BLACK && castling == 0b11 && !EP) return generate_moves<BLACK, 0b11, false>(position);
-	else if (color == WHITE && castling == 0b00 && !EP) return generate_moves<WHITE, 0b00, false>(position);
-	else if (color == BLACK && castling == 0b00 && !EP) return generate_moves<BLACK, 0b00, false>(position);
-	else if (color == WHITE && castling == 0b01 && !EP) return generate_moves<WHITE, 0b01, false>(position);
-	else if (color == BLACK && castling == 0b01 && !EP) return generate_moves<BLACK, 0b01, false>(position);
-	else if (color == WHITE && castling == 0b10 && !EP) return generate_moves<WHITE, 0b10, false>(position);
-	else if (color == BLACK && castling == 0b10 && !EP) return generate_moves<BLACK, 0b10, false>(position);
-	else if (color == WHITE && castling == 0b11 &&  EP) return generate_moves<WHITE, 0b11, true >(position);
-	else if (color == BLACK && castling == 0b11 &&  EP) return generate_moves<BLACK, 0b11, true >(position);
-	else if (color == WHITE && castling == 0b00 &&  EP) return generate_moves<WHITE, 0b00, true >(position);
-	else if (color == BLACK && castling == 0b00 &&  EP) return generate_moves<BLACK, 0b00, true >(position);
-	else if (color == WHITE && castling == 0b01 &&  EP) return generate_moves<WHITE, 0b01, true >(position);
-	else if (color == BLACK && castling == 0b01 &&  EP) return generate_moves<BLACK, 0b01, true >(position);
-	else if (color == WHITE && castling == 0b10 &&  EP) return generate_moves<WHITE, 0b10, true >(position);
-	else if (color == BLACK && castling == 0b10 &&  EP) return generate_moves<BLACK, 0b10, true >(position);
+		 if (color == WHITE && castling == 0b11 && !EP) generate_moves<WHITE, 0b11, false>(move_list, position);
+	else if (color == BLACK && castling == 0b11 && !EP) generate_moves<BLACK, 0b11, false>(move_list, position);
+	else if (color == WHITE && castling == 0b00 && !EP) generate_moves<WHITE, 0b00, false>(move_list, position);
+	else if (color == BLACK && castling == 0b00 && !EP) generate_moves<BLACK, 0b00, false>(move_list, position);
+	else if (color == WHITE && castling == 0b01 && !EP) generate_moves<WHITE, 0b01, false>(move_list, position);
+	else if (color == BLACK && castling == 0b01 && !EP) generate_moves<BLACK, 0b01, false>(move_list, position);
+	else if (color == WHITE && castling == 0b10 && !EP) generate_moves<WHITE, 0b10, false>(move_list, position);
+	else if (color == BLACK && castling == 0b10 && !EP) generate_moves<BLACK, 0b10, false>(move_list, position);
+	else if (color == WHITE && castling == 0b11 &&  EP) generate_moves<WHITE, 0b11, true >(move_list, position);
+	else if (color == BLACK && castling == 0b11 &&  EP) generate_moves<BLACK, 0b11, true >(move_list, position);
+	else if (color == WHITE && castling == 0b00 &&  EP) generate_moves<WHITE, 0b00, true >(move_list, position);
+	else if (color == BLACK && castling == 0b00 &&  EP) generate_moves<BLACK, 0b00, true >(move_list, position);
+	else if (color == WHITE && castling == 0b01 &&  EP) generate_moves<WHITE, 0b01, true >(move_list, position);
+	else if (color == BLACK && castling == 0b01 &&  EP) generate_moves<BLACK, 0b01, true >(move_list, position);
+	else if (color == WHITE && castling == 0b10 &&  EP) generate_moves<WHITE, 0b10, true >(move_list, position);
+	else if (color == BLACK && castling == 0b10 &&  EP) generate_moves<BLACK, 0b10, true >(move_list, position);
 
 	return move_list;
-}
-
-template<Color color>
-forceinline uint32_t fill_moves(MoveList moves, Move* all_moves)
-{
-	uint32_t curr_move_index = 0;
-	for (uint32_t move_id = 0; move_id < moves.get_num_moves(); move_id++)
-	{
-		auto& legal_moves = moves.moves[move_id];
-		while (legal_moves.moves)
-		{
-			const Bitboard legal_move = pop_bit(legal_moves.moves);
-			const uint32_t target_index = bit_index(legal_move);
-			if (legal_move & promotion_rank<color>() && legal_moves.piece == PAWN)
-			{
-				for (const auto promotion_piece : promotion_pieces)
-				{
-					all_moves[curr_move_index++] = { (1ULL << legal_moves.piece_index), legal_move, legal_moves.piece, promotion_piece };
-				}
-			}
-			else
-			{
-				all_moves[curr_move_index++] = { (1ULL << legal_moves.piece_index), legal_move, legal_moves.piece };
-			}
-		}
-	}
-	return curr_move_index;
 }
 
 
