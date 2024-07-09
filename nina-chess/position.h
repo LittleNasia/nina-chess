@@ -137,6 +137,8 @@ struct Position
 	}
 };
 
+inline static constexpr Position startpos;
+
 template<Color side_to_move, bool castling, bool EP>
 forceinline Position make_move(const Position& pos, const Move& m)
 {
@@ -224,6 +226,8 @@ forceinline Position make_move(const Position& pos, const Move& m)
 	else if (side_to_move == BLACK && !castling && !EP) return make_move<BLACK, false, false>(pos, m);
 	else if (side_to_move == WHITE && !castling && EP)  return make_move<WHITE, false, true>(pos, m);
 	else if (side_to_move == BLACK && !castling && EP)  return make_move<BLACK, false, true>(pos, m);
+
+	return startpos;
 }
 
 void print_board(const Position& curr_pos);

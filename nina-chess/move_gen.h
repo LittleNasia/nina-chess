@@ -447,23 +447,24 @@ forceinline MoveList& generate_moves(const Position& position)
 	const CastlingType castling = position.get_curr_castling();
 
 
-	if (color == WHITE && castling == 0b11 && !EP) return generate_moves<WHITE, 0b11, false>(position);
-	if (color == BLACK && castling == 0b11 && !EP) return generate_moves<BLACK, 0b11, false>(position);
-	if (color == WHITE && castling == 0b00 && !EP) return generate_moves<WHITE, 0b00, false>(position);
-	if (color == BLACK && castling == 0b00 && !EP) return generate_moves<BLACK, 0b00, false>(position);
-	if (color == WHITE && castling == 0b01 && !EP) return generate_moves<WHITE, 0b01, false>(position);
-	if (color == BLACK && castling == 0b01 && !EP) return generate_moves<BLACK, 0b01, false>(position);
-	if (color == WHITE && castling == 0b10 && !EP) return generate_moves<WHITE, 0b10, false>(position);
-	if (color == BLACK && castling == 0b10 && !EP) return generate_moves<BLACK, 0b10, false>(position);
-	if (color == WHITE && castling == 0b11 &&  EP) return generate_moves<WHITE, 0b11, true >(position);
-	if (color == BLACK && castling == 0b11 &&  EP) return generate_moves<BLACK, 0b11, true >(position);
-	if (color == WHITE && castling == 0b00 &&  EP) return generate_moves<WHITE, 0b00, true >(position);
-	if (color == BLACK && castling == 0b00 &&  EP) return generate_moves<BLACK, 0b00, true >(position);
-	if (color == WHITE && castling == 0b01 &&  EP) return generate_moves<WHITE, 0b01, true >(position);
-	if (color == BLACK && castling == 0b01 &&  EP) return generate_moves<BLACK, 0b01, true >(position);
-	if (color == WHITE && castling == 0b10 &&  EP) return generate_moves<WHITE, 0b10, true >(position);
-	if (color == BLACK && castling == 0b10 &&  EP) return generate_moves<BLACK, 0b10, true >(position);
-	
+		 if (color == WHITE && castling == 0b11 && !EP) return generate_moves<WHITE, 0b11, false>(position);
+	else if (color == BLACK && castling == 0b11 && !EP) return generate_moves<BLACK, 0b11, false>(position);
+	else if (color == WHITE && castling == 0b00 && !EP) return generate_moves<WHITE, 0b00, false>(position);
+	else if (color == BLACK && castling == 0b00 && !EP) return generate_moves<BLACK, 0b00, false>(position);
+	else if (color == WHITE && castling == 0b01 && !EP) return generate_moves<WHITE, 0b01, false>(position);
+	else if (color == BLACK && castling == 0b01 && !EP) return generate_moves<BLACK, 0b01, false>(position);
+	else if (color == WHITE && castling == 0b10 && !EP) return generate_moves<WHITE, 0b10, false>(position);
+	else if (color == BLACK && castling == 0b10 && !EP) return generate_moves<BLACK, 0b10, false>(position);
+	else if (color == WHITE && castling == 0b11 &&  EP) return generate_moves<WHITE, 0b11, true >(position);
+	else if (color == BLACK && castling == 0b11 &&  EP) return generate_moves<BLACK, 0b11, true >(position);
+	else if (color == WHITE && castling == 0b00 &&  EP) return generate_moves<WHITE, 0b00, true >(position);
+	else if (color == BLACK && castling == 0b00 &&  EP) return generate_moves<BLACK, 0b00, true >(position);
+	else if (color == WHITE && castling == 0b01 &&  EP) return generate_moves<WHITE, 0b01, true >(position);
+	else if (color == BLACK && castling == 0b01 &&  EP) return generate_moves<BLACK, 0b01, true >(position);
+	else if (color == WHITE && castling == 0b10 &&  EP) return generate_moves<WHITE, 0b10, true >(position);
+	else if (color == BLACK && castling == 0b10 &&  EP) return generate_moves<BLACK, 0b10, true >(position);
+
+	return move_list;
 }
 
 template<Color color>
