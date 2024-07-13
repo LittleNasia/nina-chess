@@ -1,6 +1,7 @@
 <Project>
 
 <PropertyGroup Label="Globals">
+    <TargetName>$(ProjectName)</TargetName>
     <LinkerAdditionalOptions></LinkerAdditionalOptions>
     <TestPerftNodeLimit>18446744073709551615</TestPerftNodeLimit>
     <BenchPerftNodeLimit>10000000</BenchPerftNodeLimit>

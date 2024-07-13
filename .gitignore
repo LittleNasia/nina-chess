@@ -399,3 +399,4 @@ FodyWeavers.xsd
 /nina-chess/perftsuiteee.epd
 /test/clone
 /test/clone/*
+/test/*.exe

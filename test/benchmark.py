@@ -1,11 +1,42 @@
 import glob
 import random
 import os
+import stat
 import subprocess
 import numpy as np
 from scipy import stats
+import shutil
 
 files = glob.glob("C:\\Users\\Nasia and Ilusia\\Desktop\\test folder\\*.exe")
+prev_version_clone_dest = "./test/clone"
+
+def deleteReadOnlyFile(action, name, exc):
+    os.chmod(name, stat.S_IWRITE)
+    os.remove(name)
+
+def prepareExecutables():
+    if not os.path.exists(prev_version_clone_dest):
+        os.mkdir(prev_version_clone_dest)
+    subprocess.run("git clone . " + prev_version_clone_dest)
+    subprocess.run("msbuild ./test/clone/nina-chess.sln /p:OutDir=../test/ /p:Configuration=Bench /p:Platform=x64 /p:TargetName=default")
+    subprocess.run("msbuild nina-chess.sln /p:OutDir=../test/ /p:Configuration=Bench /p:Platform=x64 /p:TargetName=tested")
+
+def cleanEnvironment():
+    if os.path.exists(prev_version_clone_dest):
+        shutil.rmtree(prev_version_clone_dest, onerror=deleteReadOnlyFile)
+    #os.remove("./test/tested.exe")
+    #os.remove("./test/default.exe")
+
+cleanEnvironment()
+
+prepareExecutables()
+
+cleanEnvironment()
+
+exit()
+
+
+
 
 speeds = {}
 
