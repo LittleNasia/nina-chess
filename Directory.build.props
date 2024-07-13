@@ -4,7 +4,7 @@
     <TargetName>$(ProjectName)</TargetName>
     <LinkerAdditionalOptions></LinkerAdditionalOptions>
     <TestPerftNodeLimit>18446744073709551615</TestPerftNodeLimit>
-    <BenchPerftNodeLimit>5000000</BenchPerftNodeLimit>
+    <BenchPerftNodeLimit>1000000</BenchPerftNodeLimit>
 </PropertyGroup>
 
 </Project>

@@ -47,11 +47,13 @@ prepareExecutables()
 
 try:
     bench_results = bench_executables.benchmarkFiles(NUM_BENCHMARK_RUNS, OLD_EXECUTABLE_PATH, NEW_EXECUTABLE_PATH)
-    if bench_results[NEW_EXECUTABLE_PATH] == EXECUTABLE_REJECTED:
+    if bench_results[NEW_EXECUTABLE_PATH] == bench_executables.EXECUTABLE_REJECTED:
         raise Exception("Changes rejected because of significant move generation speed degradation")
 except:
     cleanEnvironment()
     raise
+
+cleanEnvironment()
 
 
     
