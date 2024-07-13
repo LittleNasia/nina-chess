@@ -1,8 +1,9 @@
 <Project>
 
 <PropertyGroup Label="Globals">
-    <OmitFramePointers>true</OmitFramePointers>
-    <LinkerAdditionalOptions>/useprofile</LinkerAdditionalOptions>
+    <LinkerAdditionalOptions></LinkerAdditionalOptions>
+    <TestPerftNodeLimit>18446744073709551615</TestPerftNodeLimit>
+    <BenchPerftNodeLimit>10000000</BenchPerftNodeLimit>
 </PropertyGroup>
 
 </Project>

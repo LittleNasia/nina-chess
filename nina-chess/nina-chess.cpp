@@ -84,7 +84,7 @@ void do_thing(const Position& pos)
         std::cout << "enter the depth of perft\n";
         int depth = 1;
         std::cin >> depth;
-        for (int move_id = 0; move_id < moves.get_num_moves(); move_id++)
+        for (uint32_t move_id = 0; move_id < moves.get_num_moves(); move_id++)
         {
             const auto& curr_move = moves.moves[move_id];
             std::cout << "move index " << move_id << "move " << square_names[bit_index(curr_move.from())] << " " << square_names[bit_index(curr_move.to())];

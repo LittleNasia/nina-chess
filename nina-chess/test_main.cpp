@@ -5,7 +5,8 @@
 
 int main()
 {
-	if (!test_perft(false, 8031647685ULL - 1))
+	std::cout << "doing nodes " << _PERFTNODES << "\n";
+	if (!test_perft(false, _PERFTNODES))
 		return 1;
 }
 
