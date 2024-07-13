@@ -397,3 +397,5 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /nina-chess/perftsuiteee.epd
+/test/clone
+/test/clone/*
