@@ -14,7 +14,7 @@ int main()
 	}
 
 	size_t nps{ 0 };
-	constexpr uint32_t numBenchRuns = 3;
+	constexpr uint32_t numBenchRuns = 10;
 	for(uint32_t runIndex = 0; runIndex < numBenchRuns; runIndex++)
 	{
 		size_t currRunNps = test_perft(hidePerftOutput, benchNodeLimit);
