@@ -65,7 +65,7 @@ def benchmarkFiles(runs, defaultFile, *filenames):
             print(f"\t{defaultFile}: Mean = {meanDefault:.2f}, Std = {std2:.2f}, N = {len(defaultFileScores)}")
             print(f"\tT-statistic = {t_stat:.2f}, P-value = {p_value:.2f}")
 
-            alpha = 0.05
+            alpha = 0.02
             if p_value < alpha:
                 if meanCurrent > meanDefault:
                     statuses[file] = EXECUTABLE_ACCEPTED
