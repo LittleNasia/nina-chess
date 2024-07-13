@@ -22,6 +22,6 @@ int main()
 		nps += currRunNps;
 	}
 
-	std::cout << nps / numBenchRuns << std::endl;
+	std::cout << nps / numBenchRuns << std::endl;;
 }
 #endif
