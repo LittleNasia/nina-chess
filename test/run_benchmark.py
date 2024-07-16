@@ -7,8 +7,10 @@ import numpy as np
 from scipy import stats
 import shutil
 import bench_executables
+import sys
 
-files = glob.glob("C:\\Users\\Nasia and Ilusia\\Desktop\\test folder\\*.exe")
+cwd = os.getcwd()
+
 PREV_VERSION_CLONE_DEST = "./test/clone"
 
 NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION = "tested"
@@ -16,6 +18,8 @@ OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION = "default"
 
 NEW_EXECUTABLE_NAME = f"{NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION}.exe"
 OLD_EXECUTABLE_NAME = f"{OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION}.exe"
+NEW_EXECUTABLE_PDB_NAME = f"{NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION}.exe"
+OLD_EXECUTABLE_PDB_NAME = f"{OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION}.exe"
 
 NEW_EXECUTABLE_PATH = f"./test/{NEW_EXECUTABLE_NAME}"
 OLD_EXECUTABLE_PATH = f"./test/{OLD_EXECUTABLE_NAME}"
@@ -27,7 +31,7 @@ def deleteReadOnlyFile(action, name, exc):
     os.remove(name)
 
 def prepareExecutables():
-    cwd = os.getcwd()
+    
     if not os.path.exists(PREV_VERSION_CLONE_DEST):
         os.mkdir(PREV_VERSION_CLONE_DEST)
     subprocess.run("git clone . " + PREV_VERSION_CLONE_DEST)
@@ -35,25 +39,34 @@ def prepareExecutables():
     subprocess.run(f"msbuild ./test/clone/nina-chess.sln /p:OutDir=\"{cwd}/test/\" /p:Configuration=Bench /p:Platform=x64 /p:TargetName={OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION}")
 
 def cleanEnvironment():
-    if os.path.exists(PREV_VERSION_CLONE_DEST):
-        shutil.rmtree(PREV_VERSION_CLONE_DEST, onerror=deleteReadOnlyFile)
-    if os.path.exists(NEW_EXECUTABLE_PATH):
-        os.remove(NEW_EXECUTABLE_PATH)
-    if os.path.exists(OLD_EXECUTABLE_PATH):
-        os.remove(OLD_EXECUTABLE_PATH)
+    files = os.listdir(f"{cwd}/test/")
+    for file in files:
+        if file.endswith(".exe") or file.endswith(".pdb"):
+            os.remove(f"{cwd}/test/{file}")
 
-cleanEnvironment()
-prepareExecutables()
-
-try:
-    bench_results = bench_executables.benchmarkFiles(NUM_BENCHMARK_RUNS, OLD_EXECUTABLE_PATH, NEW_EXECUTABLE_PATH)
-    if bench_results[NEW_EXECUTABLE_PATH] == bench_executables.EXECUTABLE_REJECTED:
-        raise Exception("Changes rejected because of significant move generation speed degradation")
-except:
+def runBenchmark():
     cleanEnvironment()
-    raise
+    prepareExecutables()
 
-cleanEnvironment()
+    try:
+        bench_results = bench_executables.benchmarkFiles(NUM_BENCHMARK_RUNS, OLD_EXECUTABLE_PATH, NEW_EXECUTABLE_PATH)
+        if bench_results[NEW_EXECUTABLE_PATH] == bench_executables.EXECUTABLE_REJECTED:
+            raise Exception("Changes rejected because of significant move generation speed degradation")
+    except:
+        cleanEnvironment()
+        raise
+
+    cleanEnvironment()
+
+def runTests():
+    subprocess.run(f'"{cwd}/x64/Test/nina-chess.exe"', check=True)
+
+
+commitName = sys.argv[1]
+if not "[NO-TEST]" in commitName:
+    runTests()
+if not "[NO-BENCH]" in commitName:
+    runBenchmark()
 
 
     
