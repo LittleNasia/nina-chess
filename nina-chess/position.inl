@@ -139,8 +139,8 @@ forceinline Position make_move(const Position& pos, const Move& m)
 	else if (side_to_move == BLACK &&  castling && !EP)  return make_move<BLACK, true , false>(pos, m);
 	else if (side_to_move == WHITE && !castling && !EP)  return make_move<WHITE, false, false>(pos, m);
 	else if (side_to_move == BLACK && !castling && !EP)  return make_move<BLACK, false, false>(pos, m);
-	else if (side_to_move == WHITE && !castling &&  EP)  return make_move<WHITE, false, true>(pos, m);
-	else if (side_to_move == BLACK && !castling &&  EP)  return make_move<BLACK, false, true>(pos, m);
+	else if (side_to_move == WHITE && !castling &&  EP)  return make_move<WHITE, false, true >(pos, m);
+	else if (side_to_move == BLACK && !castling &&  EP)  return make_move<BLACK, false, true >(pos, m);
 
 	return Position();
 }
