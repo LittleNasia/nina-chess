@@ -39,6 +39,8 @@ def prepareExecutables():
     subprocess.run(f"msbuild ./test/clone/nina-chess.sln /p:OutDir=\"{cwd}/test/\" /p:Configuration=Bench /p:Platform=x64 /p:TargetName={OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION}")
 
 def cleanEnvironment():
+    if os.path.exists(PREV_VERSION_CLONE_DEST):
+        shutil.rmtree(PREV_VERSION_CLONE_DEST, onerror=deleteReadOnlyFile)
     files = os.listdir(f"{cwd}/test/")
     for file in files:
         if file.endswith(".exe") or file.endswith(".pdb"):
