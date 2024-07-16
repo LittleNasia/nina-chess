@@ -11,7 +11,7 @@ forceinline void fill_pinmask(const size_t square, Bitboard& pinmask, Bitboard p
 	while (pinners)
 	{
 		const Bitboard pinner = pop_bit(pinners);
-		pinmask |= PinBetween[square][bit_index(pinner)];
+		pinmask |= pin_between_table[square][bit_index(pinner)];
 	}
 }
 
@@ -21,7 +21,7 @@ forceinline void fill_checkmask(const size_t square, Bitboard& checkmask, Bitboa
 	while (checkers)
 	{
 		const Bitboard checker = pop_bit(checkers);
-		checkmask |= PinBetween[square][bit_index(checker)] | (1ULL<<square);
+		checkmask |= pin_between_table[square][bit_index(checker)] | (1ULL<<square);
 	}
 }
 template<Color color>
