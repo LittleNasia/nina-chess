@@ -58,7 +58,7 @@ forceinline constexpr Bitboard get_pawn_left_attacks(Bitboard pawns)
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_pawn_left_attackers(Bitboard attackers)
+forceinline constexpr Bitboard get_pawn_left_attackers(const Bitboard attackers)
 {
     if constexpr (color == WHITE)
     {
@@ -85,7 +85,7 @@ forceinline constexpr Bitboard get_pawn_right_attacks(Bitboard pawns)
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_pawn_right_attackers(Bitboard attackers)
+forceinline constexpr Bitboard get_pawn_right_attackers(const Bitboard attackers)
 {
     if constexpr (color == WHITE)
     {
@@ -114,7 +114,7 @@ forceinline Bitboard get_knight_attacks(Bitboard pieces)
     return attacks;
 }
 
-forceinline Bitboard get_king_attacks(Bitboard pieces)
+forceinline Bitboard get_king_attacks(const Bitboard pieces)
 {
     return king_moves[bit_index(pieces)];
 }

@@ -9,9 +9,13 @@ forceinline constexpr Position::Position() :
 {
 }
 
-forceinline constexpr Position::Position(Bitboard w_pawns, Bitboard w_knights, Bitboard w_bishops, Bitboard w_rooks, Bitboard w_queens, Bitboard w_king,
-									Bitboard b_pawns, Bitboard b_knights, Bitboard b_bishops, Bitboard b_rooks, Bitboard b_queens, Bitboard b_king,
-									Bitboard EP_square, CastlingType castling, Color side_to_move, int ply) :
+forceinline constexpr Position::Position(
+	const Bitboard w_pawns, const Bitboard w_knights, const Bitboard w_bishops,
+	const Bitboard w_rooks, const Bitboard w_queens, const Bitboard w_king,
+	const Bitboard b_pawns, const Bitboard b_knights, const Bitboard b_bishops,
+	const Bitboard b_rooks, const Bitboard b_queens, const Bitboard b_king,
+	const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
+	const int ply) :
 	white_pieces(w_pawns, w_knights, w_bishops, w_rooks, w_queens, w_king),
 	black_pieces(b_pawns, b_knights, b_bishops, b_rooks, b_queens, b_king),
 	occupied(w_pawns | w_knights | w_bishops | w_rooks | w_queens | w_king |
@@ -23,7 +27,8 @@ forceinline constexpr Position::Position(Bitboard w_pawns, Bitboard w_knights, B
 {
 }
 
-forceinline constexpr Position::Position(const Side& white_pieces, const Side& black_pieces, const Bitboard EP_square, const CastlingType castling, const Color side_to_move, const int ply) :
+forceinline constexpr Position::Position(const Side& white_pieces, const Side& black_pieces,
+		const Bitboard EP_square, const CastlingType castling, const Color side_to_move, const int ply) :
 	white_pieces(white_pieces.pawns, white_pieces.knights, white_pieces.bishops,
 				 white_pieces.rooks, white_pieces.queens, white_pieces.king),
 	black_pieces(black_pieces.pawns, black_pieces.knights, black_pieces.bishops,

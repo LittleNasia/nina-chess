@@ -64,19 +64,19 @@ using CastlingType = uint32_t;
 inline constexpr Bitboard empty_bitboard = 0ULL;
 inline constexpr Bitboard full_bitboard = 0xffffffffffffffffULL;
 
-forceinline constexpr uint32_t two_d_to_one_d(uint32_t row, uint32_t col)
+forceinline constexpr uint32_t two_d_to_one_d(const uint32_t row, const uint32_t col)
 {
 	return row * board_cols + col;
 }
 
-forceinline size_t pext(Bitboard b, Bitboard mask)
+forceinline size_t pext(const Bitboard b, const Bitboard mask)
 {
 	return _pext_u64(b, mask);
 }
 
 #pragma warning( push )
 #pragma warning (disable:4244)
-forceinline uint32_t popcnt(Bitboard bb)
+forceinline uint32_t popcnt(const Bitboard bb)
 {
 	return __popcnt64(bb);
 }
@@ -201,7 +201,7 @@ forceinline constexpr Color get_opposite_color()
 	}
 }
 
-forceinline constexpr Color get_opposite_color(Color color)
+forceinline constexpr Color get_opposite_color(const Color color)
 {
 	if (color == WHITE)
 	{
@@ -309,7 +309,7 @@ forceinline constexpr CastlingType get_castling()
 template<Color color>
 forceinline constexpr Bitboard kingside_castling_castling_king_path()
 {
-	if (color == WHITE)
+	if constexpr (color == WHITE)
 	{
 		return 0xe;
 	}
@@ -323,7 +323,7 @@ forceinline constexpr Bitboard kingside_castling_castling_king_path()
 template<Color color>
 forceinline constexpr Bitboard kingside_castling_castling_rook_path()
 {
-	if (color == WHITE)
+	if constexpr (color == WHITE)
 	{
 		return 0x6;
 	}
@@ -337,7 +337,7 @@ forceinline constexpr Bitboard kingside_castling_castling_rook_path()
 template<Color color>
 forceinline constexpr Bitboard queenside_castling_king_path()
 {
-	if (color == WHITE)
+	if constexpr (color == WHITE)
 	{
 		return 0x38;
 	}
@@ -351,7 +351,7 @@ forceinline constexpr Bitboard queenside_castling_king_path()
 template<Color color>
 forceinline constexpr Bitboard queenside_castling_rook_path()
 {
-	if (color == WHITE)
+	if constexpr (color == WHITE)
 	{
 		return 0x70;
 	}
@@ -364,7 +364,7 @@ forceinline constexpr Bitboard queenside_castling_rook_path()
 template<Color color>
 forceinline constexpr Bitboard kingside_castling_rook()
 {
-	if (color == WHITE)
+	if constexpr (color == WHITE)
 	{
 		return 0x1;
 	}
@@ -377,7 +377,7 @@ forceinline constexpr Bitboard kingside_castling_rook()
 template<Color color>
 forceinline constexpr Bitboard queenside_castling_rook()
 {
-	if (color == WHITE)
+	if constexpr (color == WHITE)
 	{
 		return 0x80;
 	}

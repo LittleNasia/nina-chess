@@ -10,8 +10,8 @@ struct Side
 	{
 
 	}
-	forceinline constexpr Side(Bitboard pawns, Bitboard knights, Bitboard bishops,
-		Bitboard rooks, Bitboard queens, Bitboard king) :
+	forceinline constexpr Side(const Bitboard pawns, const Bitboard knights, const Bitboard bishops,
+		const Bitboard rooks, const Bitboard queens, const Bitboard king) :
 		pawns(pawns), knights(knights), bishops(bishops),
 		rooks(rooks), queens(queens), king(king),
 		pieces(pawns | knights | bishops | rooks | queens | king)
@@ -25,7 +25,7 @@ struct Side
 	Bitboard queens = 0;
 	Bitboard king = 0;
 
-	constexpr Bitboard& get_piece_bb(PieceType piece_type)
+	constexpr Bitboard& get_piece_bb(const PieceType piece_type)
 	{
 		return (&pawns)[piece_type];
 	}

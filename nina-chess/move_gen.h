@@ -5,7 +5,7 @@
 #include "bitmasks.h"
 #include "position.h"
 
-forceinline void fill_pinmask(size_t square, Bitboard& pinmask, Bitboard pinners)
+forceinline void fill_pinmask(const size_t square, Bitboard& pinmask, Bitboard pinners)
 {
 	// Evil branch
 	while (pinners)
@@ -15,7 +15,7 @@ forceinline void fill_pinmask(size_t square, Bitboard& pinmask, Bitboard pinners
 	}
 }
 
-forceinline void fill_checkmask(size_t square, Bitboard& checkmask, Bitboard checkers)
+forceinline void fill_checkmask(const size_t square, Bitboard& checkmask, Bitboard checkers)
 {
 	// More evil branches
 	while (checkers)
@@ -25,7 +25,7 @@ forceinline void fill_checkmask(size_t square, Bitboard& checkmask, Bitboard che
 	}
 }
 template<Color color>
-forceinline constexpr Bitboard get_legal_left_pawn_captures(Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard enemy_pieces)
+forceinline constexpr Bitboard get_legal_left_pawn_captures(const Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard enemy_pieces)
 {
 	const Bitboard pinmask = (bishop_pinmask | rook_pinmask);
 	const Bitboard unpinned_pawns = pawns & ~pinmask;
@@ -37,7 +37,7 @@ forceinline constexpr Bitboard get_legal_left_pawn_captures(Bitboard pawns, cons
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_legal_right_pawn_captures(Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard enemy_pieces)
+forceinline constexpr Bitboard get_legal_right_pawn_captures(const Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard enemy_pieces)
 {
 	const Bitboard pinmask = (bishop_pinmask | rook_pinmask);
 	const Bitboard unpinned_pawns = pawns & ~pinmask;
@@ -49,7 +49,7 @@ forceinline constexpr Bitboard get_legal_right_pawn_captures(Bitboard pawns, con
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_legal_pawn_advances(Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard occupied)
+forceinline constexpr Bitboard get_legal_pawn_advances(const Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard occupied)
 {
 	const Bitboard pinmask = bishop_pinmask | rook_pinmask;
 	const Bitboard unpinned_pawns = pawns & ~pinmask;
@@ -88,7 +88,7 @@ private:
 };
 
 template<PieceType piece_type, Color color>
-forceinline void write_moves(MoveList& moves, Bitboard moves_mask, uint32_t piece_index)
+forceinline void write_moves(MoveList& moves, Bitboard moves_mask, const uint32_t piece_index)
 {
 	constexpr auto moving_piece = piece_type;
 	while (moves_mask)
@@ -288,7 +288,7 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 	const uint32_t num_checkers = popcnt(rook_checkers | bishop_checkers | knight_checkers | pawn_checkers);
 
 	// king can always move, unless she can't
-	Bitboard legal_king_moves = get_king_moves(king_index, attacked_squares) & ~curr_pieces.pieces;
+	const Bitboard legal_king_moves = get_king_moves(king_index, attacked_squares) & ~curr_pieces.pieces;
 	write_moves<KING, color>(move_list, legal_king_moves, king_index);
 	if (num_checkers > 1)
 	{
@@ -306,10 +306,10 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 	legal_pawn_double_advances = get_pawn_advances<color>(legal_pawn_double_advances) & ~Position.occupied;
 
 	// bishops pinned by a rook can't move 
-	Bitboard movable_bishops = curr_pieces.bishops & ~rook_pinmask;
+	const Bitboard movable_bishops = curr_pieces.bishops & ~rook_pinmask;
 	// likewise, rooks pinned by 
-	Bitboard movable_rooks = curr_pieces.rooks & ~bishop_pinmask;
-	Bitboard movable_knights = curr_pieces.knights & ~(bishop_pinmask | rook_pinmask);
+	const Bitboard movable_rooks = curr_pieces.rooks & ~bishop_pinmask;
+	const Bitboard movable_knights = curr_pieces.knights & ~(bishop_pinmask | rook_pinmask);
 	// pinned queens can move always
 	
 	// no checks
