@@ -1,5 +1,7 @@
 #include "board.h"
 
+#include <stdexcept>
+
 Board::Board(Evaluator* evaluator):
 	evaluator(evaluator),
 	position()
@@ -13,6 +15,10 @@ Board Board::MakeMove(const Move move) const
 
 Score Board::Evaluate() const
 {
+	DEBUG_IF(evaluator == nullptr)
+	{
+		throw std::runtime_error("Evaluator is not set");
+	}
 	return evaluator->Evaluate(position);
 }
 
