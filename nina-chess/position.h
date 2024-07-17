@@ -41,14 +41,16 @@ struct Position
 	const int ply;
 };
 
-template<Color side_to_move, bool castling, bool EP>
-forceinline Position make_move(const Position& pos, const Move& m);
+namespace position
+{
+	template<Color side_to_move, bool castling, bool EP>
+	forceinline Position MakeMove(const Position& pos, const Move& m);
 
-forceinline Position make_move(const Position& pos, const Move& m);
+	forceinline Position MakeMove(const Position& pos, const Move& m);
 
-void print_board(const Position& curr_pos);
+	void PrintBoard(const Position& curr_pos);
 
-Position parse_fen(const std::string_view fen);
-
+	Position ParseFen(const std::string_view fen);
+}
 
 #include "position.inl"

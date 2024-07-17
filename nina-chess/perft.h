@@ -21,7 +21,7 @@ inline void perft(const Position& pos, size_t& nodes, int depth)
 
 	for (uint32_t move_id = 0; move_id < moves.get_num_moves(); move_id++)
 	{
-		const auto new_pos = make_move(pos, moves.moves[move_id]);
+		const auto new_pos = position::MakeMove(pos, moves.moves[move_id]);
 		perft(new_pos, nodes, depth - 1);
 	}
 }
@@ -56,7 +56,7 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 			}
 			parsing_fen = false;
 			delete curr_pos;
-			curr_pos = new Position(parse_fen(fen));
+			curr_pos = new Position(position::ParseFen(fen));
 			
 			perft_test_suite >> expected_nodes;
 			parsing_fen = false;

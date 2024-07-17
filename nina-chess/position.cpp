@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-void print_board(const Position& curr_pos)
+void position::PrintBoard(const Position& curr_pos)
 {
 	int rank = 8;
 	for (int square = 63; square >= 0; square--)
@@ -98,7 +98,7 @@ void print_board(const Position& curr_pos)
 	std::cout << "side_to_move " << (curr_pos.side_to_move == WHITE ? "WHITE" : "BLACK");
 }
 
-Position parse_fen(const std::string_view fen)
+Position position::ParseFen(const std::string_view fen)
 {
 	int row = 7;
 	int col = 7;

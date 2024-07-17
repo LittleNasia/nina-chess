@@ -302,6 +302,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bench_main.cpp" />
+    <ClCompile Include="board.cpp" />
+    <ClCompile Include="evaluator.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="nina-chess.cpp" />
     <ClCompile Include="test_main.cpp" />
@@ -309,6 +311,8 @@
   <ItemGroup>
     <ClInclude Include="attacks.h" />
     <ClInclude Include="bitmasks.h" />
+    <ClInclude Include="board.h" />
+    <ClInclude Include="evaluator.h" />
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="move_gen.h" />

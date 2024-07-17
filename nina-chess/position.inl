@@ -60,7 +60,7 @@ forceinline constexpr const Side& Position::get_side() const
 }
 
 template<Color side_to_move, bool castling, bool EP>
-forceinline Position make_move(const Position& pos, const Move& m)
+forceinline Position position::MakeMove(const Position& pos, const Move& m)
 {
 	Bitboard EP_square = 0ULL;
 	CastlingType curr_castling_perms = pos.castling;
@@ -133,19 +133,19 @@ forceinline Position make_move(const Position& pos, const Move& m)
 		EP_square, curr_castling_perms, opposite_color, pos.ply + 1);
 }
 
-forceinline Position make_move(const Position& pos, const Move& m)
+forceinline Position position::MakeMove(const Position& pos, const Move& m)
 {
 	const auto& side_to_move = pos.side_to_move;
 	const auto& own_pieces = ((pos.side_to_move == WHITE) ? pos.white_pieces : pos.black_pieces);
 	const bool castling = (m.from() == own_pieces.king) && (m.to() & own_pieces.rooks);
 	const bool EP = m.to() == pos.EP_square && (m.piece() == PAWN);
 
-		 if (side_to_move == WHITE &&  castling && !EP)  return make_move<WHITE, true , false>(pos, m);
-	else if (side_to_move == BLACK &&  castling && !EP)  return make_move<BLACK, true , false>(pos, m);
-	else if (side_to_move == WHITE && !castling && !EP)  return make_move<WHITE, false, false>(pos, m);
-	else if (side_to_move == BLACK && !castling && !EP)  return make_move<BLACK, false, false>(pos, m);
-	else if (side_to_move == WHITE && !castling &&  EP)  return make_move<WHITE, false, true >(pos, m);
-	else if (side_to_move == BLACK && !castling &&  EP)  return make_move<BLACK, false, true >(pos, m);
+		 if (side_to_move == WHITE &&  castling && !EP)  return MakeMove<WHITE, true , false>(pos, m);
+	else if (side_to_move == BLACK &&  castling && !EP)  return MakeMove<BLACK, true , false>(pos, m);
+	else if (side_to_move == WHITE && !castling && !EP)  return MakeMove<WHITE, false, false>(pos, m);
+	else if (side_to_move == BLACK && !castling && !EP)  return MakeMove<BLACK, false, false>(pos, m);
+	else if (side_to_move == WHITE && !castling &&  EP)  return MakeMove<WHITE, false, true >(pos, m);
+	else if (side_to_move == BLACK && !castling &&  EP)  return MakeMove<BLACK, false, true >(pos, m);
 
 	return Position();
 }

@@ -9,6 +9,14 @@ inline constexpr size_t board_cols = 8;
 inline constexpr size_t num_board_squares = 64;
 inline constexpr size_t max_ply = 512;
 
+#ifdef _DEBUG
+inline constexpr bool is_debug = true;
+#else
+inline constexpr bool is_debug = false;
+#endif
+
+#define DEBUG_IF(x) if constexpr(is_debug) if (x)
+
 // TODO determine which functions should be forceinlined and which shouldnt
 // forceinlining everything doesn't seem to give performance benefits anymore
 #define forceinline inline
