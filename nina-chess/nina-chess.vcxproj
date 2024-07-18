@@ -314,6 +314,7 @@
     <ClInclude Include="bitmasks.h" />
     <ClInclude Include="board.h" />
     <ClInclude Include="evaluator.h" />
+    <ClInclude Include="move_list.h" />
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="move_gen.h" />
@@ -324,6 +325,7 @@
     <ClInclude Include="zobrist.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="board.inl" />
     <None Include="position.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

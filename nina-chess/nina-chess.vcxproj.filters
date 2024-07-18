@@ -71,10 +71,16 @@
     <ClInclude Include="zobrist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="move_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="position.inl">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="board.inl">
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
 </Project>

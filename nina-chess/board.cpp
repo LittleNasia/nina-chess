@@ -13,7 +13,7 @@ Board Board::MakeMove(const Move move) const
 	return Board(evaluator, position::MakeMove(position, move));
 }
 
-Score Board::Evaluate() const
+Score Board::Evaluate(const MoveList& move_list) const
 {
 	DEBUG_IF(evaluator == nullptr)
 	{

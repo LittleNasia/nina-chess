@@ -3,6 +3,7 @@
 
 #include "attacks.h"
 #include "bitmasks.h"
+#include "move_list.h"
 #include "position.h"
 
 forceinline void fill_pinmask(const size_t square, Bitboard& pinmask, Bitboard pinners)
@@ -69,29 +70,6 @@ forceinline constexpr Bitboard get_king_moves(const size_t king_index, const Bit
 {
 	return king_moves[king_index] & ~attacked_squares;
 }
-
-struct MoveList
-{
-	Move moves[100];
-	forceinline constexpr MoveList() = default;
-	forceinline void push_move(const Move&& move)
-	{
-		moves[num_moves++] = move;
-	}
-	forceinline void reset()
-	{
-		num_moves = 0;
-	}
-	forceinline constexpr uint32_t get_num_moves() const { return num_moves; }
-
-	Bitboard piece_moves[PIECE_TYPE_NONE] = { 0,0,0,0,0,0 };
-	Bitboard pinmask = 0;
-	Bitboard checkmask = 0;
-	Bitboard pinners = 0;
-	Bitboard checkers = 0;
-	Bitboard attacked_squares = 0;
-	uint32_t num_moves = 0;
-};
 
 template<PieceType piece_type, Color color, bool castling = false, bool EP = false>
 forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uint32_t piece_index)
