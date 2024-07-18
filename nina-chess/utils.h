@@ -20,6 +20,8 @@ inline constexpr bool is_debug = false;
 
 // TODO determine which functions should be forceinlined and which shouldnt
 // forceinlining everything doesn't seem to give performance benefits anymore
+// maybe not anymore, forceinlining everything seems to be the way to go now for some reason ? ? ?
+// there are functions that probably still shouldn't be inlined but forceinline as a default seems fine now
 #define forceinline __forceinline
 
 enum
