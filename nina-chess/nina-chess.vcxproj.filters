@@ -33,6 +33,9 @@
     <ClCompile Include="board.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="legacy_generation_code.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="position.h">
@@ -63,6 +66,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="board.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="search.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zobrist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -304,6 +304,7 @@
     <ClCompile Include="bench_main.cpp" />
     <ClCompile Include="board.cpp" />
     <ClCompile Include="evaluator.cpp" />
+    <ClCompile Include="legacy_generation_code.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="nina-chess.cpp" />
     <ClCompile Include="test_main.cpp" />
@@ -316,9 +317,11 @@
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="move_gen.h" />
+    <ClInclude Include="search.h" />
     <ClInclude Include="side.h" />
     <ClInclude Include="targets.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="zobrist.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="position.inl" />

@@ -1,15 +1,17 @@
 #include "position.h"
+#include "zobrist.h"
 
-forceinline constexpr Position::Position() :
+forceinline Position::Position() :
 	white_pieces(65280ULL, 66ULL, 36ULL, 129ULL, 16ULL, 8ULL),
 	black_pieces(71776119061217280ULL, 4755801206503243776ULL, 2594073385365405696ULL,
 		9295429630892703744ULL, 1152921504606846976ULL, 576460752303423488ULL),
 	occupied(18446462598732906495ULL), EP_square(0ULL), side_to_move(WHITE), castling(0b1111),
-	ply(0)
+	ply(0),
+	hash(calculate_hash())
 {
 }
 
-forceinline constexpr Position::Position(
+forceinline Position::Position(
 	const Bitboard w_pawns, const Bitboard w_knights, const Bitboard w_bishops,
 	const Bitboard w_rooks, const Bitboard w_queens, const Bitboard w_king,
 	const Bitboard b_pawns, const Bitboard b_knights, const Bitboard b_bishops,
@@ -23,11 +25,30 @@ forceinline constexpr Position::Position(
 	EP_square(EP_square),
 	castling(castling & update_castling_rights(w_rooks, b_rooks)),
 	side_to_move(side_to_move),
-	ply(ply)
+	ply(ply),
+	hash(calculate_hash())
 {
 }
 
-forceinline constexpr Position::Position(const Side& white_pieces, const Side& black_pieces,
+forceinline Position::Position(
+	const Bitboard w_pawns, const Bitboard w_knights, const Bitboard w_bishops, const Bitboard w_rooks, const Bitboard w_queens, const Bitboard w_king,
+	const Bitboard b_pawns, const Bitboard b_knights, const Bitboard b_bishops, const Bitboard b_rooks, const Bitboard b_queens, const Bitboard b_king,
+	const Bitboard EP_square, const CastlingType castling, const Color side_to_move, const int ply, const uint64_t hash):
+	white_pieces(w_pawns, w_knights, w_bishops, w_rooks, w_queens, w_king),
+	black_pieces(b_pawns, b_knights, b_bishops, b_rooks, b_queens, b_king),
+	occupied(w_pawns | w_knights | w_bishops | w_rooks | w_queens | w_king |
+		b_pawns | b_knights | b_bishops | b_rooks | b_queens | b_king),
+	EP_square(EP_square),
+	castling(castling& update_castling_rights(w_rooks, b_rooks)),
+	side_to_move(side_to_move),
+	ply(ply),
+	hash(hash)
+{
+	DEBUG_IF(hash != calculate_hash())
+		throw std::runtime_error("hashes don't match");
+}
+
+forceinline Position::Position(const Side& white_pieces, const Side& black_pieces,
 		const Bitboard EP_square, const CastlingType castling, const Color side_to_move, const int ply) :
 	white_pieces(white_pieces.pawns, white_pieces.knights, white_pieces.bishops,
 				 white_pieces.rooks, white_pieces.queens, white_pieces.king),
@@ -35,15 +56,68 @@ forceinline constexpr Position::Position(const Side& white_pieces, const Side& b
 				 black_pieces.rooks, black_pieces.queens, black_pieces.king),
 	occupied(this->white_pieces.pieces | this->black_pieces.pieces),
 	EP_square(EP_square),
-	castling(castling& update_castling_rights(white_pieces.rooks, black_pieces.rooks)),
+	castling(castling & update_castling_rights(white_pieces.rooks, black_pieces.rooks)),
 	side_to_move(side_to_move),
-	ply(ply)
+	ply(ply),
+	hash(calculate_hash())
 {
+}
+
+forceinline Position::Position(const Side& white_pieces, const Side& black_pieces,
+	const Bitboard EP_square, const CastlingType castling, const Color side_to_move, const int ply, const uint64_t hash) :
+	white_pieces(white_pieces.pawns, white_pieces.knights, white_pieces.bishops,
+		white_pieces.rooks, white_pieces.queens, white_pieces.king),
+	black_pieces(black_pieces.pawns, black_pieces.knights, black_pieces.bishops,
+		black_pieces.rooks, black_pieces.queens, black_pieces.king),
+	occupied(this->white_pieces.pieces | this->black_pieces.pieces),
+	EP_square(EP_square),
+	castling(castling),
+	side_to_move(side_to_move),
+	ply(ply),
+	hash(hash)
+{
+	DEBUG_IF(hash != calculate_hash())
+		throw std::runtime_error("hashes don't match");
 }
 
 forceinline constexpr CastlingType Position::get_curr_castling() const
 {
 	return castling >> (2 * side_to_move) & 0b11;
+}
+
+forceinline uint64_t Position::calculate_hash() const
+{
+	uint64_t hash = 0ULL;
+	hash ^= (zobrist_side_to_move * side_to_move);
+	hash ^= zobrist_castling[castling];
+	hash ^= zobrist_ep_square[bit_index(EP_square)];
+
+	for (Color color = WHITE; auto& side : { white_pieces, black_pieces })
+	{
+		for (PieceType piece = PAWN; piece < PIECE_TYPE_NONE; piece++)
+		{
+			Bitboard piece_bb = side.get_piece_bb(piece);
+			while (piece_bb)
+			{
+				const Bitboard square = pop_bit(piece_bb);
+				const size_t index = bit_index(square);
+				hash ^= zobrist_keys[index][color * PIECE_TYPE_NONE + piece];
+			}
+		}
+		color++;
+	}
+	return hash;
+}
+
+template<Color side_to_move>
+forceinline constexpr uint64_t position::update_hash(uint64_t hash, const PieceType moving_piece, Bitboard move)
+{
+	const Bitboard first_square = pop_bit(move);
+	const Bitboard second_square = pop_bit(move);
+	hash ^= zobrist_keys[bit_index(first_square)][side_to_move * PIECE_TYPE_NONE + moving_piece];
+	if(second_square)
+		hash ^= zobrist_keys[bit_index(second_square)][side_to_move * PIECE_TYPE_NONE + moving_piece];
+	return hash;
 }
 
 template<Color color>
@@ -62,6 +136,9 @@ forceinline constexpr const Side& Position::get_side() const
 template<Color side_to_move, bool castling, bool EP>
 forceinline Position position::MakeMove(const Position& pos, const Move& m)
 {
+	size_t new_hash = pos.hash;
+	new_hash ^= zobrist_side_to_move;
+	new_hash ^= zobrist_ep_square[bit_index(pos.EP_square)];
 	Bitboard EP_square = 0ULL;
 	CastlingType curr_castling_perms = pos.castling;
 	constexpr Color opposite_color = get_opposite_color<side_to_move>();
@@ -71,19 +148,31 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 	Side& black_pieces = (side_to_move == BLACK ? own_pieces : enemy_pieces);
 	if constexpr (castling)
 	{
+		new_hash ^= zobrist_castling[curr_castling_perms];
 		if (m.to() == queenside_castling_rook<side_to_move>())
 		{
-			own_pieces.rooks ^= (m.to() | queenside_castling_rook_dest<side_to_move>());
-			own_pieces.king ^= (m.from() | queenside_castling_king_dest<side_to_move>());
+			const Bitboard rook_move_bb = (m.to() | queenside_castling_rook_dest<side_to_move>());
+			const Bitboard king_move_bb = (m.from() | queenside_castling_king_dest<side_to_move>());
+			own_pieces.rooks ^= rook_move_bb;
+			own_pieces.king ^= king_move_bb;
+			new_hash = update_hash<side_to_move>(new_hash, ROOK, rook_move_bb);
+			new_hash = update_hash<side_to_move>(new_hash, KING, king_move_bb);
 		}
 		else if (m.to() == kingside_castling_rook<side_to_move>())
 		{
-			own_pieces.rooks ^= (m.to() | kingside_castling_rook_dest<side_to_move>());
-			own_pieces.king ^= (m.from() | kingside_castling_king_dest<side_to_move>());
+			const Bitboard rook_move_bb = (m.to() | kingside_castling_rook_dest<side_to_move>());
+			const Bitboard king_move_bb = (m.from() | kingside_castling_king_dest<side_to_move>());
+			own_pieces.rooks ^= rook_move_bb;
+			own_pieces.king ^= king_move_bb;
+			new_hash = update_hash<side_to_move>(new_hash, ROOK, rook_move_bb);
+			new_hash = update_hash<side_to_move>(new_hash, KING, king_move_bb);
 		}
 		curr_castling_perms &= ~castling_perms<side_to_move>();
+		new_hash ^= zobrist_castling[curr_castling_perms];
+		new_hash ^= zobrist_ep_square[bit_index(EP_square)];
+
 		return Position(
-			white_pieces, black_pieces, EP_square, curr_castling_perms, opposite_color, pos.ply + 1
+			white_pieces, black_pieces, EP_square, curr_castling_perms, opposite_color, pos.ply + 1, new_hash
 		);
 	}
 	if constexpr (EP)
@@ -92,11 +181,14 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 		const auto EP_victim = EP_victims_lookup[EP_index];
 		enemy_pieces.pawns ^= EP_victim;
 		own_pieces.pawns ^= (m.from() | pos.EP_square);
+		new_hash = update_hash<side_to_move>(new_hash, PAWN, (m.from() | pos.EP_square));
+		new_hash = update_hash<opposite_color>(new_hash, PAWN, EP_victim);
+		new_hash ^= zobrist_ep_square[bit_index(EP_square)];
 		return Position(
-			white_pieces, black_pieces, EP_square, curr_castling_perms, opposite_color, pos.ply + 1
+			white_pieces, black_pieces, EP_square, curr_castling_perms, opposite_color, pos.ply + 1, new_hash
 		);
 	}
-
+	new_hash ^= zobrist_castling[curr_castling_perms];
 	// normal move, maybe capture
 
 	// remove castling perms because nobody wants them
@@ -104,10 +196,23 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 	{
 		curr_castling_perms &= ~castling_perms<side_to_move>();
 	}
-
+	
+	
+	if(m.to() & enemy_pieces.pawns)
+		new_hash = update_hash<opposite_color>(new_hash, PAWN  , m.to());
+	else if (m.to() & enemy_pieces.knights)
+		new_hash = update_hash<opposite_color>(new_hash, KNIGHT, m.to());
+	else if (m.to() & enemy_pieces.bishops)
+		new_hash = update_hash<opposite_color>(new_hash, BISHOP, m.to());
+	else if (m.to() & enemy_pieces.rooks)
+		new_hash = update_hash<opposite_color>(new_hash, ROOK  , m.to());
+	else if (m.to() & enemy_pieces.queens)
+		new_hash = update_hash<opposite_color>(new_hash, QUEEN , m.to());
 	enemy_pieces.remove_pieces(m.to());
+
 	Bitboard& piece_bb = own_pieces.get_piece_bb(m.piece());
 	piece_bb ^= m.from() | m.to();
+	new_hash = update_hash<side_to_move>(new_hash, m.piece(), m.from() | m.to());
 
 	if (m.piece() == PAWN)
 	{
@@ -118,19 +223,30 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 		if constexpr (side_to_move == WHITE)
 		{
 			piece_bb &= 0xffffffffffffff;
+			if (m.to() & ~0xffffffffffffff)
+			{
+				new_hash ^= zobrist_keys[bit_index(m.to())][WHITE_PAWN];
+			}
 		}
 		else
 		{
 			piece_bb &= 0xffffffffffffff00;
+			if (m.to() & ~0xffffffffffffff00)
+			{
+				new_hash ^= zobrist_keys[bit_index(m.to())][BLACK_PAWN];
+			}
 		}
 		if (m.promotion_piece() != PIECE_TYPE_NONE)
 		{
 			own_pieces.get_piece_bb(m.promotion_piece()) |= m.to();
+			new_hash = update_hash<side_to_move>(new_hash, m.promotion_piece(), m.to());
 		}
 	}
-
+	curr_castling_perms &= update_castling_rights(white_pieces.rooks, black_pieces.rooks);
+	new_hash ^= zobrist_ep_square[bit_index(EP_square)];
+	new_hash ^= zobrist_castling[curr_castling_perms];
 	return Position(white_pieces, black_pieces,
-		EP_square, curr_castling_perms, opposite_color, pos.ply + 1);
+		EP_square, curr_castling_perms, opposite_color, pos.ply + 1, new_hash);
 }
 
 template<Color side_to_move>
@@ -163,6 +279,3 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 
 	return Position();
 }
-
-
-inline static constexpr Position startpos;

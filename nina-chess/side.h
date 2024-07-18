@@ -30,6 +30,11 @@ struct Side
 		return (&pawns)[piece_type];
 	}
 
+	constexpr const Bitboard get_piece_bb(const PieceType piece_type) const
+	{
+		return (&pawns)[piece_type];
+	}
+
 	forceinline constexpr void remove_pieces(const Bitboard piece)
 	{
 		pawns &= ~piece;
