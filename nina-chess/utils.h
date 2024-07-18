@@ -484,18 +484,49 @@ public:
 	inline static constexpr uint32_t promotion_piece_offset = piece_offset + 4;
 	inline static constexpr uint32_t promotion_piece_mask = 0b1111 << promotion_piece_offset;
 
+	inline static constexpr uint32_t castling_offset = promotion_piece_offset + 4;
+	inline static constexpr uint32_t castling_mask = 0b1 << castling_offset;
+
 
 	forceinline constexpr Bitboard from() const { return 1ULL << (encodedMove & index_from_mask); }
 	forceinline constexpr Bitboard to() const { return 1ULL << ((encodedMove & index_to_mask) >> index_to_offset); }
 	forceinline constexpr Piece piece() const { return (encodedMove & piece_mask) >> piece_offset; }
 	forceinline constexpr Piece promotion_piece() const { return (encodedMove & promotion_piece_mask) >> promotion_piece_offset; }
+	forceinline constexpr bool is_castling() const { return (encodedMove & castling_mask) >> castling_offset; }
+
 	forceinline constexpr operator bool() const { return from(); }
 
 	forceinline constexpr Move() : Move(0, 0, 0, PIECE_TYPE_NONE)
 	{}
 
-	forceinline constexpr Move(const uint32_t from, const uint32_t to, const Piece piece, const Piece promotion_piece = PIECE_TYPE_NONE):
-		encodedMove{ (from << index_from_offset) | (to << index_to_offset) | (piece << piece_offset) | (promotion_piece << promotion_piece_offset) }
+	forceinline constexpr Move(const uint32_t from, const uint32_t to, const Piece piece) :
+		encodedMove{
+		(PIECE_TYPE_NONE << promotion_piece_offset) |
+		(from << index_from_offset) |
+		(to << index_to_offset) |
+		(piece << piece_offset)
+		}
+	{
+	}
+
+	forceinline constexpr Move(const uint32_t from, const uint32_t to, const Piece piece, const Piece promotion_piece) :
+		encodedMove{
+		(from << index_from_offset) |
+		(to << index_to_offset) |
+		(piece << piece_offset) |
+		(promotion_piece << promotion_piece_offset)
+		}
+	{
+	}
+
+	forceinline constexpr Move(const uint32_t from, const uint32_t to, const Piece piece, const Piece promotion_piece, const bool castling) :
+		encodedMove{ 
+		(from << index_from_offset) |
+		(to << index_to_offset) |
+		(piece << piece_offset) |
+		(promotion_piece << promotion_piece_offset)  |
+		(castling << castling_offset)
+		}
 	{
 	}
 

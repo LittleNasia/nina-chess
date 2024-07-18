@@ -93,7 +93,7 @@ struct MoveList
 	uint32_t num_moves = 0;
 };
 
-template<PieceType piece_type, Color color>
+template<PieceType piece_type, Color color, bool castling = false>
 forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uint32_t piece_index)
 {
 	constexpr auto moving_piece = piece_type;
@@ -101,7 +101,10 @@ forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uin
 	{
 		const Bitboard move = pop_bit(moves_mask);
 		const uint32_t move_target = bit_index(move);
-		move_list.push_move({ piece_index, move_target, moving_piece });
+		if constexpr (castling)
+			move_list.push_move({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling });
+		else
+			move_list.push_move({ piece_index, move_target, moving_piece });
 	}
 	move_list.piece_moves[piece_type] |= moves_mask;
 }
@@ -401,7 +404,8 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 			(Position.occupied & (kingside_castling_castling_rook_path<color>() & ~king)));
 		if (can_castle)
 		{
-			write_moves<KING, color>(move_list, kingside_castling_rook<color>(), king_index);
+			constexpr bool castling = true;
+			write_moves<KING, color, castling>(move_list, kingside_castling_rook<color>(), king_index);
 		}
 	}
 	// queenside castling
@@ -411,7 +415,8 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 			(Position.occupied & (queenside_castling_rook_path<color>() & ~king)));
 		if (can_castle)
 		{
-			write_moves<KING, color>(move_list, queenside_castling_rook<color>(), king_index);
+			constexpr bool castling = true;
+			write_moves<KING, color, castling>(move_list, queenside_castling_rook<color>(), king_index);
 		}
 	}
 	return move_list;

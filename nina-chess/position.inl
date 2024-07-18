@@ -137,7 +137,7 @@ template<Color side_to_move>
 forceinline Position position::MakeMove(const Position& pos, const Move& m)
 {
 	const auto& own_pieces = pos.get_side<side_to_move>();
-	const bool castling = (m.from() == own_pieces.king) && (m.to() & own_pieces.rooks);
+	const bool castling = m.is_castling();
 	const bool EP = m.to() == pos.EP_square && (m.piece() == PAWN);
 
 	if		( castling && !EP)  return MakeMove<side_to_move, true , false>(pos, m);
@@ -151,7 +151,7 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 {
 	const auto& side_to_move = pos.side_to_move;
 	const auto& own_pieces = ((pos.side_to_move == WHITE) ? pos.white_pieces : pos.black_pieces);
-	const bool castling = (m.from() == own_pieces.king) && (m.to() & own_pieces.rooks);
+	const bool castling = m.is_castling();
 	const bool EP = m.to() == pos.EP_square && (m.piece() == PAWN);
 
 		 if (side_to_move == WHITE &&  castling && !EP)  return MakeMove<WHITE, true , false>(pos, m);
