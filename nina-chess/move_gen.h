@@ -96,7 +96,7 @@ struct MoveList
 template<PieceType piece_type, Color color, bool castling = false, bool EP = false>
 forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uint32_t piece_index)
 {
-	constexpr auto moving_piece = piece_type;
+	constexpr PieceType moving_piece = piece_type;
 	while (moves_mask)
 	{
 		const Bitboard move = pop_bit(moves_mask);
@@ -115,7 +115,7 @@ template<Color color>
 forceinline void write_pawn_moves(MoveList& move_list, const Bitboard left_pawn_captures, const Bitboard right_pawn_captures,
 	const Bitboard legal_pawn_advances, const Bitboard pawn_double_advances, Bitboard pawns)
 {
-	constexpr Piece moving_piece = PAWN;
+	constexpr PieceType moving_piece = PAWN;
 	while (pawns)
 	{
 		const auto pawn = pop_bit(pawns);
@@ -216,7 +216,7 @@ template<Color color, bool check, bool unblockable_check>
 forceinline void write_knight_moves(MoveList& move_list, Bitboard movable_knights, const Bitboard allies,
 	const Bitboard checkers, const Bitboard bishop_checkmask, const Bitboard rook_checkmask)
 {
-	constexpr Piece moving_piece = KNIGHT;
+	constexpr PieceType moving_piece = KNIGHT;
 	while (movable_knights)
 	{
 		const Bitboard curr_knight = pop_bit(movable_knights);

@@ -24,14 +24,14 @@ inline constexpr bool is_debug = false;
 // there are functions that probably still shouldn't be inlined but forceinline as a default seems fine now
 #define forceinline __forceinline
 
-enum
+enum Color: uint8_t
 {
 	WHITE,
 	BLACK,
 	COLOR_NONE
 };
 
-enum
+enum Piece : uint32_t
 {
 	WHITE_PAWN,
 	WHITE_KNIGHT,
@@ -56,7 +56,7 @@ constexpr char piece_names[] =
 	'p','n','b','r','q','k',
 };
 
-enum
+enum PieceType : uint32_t
 {
 	PAWN,
 	KNIGHT,
@@ -67,9 +67,11 @@ enum
 	PIECE_TYPE_NONE
 };
 
-using PieceType = uint32_t;
-using Piece = uint32_t;
-using Color = uint32_t;
+forceinline constexpr PieceType operator++(PieceType& piece, int)
+{
+	return piece = static_cast<PieceType>(piece + 1);
+}
+
 using CastlingType = uint32_t;
 
 inline constexpr Bitboard empty_bitboard = 0ULL;
@@ -496,14 +498,14 @@ public:
 
 	forceinline constexpr Bitboard from() const { return 1ULL << (encodedMove & index_from_mask); }
 	forceinline constexpr Bitboard to() const { return 1ULL << ((encodedMove & index_to_mask) >> index_to_offset); }
-	forceinline constexpr PieceType piece() const { return (encodedMove & piece_mask) >> piece_offset; }
-	forceinline constexpr PieceType promotion_piece() const { return (encodedMove & promotion_piece_mask) >> promotion_piece_offset; }
+	forceinline constexpr PieceType piece() const { return static_cast<PieceType>((encodedMove & piece_mask) >> piece_offset); }
+	forceinline constexpr PieceType promotion_piece() const { return static_cast<PieceType>((encodedMove & promotion_piece_mask) >> promotion_piece_offset); }
 	forceinline constexpr bool is_castling() const { return (encodedMove & castling_mask) >> castling_offset; }
 	forceinline constexpr bool is_EP() const { return (encodedMove & EP_mask) >> EP_offset; }
 
 	forceinline constexpr operator bool() const { return from(); }
 
-	forceinline constexpr Move() : Move(0, 0, 0, PIECE_TYPE_NONE)
+	forceinline constexpr Move() : Move(0, 0, PIECE_TYPE_NONE, PIECE_TYPE_NONE)
 	{}
 
 	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece) :
@@ -515,7 +517,7 @@ public:
 		}
 	{}
 
-	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const Piece promotion_piece) :
+	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const PieceType promotion_piece) :
 		encodedMove{
 		(from << index_from_offset) |
 		(to << index_to_offset) |
@@ -524,7 +526,7 @@ public:
 		}
 	{}
 
-	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const Piece promotion_piece, const bool castling) :
+	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const PieceType promotion_piece, const bool castling) :
 		encodedMove{ 
 		(from << index_from_offset) |
 		(to << index_to_offset) |
@@ -534,7 +536,7 @@ public:
 		}
 	{}
 
-	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const Piece promotion_piece, const bool castling, const bool EP) :
+	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const PieceType promotion_piece, const bool castling, const bool EP) :
 		encodedMove{
 		(from << index_from_offset) |
 		(to << index_to_offset) |
@@ -626,7 +628,7 @@ inline const char* square_names[num_board_squares] =
 	"h8","g8","f8","e8","d8","c8","b8","a8",
 };
 
-inline constexpr Piece promotion_pieces[4] =
+inline constexpr PieceType promotion_pieces[4] =
 {
 	KNIGHT,
 	BISHOP,

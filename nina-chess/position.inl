@@ -104,7 +104,7 @@ forceinline uint64_t Position::calculate_hash() const
 				hash ^= zobrist_keys[index][color * PIECE_TYPE_NONE + piece];
 			}
 		}
-		color++;
+		color = BLACK;
 	}
 	return hash;
 }
