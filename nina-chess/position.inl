@@ -138,10 +138,10 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 {
 	const auto& own_pieces = pos.get_side<side_to_move>();
 	const bool castling = m.is_castling();
-	const bool EP = m.to() == pos.EP_square && (m.piece() == PAWN);
+	const bool EP = m.is_EP();
 
-	if		( castling && !EP)  return MakeMove<side_to_move, true , false>(pos, m);
-	else if (!castling && !EP)  return MakeMove<side_to_move, false, false>(pos, m);
+	if		(!castling && !EP)  return MakeMove<side_to_move, false, false>(pos, m); 
+	else if ( castling && !EP)  return MakeMove<side_to_move, true , false>(pos, m);
 	else if (!castling &&  EP)  return MakeMove<side_to_move, false, true >(pos, m);
 
 	return Position();
@@ -152,12 +152,12 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 	const auto& side_to_move = pos.side_to_move;
 	const auto& own_pieces = ((pos.side_to_move == WHITE) ? pos.white_pieces : pos.black_pieces);
 	const bool castling = m.is_castling();
-	const bool EP = m.to() == pos.EP_square && (m.piece() == PAWN);
+	const bool EP = m.is_EP();
 
-		 if (side_to_move == WHITE &&  castling && !EP)  return MakeMove<WHITE, true , false>(pos, m);
-	else if (side_to_move == BLACK &&  castling && !EP)  return MakeMove<BLACK, true , false>(pos, m);
-	else if (side_to_move == WHITE && !castling && !EP)  return MakeMove<WHITE, false, false>(pos, m);
+	if		(side_to_move == WHITE && !castling && !EP)  return MakeMove<WHITE, false, false>(pos, m);
 	else if (side_to_move == BLACK && !castling && !EP)  return MakeMove<BLACK, false, false>(pos, m);
+	else if (side_to_move == WHITE &&  castling && !EP)  return MakeMove<WHITE, true , false>(pos, m);
+	else if (side_to_move == BLACK &&  castling && !EP)  return MakeMove<BLACK, true , false>(pos, m);
 	else if (side_to_move == WHITE && !castling &&  EP)  return MakeMove<WHITE, false, true >(pos, m);
 	else if (side_to_move == BLACK && !castling &&  EP)  return MakeMove<BLACK, false, true >(pos, m);
 

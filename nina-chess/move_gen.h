@@ -93,7 +93,7 @@ struct MoveList
 	uint32_t num_moves = 0;
 };
 
-template<PieceType piece_type, Color color, bool castling = false>
+template<PieceType piece_type, Color color, bool castling = false, bool EP = false>
 forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uint32_t piece_index)
 {
 	constexpr auto moving_piece = piece_type;
@@ -103,6 +103,8 @@ forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uin
 		const uint32_t move_target = bit_index(move);
 		if constexpr (castling)
 			move_list.push_move({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling });
+		else if constexpr (EP)
+			move_list.push_move({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling, EP });
 		else
 			move_list.push_move({ piece_index, move_target, moving_piece });
 	}
@@ -391,7 +393,9 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 				!(king_rook_attacks & enemy_rook_queen)
 				)
 			{
-				write_moves<PAWN, color>(move_list, Position.EP_square, bit_index(EP_candidate));
+				constexpr bool castling = false;
+				constexpr bool EP = true;
+				write_moves<PAWN, color, castling, EP>(move_list, Position.EP_square, bit_index(EP_candidate));
 			}
 		}
 	}
