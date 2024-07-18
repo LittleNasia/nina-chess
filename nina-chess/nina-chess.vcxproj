@@ -289,6 +289,7 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <CallingConvention>Cdecl</CallingConvention>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -304,7 +305,6 @@
     <ClCompile Include="bench_main.cpp" />
     <ClCompile Include="board.cpp" />
     <ClCompile Include="evaluator.cpp" />
-    <ClCompile Include="legacy_generation_code.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="nina-chess.cpp" />
     <ClCompile Include="test_main.cpp" />
