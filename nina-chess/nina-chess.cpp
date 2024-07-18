@@ -152,7 +152,14 @@ void do_thing(const Position& pos)
             const auto& curr_move = moves.moves[move_id];
             std::cout << "move index " << move_id << "move " << square_names[bit_index(curr_move.from())] << " " << square_names[bit_index(curr_move.to())];
             size_t nodes = 0;
-            perft(position::MakeMove(pos, curr_move), nodes, depth);
+            if (pos.side_to_move == WHITE)
+            {
+                perft<WHITE>(position::MakeMove(pos, curr_move), nodes, depth);
+            }
+            else
+            {
+                perft<BLACK>(position::MakeMove(pos, curr_move), nodes, depth);
+            }
             std::cout << " nodes: " << nodes << "\n";
         }
         std::cout << "please enter index of move to play ";

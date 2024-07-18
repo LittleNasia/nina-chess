@@ -9,7 +9,7 @@
 #include "move_gen.h"
 #include "position.h"
 
-
+template<Color side_to_move>
 inline void perft(const Position& pos, size_t& nodes, int depth)
 {
 	if (depth <= 0)
@@ -17,12 +17,14 @@ inline void perft(const Position& pos, size_t& nodes, int depth)
 		nodes++;
 		return;
 	}
-	const auto& moves = generate_moves(pos);
+	const auto& moves = generate_moves<side_to_move>(pos);
+
+	constexpr Color opposite_side = get_opposite_color<side_to_move>();
 
 	for (uint32_t move_id = 0; move_id < moves.get_num_moves(); move_id++)
 	{
-		const auto new_pos = position::MakeMove(pos, moves.moves[move_id]);
-		perft(new_pos, nodes, depth - 1);
+		const auto new_pos = position::MakeMove<side_to_move>(pos, moves.moves[move_id]);
+		perft<opposite_side>(new_pos, nodes, depth - 1);
 	}
 }
 
@@ -81,7 +83,14 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 			std::cout << "testing on depth " << curr_depth << ", expected "
 				<< expected_nodes;// << ", received " <<  << "\n";
 			const auto start = std::chrono::high_resolution_clock::now();
-			perft(*curr_pos, curr_nodes, curr_depth);
+			if (curr_pos->side_to_move == WHITE)
+			{
+				perft<WHITE>(*curr_pos, curr_nodes, curr_depth);
+			}
+			else
+			{
+				perft<BLACK>(*curr_pos, curr_nodes, curr_depth);
+			}
 			const auto stop = std::chrono::high_resolution_clock::now();
 			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 			if (!hideOutput)

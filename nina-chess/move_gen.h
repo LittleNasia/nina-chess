@@ -444,4 +444,22 @@ forceinline MoveList generate_moves(const Position& position)
 	return move_list;
 }
 
+template<Color side_to_move>
+forceinline MoveList generate_moves(const Position& position)
+{
+	MoveList move_list;
+	const bool EP = position.EP_square;
+	const Color color = position.side_to_move;
+	const CastlingType castling = position.get_curr_castling();
 
+	if		(castling == 0b11 && !EP) generate_moves<side_to_move, 0b11, false>(move_list, position);
+	else if (castling == 0b00 && !EP) generate_moves<side_to_move, 0b00, false>(move_list, position);
+	else if (castling == 0b01 && !EP) generate_moves<side_to_move, 0b01, false>(move_list, position);
+	else if (castling == 0b10 && !EP) generate_moves<side_to_move, 0b10, false>(move_list, position);
+	else if (castling == 0b11 &&  EP) generate_moves<side_to_move, 0b11, true >(move_list, position);
+	else if (castling == 0b00 &&  EP) generate_moves<side_to_move, 0b00, true >(move_list, position);
+	else if (castling == 0b01 &&  EP) generate_moves<side_to_move, 0b01, true >(move_list, position);
+	else if (castling == 0b10 &&  EP) generate_moves<side_to_move, 0b10, true >(move_list, position);
+
+	return move_list;
+}

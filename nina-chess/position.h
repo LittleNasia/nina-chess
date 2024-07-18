@@ -46,6 +46,9 @@ namespace position
 	template<Color side_to_move, bool castling, bool EP>
 	forceinline Position MakeMove(const Position& pos, const Move& m);
 
+	template<Color side_to_move>
+	forceinline Position MakeMove(const Position& pos, const Move& m);
+
 	forceinline Position MakeMove(const Position& pos, const Move& m);
 
 	void PrintBoard(const Position& curr_pos);
