@@ -83,24 +83,31 @@ struct MoveList
 		num_moves = 0;
 	}
 	forceinline constexpr uint32_t get_num_moves() const { return num_moves; }
-private:
+
+	Bitboard piece_moves[PIECE_TYPE_NONE] = { 0,0,0,0,0,0 };
+	Bitboard pinmask = 0;
+	Bitboard checkmask = 0;
+	Bitboard pinners = 0;
+	Bitboard checkers = 0;
+	Bitboard attacked_squares = 0;
 	uint32_t num_moves = 0;
 };
 
 template<PieceType piece_type, Color color>
-forceinline void write_moves(MoveList& moves, Bitboard moves_mask, const uint32_t piece_index)
+forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uint32_t piece_index)
 {
 	constexpr auto moving_piece = piece_type;
 	while (moves_mask)
 	{
 		const Bitboard move = pop_bit(moves_mask);
 		const uint32_t move_target = bit_index(move);
-		moves.push_move({ piece_index, move_target, moving_piece });
+		move_list.push_move({ piece_index, move_target, moving_piece });
 	}
+	move_list.piece_moves[piece_type] |= moves_mask;
 }
 
 template<Color color>
-forceinline void write_pawn_moves(MoveList& moves, const Bitboard left_pawn_captures, const Bitboard right_pawn_captures,
+forceinline void write_pawn_moves(MoveList& move_list, const Bitboard left_pawn_captures, const Bitboard right_pawn_captures,
 	const Bitboard legal_pawn_advances, const Bitboard pawn_double_advances, Bitboard pawns)
 {
 	constexpr Piece moving_piece = PAWN;
@@ -122,13 +129,13 @@ forceinline void write_pawn_moves(MoveList& moves, const Bitboard left_pawn_capt
 			{
 				for (const auto promotion_piece : promotion_pieces)
 				{
-					moves.push_move({ piece_index, move_target, moving_piece, promotion_piece });
+					move_list.push_move({ piece_index, move_target, moving_piece, promotion_piece });
 				}
 			}
 			else
-				moves.push_move({ piece_index, move_target, moving_piece });
+				move_list.push_move({ piece_index, move_target, moving_piece });
 		}
-			
+		move_list.piece_moves[moving_piece] |= curr_pawn_moves;
 	}
 }  
 
@@ -153,6 +160,7 @@ forceinline void write_slider_moves(MoveList& move_list, Bitboard movable_bishop
 		curr_bishop_moves &= ~allies;
 		if(curr_bishop_moves)
 			write_moves<BISHOP, color>(move_list, curr_bishop_moves, bit_index(curr_bishop));
+		move_list.piece_moves[BISHOP] |= curr_bishop_moves;
 	}
 	while (movable_rooks)
 	{
@@ -171,6 +179,7 @@ forceinline void write_slider_moves(MoveList& move_list, Bitboard movable_bishop
 		curr_rook_moves &= ~allies;
 		if(curr_rook_moves)
 			write_moves<ROOK, color>(move_list, curr_rook_moves, bit_index(curr_rook));
+		move_list.piece_moves[ROOK] |= curr_rook_moves;
 	}
 	while (queens)
 	{
@@ -194,6 +203,7 @@ forceinline void write_slider_moves(MoveList& move_list, Bitboard movable_bishop
 		}
 		if (curr_queen_moves)
 			write_moves<QUEEN, color>(move_list, curr_queen_moves, bit_index(curr_queen));
+		move_list.piece_moves[QUEEN] |= curr_queen_moves;
 	}
 }
 
@@ -224,6 +234,7 @@ forceinline void write_knight_moves(MoveList& move_list, Bitboard movable_knight
 
 			move_list.push_move({ knight_index, move_target, moving_piece });
 		}
+		move_list.piece_moves[moving_piece] |= curr_knight_moves;
 	}
 }
 
@@ -284,6 +295,12 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 		rook_pinners |= attacked_pieces_behind & enemy_rook_queen;
 		fill_pinmask(king_index, rook_pinmask, rook_pinners);
 	}
+
+	move_list.checkers = rook_checkers | bishop_checkers | knight_checkers | pawn_checkers;
+	move_list.pinners = rook_pinners | bishop_pinners;
+	move_list.checkmask = rook_checkmask | bishop_checkmask;
+	move_list.pinmask = rook_pinmask | bishop_pinmask;
+	move_list.attacked_squares = attacked_squares;
 
 	const uint32_t num_checkers = popcnt(rook_checkers | bishop_checkers | knight_checkers | pawn_checkers);
 
