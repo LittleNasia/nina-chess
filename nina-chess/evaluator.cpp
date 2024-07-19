@@ -1,7 +1,5 @@
 #include "evaluator.h"
 
-#include <stdexcept>
-
 Score get_score(const float wdl_chances)
 {
 	DEBUG_IF(wdl_chances < -1.0f || wdl_chances > 1.0f)
@@ -13,12 +11,34 @@ Score get_score(const float wdl_chances)
 	return static_cast<Score>(wdl_chances * win_score);
 }
 
+Score get_mated_score(const int32_t mate_in)
+{
+	DEBUG_IF(mate_in < 0)
+	{
+		throw std::runtime_error("mate_in must be non-negative");
+	}
+
+	return Score(int32_t(Score::LOSS) + mate_in);
+}
+
 Evaluator::Evaluator()
 {
 
 }
 
-Score Evaluator::Evaluate(const Position& position)
+Score Evaluator::Evaluate(const Position& position, const MoveList& move_list)
 {
-	return get_score(0.0f);
+	if (position.IsDrawn())
+	{
+		return Score::DRAW;
+	}
+
+	if (move_list.get_num_moves() == 0)
+	{
+		return move_list.checkers ? get_mated_score(position.ply) : get_score(0.0f);
+	}
+
+	float score = (float)(int(popcnt(position.GetSide<WHITE>().pieces)) - int(popcnt(position.GetSide<BLACK>().pieces)));
+
+	return get_score(score/16);
 }

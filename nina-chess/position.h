@@ -9,45 +9,32 @@
 
 struct Position
 {
-	forceinline Position();
-
-	forceinline Position(
-		const Bitboard w_pawns, const Bitboard w_knights, const Bitboard w_bishops,
-		const Bitboard w_rooks, const Bitboard w_queens,  const Bitboard w_king,
-		const Bitboard b_pawns, const Bitboard b_knights, const Bitboard b_bishops,
-		const Bitboard b_rooks, const Bitboard b_queens,  const Bitboard b_king,
-		const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
-		const int ply);
-
-	forceinline Position(
-		const Bitboard w_pawns, const Bitboard w_knights, const Bitboard w_bishops,
-		const Bitboard w_rooks, const Bitboard w_queens, const Bitboard w_king,
-		const Bitboard b_pawns, const Bitboard b_knights, const Bitboard b_bishops,
-		const Bitboard b_rooks, const Bitboard b_queens, const Bitboard b_king,
-		const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
-		const int ply,
-		const uint64_t hash);
+	forceinline Position(uint64_t* hash_history);
 
 	forceinline Position(
 		const Side& white_pieces,
 		const Side& black_pieces,
 		const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
-		const int ply);
+		const int ply, const uint32_t fifty_move_rule, uint64_t* hash_history);
 
 	forceinline Position(
 		const Side& white_pieces,
 		const Side& black_pieces,
 		const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
-		const int ply,
-		const uint64_t hash);
-
+		const int ply, const uint32_t fifty_move_rule,
+		const uint64_t hash, uint64_t* hash_history);
 
 	template<Color color>
-	constexpr const Side& get_side() const;
+	constexpr const Side& GetSide() const;
 
-	forceinline constexpr CastlingType get_curr_castling() const;
+	forceinline constexpr CastlingType GetCurrentCastling() const;
 
-	forceinline uint64_t calculate_hash() const;
+	forceinline uint64_t CalculateHash() const;
+
+	forceinline constexpr bool IsDrawn() const;
+	forceinline constexpr bool IsFiftyMoveRule() const;
+	forceinline constexpr bool IsThreefoldRepetition() const;
+	forceinline constexpr bool IsInsufficientMaterial() const;
 
 	const Side white_pieces;
 	const Side black_pieces;
@@ -58,6 +45,9 @@ struct Position
 	const Color side_to_move;
 	const int ply;
 	const uint64_t hash;
+	const uint32_t fifty_move_rule;
+
+	uint64_t* hash_history;
 };
 
 namespace position
@@ -75,7 +65,7 @@ namespace position
 
 	void PrintBoard(const Position& curr_pos);
 
-	Position ParseFen(const std::string_view fen);
+	Position ParseFen(const std::string_view fen, uint64_t* hash_history);
 }
 
 #include "position.inl"

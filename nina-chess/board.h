@@ -8,13 +8,17 @@
 class Board
 {
 public:
-	Board(Evaluator* evaluator);
+	Board(Evaluator* evaluator, uint64_t* hash_history);
+	Board(const Position position, Evaluator* evaluator);
 
 	Board MakeMove(const Move move) const;
 	template<Color side_to_move>
 	forceinline Board MakeMove(const Move move) const;
 
 	Score Evaluate(const MoveList& move_list) const;
+
+	const Position& GetPosition() const { return position; }
+	const Evaluator* GetEvaluator() const { return evaluator; }
 private:
 	Board(Evaluator* evaluator, const Position&& position);
 

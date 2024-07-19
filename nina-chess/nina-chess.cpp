@@ -4,11 +4,14 @@
 #include "move_gen.h"
 #include "perft.h"
 #include "position.h"
+#include "search.h"
 #include "targets.h"
 #include "utils.h"
 
 void do_thing(const Position& pos)
 {
+    std::unique_ptr<MoveList[]> move_lists = std::make_unique<MoveList[]>(max_depth);
+    SearchInfo search_info{ 0, move_lists.get() };
     while (true)
     {
         const auto& moves = generate_moves(pos);
@@ -41,7 +44,20 @@ void do_thing(const Position& pos)
 #if _UCI
 int main()
 {
-    if (!test_perft(false))
-        return 1;
+	std::unique_ptr<uint64_t[]> hash_history = std::make_unique<uint64_t[]>(max_ply);
+	std::unique_ptr<Evaluator> evaluator = std::make_unique<Evaluator>();
+
+    TranspositionTable tt(128);
+	const Position position = position::ParseFen("4Qnk1/p4ppp/8/7n/2P5/2B1P3/PP3q1P/6RK b - - 0 1", hash_history.get());
+    Board board(position, evaluator.get());
+    const size_t depth = 8;
+
+	const auto& result = start_search(board, depth, tt);
+
+	for (int pv_move_index = 0; pv_move_index < result.pv_length; pv_move_index++)
+	{
+		std::cout << "pv move: " << pv_move_index + 1 << " " << square_names[bit_index(result.pv[pv_move_index].from())] << " " << square_names[bit_index(result.pv[pv_move_index].to())] << "\n";
+	}
+	std::cout << "score " << result.score << "\n";
 }
 #endif

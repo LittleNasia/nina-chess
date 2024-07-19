@@ -8,16 +8,16 @@ struct Side
 		rooks(0ULL), queens(0ULL), king(0ULL),
 		pieces(0ULL)
 	{
-
 	}
+
 	forceinline constexpr Side(const Bitboard pawns, const Bitboard knights, const Bitboard bishops,
 		const Bitboard rooks, const Bitboard queens, const Bitboard king) :
 		pawns(pawns), knights(knights), bishops(bishops),
 		rooks(rooks), queens(queens), king(king),
 		pieces(pawns | knights | bishops | rooks | queens | king)
 	{
-
 	}
+
 	Bitboard pawns = 0;
 	Bitboard knights = 0;
 	Bitboard bishops = 0;
@@ -42,7 +42,8 @@ struct Side
 		bishops &= ~piece;
 		rooks &= ~piece;
 		queens &= ~piece;
+		pieces &= ~piece;
 	}
 
-	const Bitboard pieces = 0;
+	Bitboard pieces = 0;
 };

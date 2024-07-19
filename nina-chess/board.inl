@@ -1,3 +1,4 @@
+#include "move_gen.h"
 
 template<Color side_to_move>
 forceinline Board Board::MakeMove(const Move move) const

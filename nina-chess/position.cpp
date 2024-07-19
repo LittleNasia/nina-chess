@@ -98,13 +98,15 @@ void position::PrintBoard(const Position& curr_pos)
 	std::cout << "side_to_move " << (curr_pos.side_to_move == WHITE ? "WHITE" : "BLACK");
 }
 
-Position position::ParseFen(const std::string_view fen)
+Position position::ParseFen(const std::string_view fen, uint64_t* hash_history)
 {
 	int row = 7;
 	int col = 7;
 	int index = 0;
 	Side white_pieces;
 	Side black_pieces;
+	const uint32_t fifty_move_rule = 0;
+	const uint32_t ply = 0;
 	for (index = 0; index < fen.length(); index++)
 	{
 		// "col 0" is actually on the right of the board (where square 0 is)
@@ -204,7 +206,7 @@ Position position::ParseFen(const std::string_view fen)
 
 	char fen_side_to_move;
 	ss >> fen_side_to_move;
-	Color side_to_move;
+	Color side_to_move = WHITE;
 	switch (fen_side_to_move)
 	{
 	case 'w':
@@ -268,7 +270,7 @@ Position position::ParseFen(const std::string_view fen)
 	}
 
 	return Position(
-		white_pieces.pawns, white_pieces.knights, white_pieces.bishops, white_pieces.rooks, white_pieces.queens, white_pieces.king,
-		black_pieces.pawns, black_pieces.knights, black_pieces.bishops, black_pieces.rooks, black_pieces.queens, black_pieces.king,
-		EP_square, castling_rights, side_to_move, 0);
+		white_pieces,
+		black_pieces,
+		EP_square, castling_rights, side_to_move, ply, fifty_move_rule, hash_history);
 }

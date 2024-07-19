@@ -3,8 +3,8 @@
 
 #include "board.h"
 #include "move.h"
-
-inline constexpr size_t max_depth = 256;
+#include "search_info.h"
+#include "transposition_table.h"
 
 struct SearchResult
 {
@@ -14,6 +14,8 @@ struct SearchResult
 };
 
 template<Color side_to_move>
-Score search(Board& board, size_t depth, Score alpha, Score beta);
+Score search(const Board& board, const size_t depth, Score alpha, Score beta, TranspositionTable& tt);
 
-SearchResult start_search(Board& board, size_t depth);
+SearchResult start_search(const Board& board, const size_t depth, TranspositionTable& tt);
+
+#include "search.inl"

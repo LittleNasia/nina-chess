@@ -31,6 +31,7 @@ public:
 	forceinline constexpr bool is_EP() const { return (encodedMove & EP_mask) >> EP_offset; }
 
 	forceinline constexpr operator bool() const { return from(); }
+	forceinline constexpr bool operator==(const Move& other) const { return encodedMove == other.encodedMove; }
 
 	forceinline constexpr Move() : Move(0, 0, PIECE_TYPE_NONE, PIECE_TYPE_NONE)
 	{}

@@ -1,6 +1,10 @@
 #pragma once
 #include "utils.h"
 
+inline constexpr Bitboard light_squares = 0xAA55AA55AA55AA55;
+
+inline constexpr Bitboard dark_squares = ~light_squares;
+
 inline constexpr Bitboard rook_xray_masks[num_board_squares] = 
 {
 0x1010101010101fe, 0x2020202020202fd, 0x4040404040404fb, 0x8080808080808f7, 0x10101010101010ef, 0x20202020202020df, 0x40404040404040bf, 0x808080808080807f,

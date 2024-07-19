@@ -172,7 +172,7 @@ forceinline Bitboard get_queen_attacks(Bitboard pieces, const Bitboard occupied)
 }
 
 template<Color color>
-inline Bitboard get_all_attacks(const Side& pieces, const Bitboard occupied)
+forceinline Bitboard get_all_attacks(const Side& pieces, const Bitboard occupied)
 {
     const auto pawn_attacks = get_pawn_attacks<color>(pieces.pawns);
     const auto knight_attacks = get_knight_attacks(pieces.knights);

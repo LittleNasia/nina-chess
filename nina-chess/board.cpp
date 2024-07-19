@@ -2,9 +2,15 @@
 
 #include <stdexcept>
 
-Board::Board(Evaluator* evaluator):
+Board::Board(Evaluator* evaluator, uint64_t* hash_history):
 	evaluator(evaluator),
-	position()
+	position(hash_history)
+{
+}
+
+Board::Board(const Position position, Evaluator* evaluator):
+	evaluator(evaluator),
+	position(position)
 {
 }
 
@@ -19,7 +25,7 @@ Score Board::Evaluate(const MoveList& move_list) const
 	{
 		throw std::runtime_error("Evaluator is not set");
 	}
-	return evaluator->Evaluate(position);
+	return evaluator->Evaluate(position, move_list);
 }
 
 Board::Board(Evaluator* evaluator, const Position&& position):

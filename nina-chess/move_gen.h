@@ -225,8 +225,8 @@ template<Color color, size_t castling, bool hasEP>
 forceinline MoveList& generate_moves(MoveList& move_list, const Position& Position)
 {
 	constexpr auto opposite_color = get_opposite_color<color>();
-	const auto& curr_pieces = Position.get_side<color>();
-	const auto& opposite_pieces = Position.get_side<opposite_color>();
+	const auto& curr_pieces = Position.GetSide<color>();
+	const auto& opposite_pieces = Position.GetSide<opposite_color>();
 	const auto& king = curr_pieces.king;
 	const auto& king_index = bit_index(curr_pieces.king);
 	const Bitboard bishop_xray_from_king = bishop_xray_masks[king_index];
@@ -404,12 +404,33 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 	return move_list;
 }
 
+template<Color side_to_move>
+forceinline MoveList generate_moves(const Position& position)
+{
+	MoveList move_list;
+
+	const bool EP = position.EP_square;
+	const Color color = position.side_to_move;
+	const CastlingType castling = position.GetCurrentCastling();
+
+		 if (castling == 0b11 && !EP) generate_moves<side_to_move, 0b11, false>(move_list, position);
+	else if (castling == 0b00 && !EP) generate_moves<side_to_move, 0b00, false>(move_list, position);
+	else if (castling == 0b01 && !EP) generate_moves<side_to_move, 0b01, false>(move_list, position);
+	else if (castling == 0b10 && !EP) generate_moves<side_to_move, 0b10, false>(move_list, position);
+	else if (castling == 0b11 &&  EP) generate_moves<side_to_move, 0b11, true >(move_list, position);
+	else if (castling == 0b00 &&  EP) generate_moves<side_to_move, 0b00, true >(move_list, position);
+	else if (castling == 0b01 &&  EP) generate_moves<side_to_move, 0b01, true >(move_list, position);
+	else if (castling == 0b10 &&  EP) generate_moves<side_to_move, 0b10, true >(move_list, position);
+
+	return move_list;
+}
+
 forceinline MoveList generate_moves(const Position& position)
 {
 	MoveList move_list;
 	const bool EP = position.EP_square;
 	const Color color = position.side_to_move;
-	const CastlingType castling = position.get_curr_castling();
+	const CastlingType castling = position.GetCurrentCastling();
 
 		 if (color == WHITE && castling == 0b11 && !EP) generate_moves<WHITE, 0b11, false>(move_list, position);
 	else if (color == BLACK && castling == 0b11 && !EP) generate_moves<BLACK, 0b11, false>(move_list, position);
@@ -427,26 +448,6 @@ forceinline MoveList generate_moves(const Position& position)
 	else if (color == BLACK && castling == 0b01 &&  EP) generate_moves<BLACK, 0b01, true >(move_list, position);
 	else if (color == WHITE && castling == 0b10 &&  EP) generate_moves<WHITE, 0b10, true >(move_list, position);
 	else if (color == BLACK && castling == 0b10 &&  EP) generate_moves<BLACK, 0b10, true >(move_list, position);
-
-	return move_list;
-}
-
-template<Color side_to_move>
-forceinline MoveList generate_moves(const Position& position)
-{
-	MoveList move_list;
-	const bool EP = position.EP_square;
-	const Color color = position.side_to_move;
-	const CastlingType castling = position.get_curr_castling();
-
-	if		(castling == 0b11 && !EP) generate_moves<side_to_move, 0b11, false>(move_list, position);
-	else if (castling == 0b00 && !EP) generate_moves<side_to_move, 0b00, false>(move_list, position);
-	else if (castling == 0b01 && !EP) generate_moves<side_to_move, 0b01, false>(move_list, position);
-	else if (castling == 0b10 && !EP) generate_moves<side_to_move, 0b10, false>(move_list, position);
-	else if (castling == 0b11 &&  EP) generate_moves<side_to_move, 0b11, true >(move_list, position);
-	else if (castling == 0b00 &&  EP) generate_moves<side_to_move, 0b00, true >(move_list, position);
-	else if (castling == 0b01 &&  EP) generate_moves<side_to_move, 0b01, true >(move_list, position);
-	else if (castling == 0b10 &&  EP) generate_moves<side_to_move, 0b10, true >(move_list, position);
 
 	return move_list;
 }

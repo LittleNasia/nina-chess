@@ -233,6 +233,7 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -290,15 +291,15 @@
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <CallingConvention>Cdecl</CallingConvention>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      <AdditionalOptions>/useprofile</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -309,6 +310,7 @@
     <ClCompile Include="nina-chess.cpp" />
     <ClCompile Include="search.cpp" />
     <ClCompile Include="test_main.cpp" />
+    <ClCompile Include="transposition_table.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="attacks.h" />
@@ -321,8 +323,10 @@
     <ClInclude Include="position.h" />
     <ClInclude Include="move_gen.h" />
     <ClInclude Include="search.h" />
+    <ClInclude Include="search_info.h" />
     <ClInclude Include="side.h" />
     <ClInclude Include="targets.h" />
+    <ClInclude Include="transposition_table.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="zobrist.h" />
   </ItemGroup>

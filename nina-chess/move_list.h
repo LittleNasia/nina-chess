@@ -5,7 +5,7 @@
 
 struct MoveList
 {
-	Move moves[100];
+	alignas(64) Move moves[50];
 	forceinline constexpr MoveList() = default;
 	forceinline void push_move(const Move&& move)
 	{
@@ -14,6 +14,12 @@ struct MoveList
 	forceinline void reset()
 	{
 		num_moves = 0;
+		std::memset(piece_moves, 0, sizeof(piece_moves));
+		pinmask = 0;
+		checkmask = 0;
+		pinners = 0;
+		checkers = 0;
+		attacked_squares = 0;
 	}
 	forceinline constexpr uint32_t get_num_moves() const { return num_moves; }
 

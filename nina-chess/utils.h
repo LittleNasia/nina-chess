@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <intrin.h>
+#include <ostream>
 #include <stdexcept>
 
 using Bitboard = std::uint64_t;
@@ -9,6 +10,8 @@ inline constexpr size_t board_rows = 8;
 inline constexpr size_t board_cols = 8;
 inline constexpr size_t num_board_squares = 64;
 inline constexpr size_t max_ply = 512;
+inline constexpr size_t max_depth = 256;
+
 
 #ifdef _DEBUG
 inline constexpr bool is_debug = true;
@@ -22,7 +25,7 @@ inline constexpr bool is_debug = false;
 // forceinlining everything doesn't seem to give performance benefits anymore
 // maybe not anymore, forceinlining everything seems to be the way to go now for some reason ? ? ?
 // there are functions that probably still shouldn't be inlined but forceinline as a default seems fine now
-#define forceinline __forceinline
+#define forceinline inline
 
 enum Color: uint8_t
 {
@@ -73,8 +76,20 @@ enum class Score : int32_t
 	LOSS = -10000,
 	DRAW = 0,
 	WIN = 10000,
-	POSITIVE_INF = 1000000
+	POSITIVE_INF = 1000000,
+	UNKNOWN = 1000001
 };
+
+forceinline constexpr Score operator-(const Score score)
+{
+	return static_cast<Score>(-static_cast<int32_t>(score));
+}
+
+forceinline std::ostream& operator<<(std::ostream& os, const Score score)
+{
+	os << static_cast<int32_t>(score);
+	return os;
+}
 
 
 using CastlingType = uint32_t;
