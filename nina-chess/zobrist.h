@@ -3,7 +3,8 @@
 
 inline constexpr uint64_t zobrist_side_to_move = 0x6969696969ULL;
 
-inline constexpr uint64_t zobrist_castling[0b10000] = {
+inline constexpr uint64_t zobrist_castling[0b10000] = 
+{
 	0x69, 0x6969, 0x696969, 0x69696969,
 	0x45, 0x4545, 0x454545, 0x45454545,
 	0x11, 0x1111, 0x111111, 0x11111111,
@@ -20,6 +21,7 @@ inline constexpr uint64_t zobrist_ep_square[num_board_squares + 1] =
 	0x09, 0x099, 0x099, 0x09999, 0x099999, 0x0999999, 0x099999999, 0x0999999999,
 	0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL,
 	0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL,
+	// no en pasant
 	0x1234567891011ULL
 };
 

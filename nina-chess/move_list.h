@@ -1,6 +1,8 @@
 #pragma once
 #include "utils.h"
 
+#include "move.h"
+
 struct MoveList
 {
 	Move moves[100];

@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include "attacks.h"
+#include "move.h"
 #include "side.h"
 
 struct Position

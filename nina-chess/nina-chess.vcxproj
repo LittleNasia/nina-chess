@@ -307,6 +307,7 @@
     <ClCompile Include="evaluator.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="nina-chess.cpp" />
+    <ClCompile Include="search.cpp" />
     <ClCompile Include="test_main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -314,6 +315,7 @@
     <ClInclude Include="bitmasks.h" />
     <ClInclude Include="board.h" />
     <ClInclude Include="evaluator.h" />
+    <ClInclude Include="move.h" />
     <ClInclude Include="move_list.h" />
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
@@ -327,6 +329,7 @@
   <ItemGroup>
     <None Include="board.inl" />
     <None Include="position.inl" />
+    <None Include="search.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
