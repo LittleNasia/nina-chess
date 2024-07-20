@@ -53,7 +53,7 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 	bool parsing_fen = true;
 	int curr_depth;
 	std::string fen;
-	Position* curr_pos = new Position(raw_hash_history);
+	Position* curr_pos = new Position();
 	size_t combined_nodes = 0;
 	float total_duration = 0;
 	while (perft_test_suite >> token)
@@ -68,7 +68,7 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 			}
 			parsing_fen = false;
 			delete curr_pos;
-			curr_pos = new Position(position::ParseFen(fen, raw_hash_history));
+			curr_pos = new Position(position::ParseFen(fen));
 			
 			perft_test_suite >> expected_nodes;
 			parsing_fen = false;

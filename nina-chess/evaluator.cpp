@@ -35,7 +35,7 @@ Score Evaluator::Evaluate(const Position& position, const MoveList& move_list)
 
 	if (move_list.get_num_moves() == 0)
 	{
-		return move_list.checkers ? get_mated_score(position.ply) : get_score(0.0f);
+		return move_list.checkers ? get_mated_score(10) : get_score(0.0f);
 	}
 
 	float score = (float)(int(popcnt(position.GetSide<WHITE>().pieces)) - int(popcnt(position.GetSide<BLACK>().pieces)));

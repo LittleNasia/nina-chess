@@ -1,47 +1,41 @@
 #include "position.h"
 #include "zobrist.h"
 
-forceinline Position::Position(uint64_t* hash_history) :
+forceinline Position::Position() :
 	white_pieces(65280ULL, 66ULL, 36ULL, 129ULL, 16ULL, 8ULL),
 	black_pieces(71776119061217280ULL, 4755801206503243776ULL, 2594073385365405696ULL,
 		9295429630892703744ULL, 1152921504606846976ULL, 576460752303423488ULL),
 	occupied(18446462598732906495ULL), EP_square(0ULL), side_to_move(WHITE), castling(0b1111),
-	ply(0),
 	hash(CalculateHash()),
-	fifty_move_rule(0),
-	hash_history{ hash_history }
+	fifty_move_rule(0)
 {
 }
 
 forceinline Position::Position(const Side& white_pieces, const Side& black_pieces,
 		const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
-		const int ply, const uint32_t fifty_move_rule, uint64_t* hash_history) :
+		const uint32_t fifty_move_rule) :
 	white_pieces(white_pieces.pawns, white_pieces.knights, white_pieces.bishops, white_pieces.rooks, white_pieces.queens, white_pieces.king),
 	black_pieces(black_pieces.pawns, black_pieces.knights, black_pieces.bishops, black_pieces.rooks, black_pieces.queens, black_pieces.king),
 	occupied(this->white_pieces.pieces | this->black_pieces.pieces),
 	EP_square(EP_square),
 	castling(castling),
 	side_to_move(side_to_move),
-	ply(ply),
 	hash(CalculateHash()),
-	fifty_move_rule(fifty_move_rule),
-	hash_history{ hash_history }
+	fifty_move_rule(fifty_move_rule)
 {
 }
 
 forceinline Position::Position(const Side& white_pieces, const Side& black_pieces,
 		const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
-		const int ply, const uint32_t fifty_move_rule, const uint64_t hash, uint64_t* hash_history) :
+		const uint32_t fifty_move_rule, const uint64_t hash) :
 	white_pieces(white_pieces.pawns, white_pieces.knights, white_pieces.bishops, white_pieces.rooks, white_pieces.queens, white_pieces.king),
 	black_pieces(black_pieces.pawns, black_pieces.knights, black_pieces.bishops, black_pieces.rooks, black_pieces.queens, black_pieces.king),
 	occupied(this->white_pieces.pieces | this->black_pieces.pieces),
 	EP_square(EP_square),
 	castling(castling),
 	side_to_move(side_to_move),
-	ply(ply),
 	hash(hash),
-	fifty_move_rule(fifty_move_rule),
-	hash_history{ hash_history }
+	fifty_move_rule(fifty_move_rule)
 {
 }
 
@@ -76,25 +70,12 @@ forceinline uint64_t Position::CalculateHash() const
 
 forceinline constexpr bool Position::IsDrawn() const
 {
-	return IsFiftyMoveRule() || IsThreefoldRepetition() || IsInsufficientMaterial();
+	return IsFiftyMoveRule() || IsInsufficientMaterial();
 }
 
 forceinline constexpr bool Position::IsFiftyMoveRule() const
 {
 	return fifty_move_rule >= 100;
-}
-
-forceinline constexpr bool Position::IsThreefoldRepetition() const
-{
-	const uint64_t curr_hash = hash;
-	for (int past_pos_index = ply - 2; past_pos_index >= 2; past_pos_index -= 2)
-	{
-		if (hash_history[past_pos_index] == curr_hash)
-		{
-			return true;
-		}
-	}
-	return false;
 }
 
 forceinline constexpr bool Position::IsInsufficientMaterial() const
@@ -193,7 +174,6 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 	new_pos.hash ^= zobrist_ep_square[bit_index(pos.EP_square)];
 	new_pos.EP_square = 0ULL;
 	new_pos.fifty_move_rule++;
-	new_pos.ply++;
 	new_pos.side_to_move = opposite_color;
 	
 	Side& own_pieces(new_pos.GetSide<side_to_move>());
@@ -302,7 +282,6 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 		new_pos.hash ^= zobrist_castling[new_pos.castling];
 	}
 	
-	new_pos.hash_history[new_pos.ply] = new_pos.hash;
 	new_pos.UpdateOccupiedBitboard();
 
 	DEBUG_IF(new_pos.hash != new_pos.CalculateHash())
@@ -322,7 +301,7 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 	else if ( castling && !EP)  return MakeMove<side_to_move, true , false>(pos, m);
 	else if (!castling &&  EP)  return MakeMove<side_to_move, false, true >(pos, m);
 
-	return Position(pos.hash_history);
+	return Position();
 }
 
 forceinline Position position::MakeMove(const Position& pos, const Move& m)
@@ -339,5 +318,5 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 	else if (side_to_move == WHITE && !castling &&  EP)  return MakeMove<WHITE, false, true >(pos, m);
 	else if (side_to_move == BLACK && !castling &&  EP)  return MakeMove<BLACK, false, true >(pos, m);
 
-	return Position(pos.hash_history);
+	return Position();
 }

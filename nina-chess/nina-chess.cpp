@@ -45,12 +45,11 @@ void do_thing(const Position& pos)
 #if _UCI
 int main()
 {
-	std::unique_ptr<uint64_t[]> hash_history = std::make_unique<uint64_t[]>(max_ply);
 	std::unique_ptr<Evaluator> evaluator = std::make_unique<Evaluator>();
 
 
     TranspositionTable tt(128);
-	const Position position = position::ParseFen("4Qnk1/p4ppp/8/7n/2P5/2B1P3/PP3q1P/6RK b - - 0 1", hash_history.get());
+	const Position position = position::ParseFen("4Qnk1/p4ppp/8/7n/2P5/2B1P3/PP3q1P/6RK b - - 0 1");
     Board board(position, evaluator.get());
     const size_t depth = 8;
 

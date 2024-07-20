@@ -94,11 +94,10 @@ void position::PrintBoard(const Position& curr_pos)
 	std::cout << "\n";
 	std::cout << "castling: BLACK: ";
 	std::cout << bool(curr_pos.castling & 0b1000) << bool(curr_pos.castling & 0b0100) << " WHITE: " << bool(curr_pos.castling & 0b0010) << bool(curr_pos.castling & 0b0001) << "\n";
-	std::cout << "ply: " << curr_pos.ply << "\n";
 	std::cout << "side_to_move " << (curr_pos.side_to_move == WHITE ? "WHITE" : "BLACK");
 }
 
-Position position::ParseFen(const std::string_view fen, uint64_t* hash_history)
+Position position::ParseFen(const std::string_view fen)
 {
 	int row = 7;
 	int col = 7;
@@ -272,5 +271,5 @@ Position position::ParseFen(const std::string_view fen, uint64_t* hash_history)
 	return Position(
 		white_pieces,
 		black_pieces,
-		EP_square, castling_rights, side_to_move, ply, fifty_move_rule, hash_history);
+		EP_square, castling_rights, side_to_move, fifty_move_rule);
 }

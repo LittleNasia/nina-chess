@@ -2,9 +2,9 @@
 
 #include <stdexcept>
 
-Board::Board(Evaluator* evaluator, uint64_t* hash_history):
+Board::Board(Evaluator* evaluator):
 	evaluator(evaluator),
-	position(hash_history)
+	position()
 {
 }
 

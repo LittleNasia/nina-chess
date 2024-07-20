@@ -8,7 +8,7 @@
 class Board
 {
 public:
-	Board(Evaluator* evaluator, uint64_t* hash_history);
+	Board(Evaluator* evaluator);
 	Board(const Position position, Evaluator* evaluator);
 
 	Board MakeMove(const Move move) const;
