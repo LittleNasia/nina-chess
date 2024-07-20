@@ -11,10 +11,11 @@
 void do_thing(const Position& pos)
 {
     std::unique_ptr<MoveList[]> move_lists = std::make_unique<MoveList[]>(max_depth);
-    SearchInfo search_info{ 0, move_lists.get() };
+	TranspositionTable tt(1);
+	SearchInfo search_info{ 0, 0, move_lists.get(), tt };
     while (true)
     {
-        const auto& moves = generate_moves(pos);
+        const auto& moves = generate_moves(pos, search_info.GetMoveList());
         position::PrintBoard(pos);
         std::cout << "enter the depth of perft\n";
         int depth = 1;
@@ -26,11 +27,11 @@ void do_thing(const Position& pos)
             size_t nodes = 0;
             if (pos.side_to_move == WHITE)
             {
-                perft<WHITE>(position::MakeMove(pos, curr_move), nodes, depth);
+                perft<WHITE>(position::MakeMove(pos, curr_move), nodes, search_info);
             }
             else
             {
-                perft<BLACK>(position::MakeMove(pos, curr_move), nodes, depth);
+                perft<BLACK>(position::MakeMove(pos, curr_move), nodes, search_info);
             }
             std::cout << " nodes: " << nodes << "\n";
         }
@@ -47,10 +48,14 @@ int main()
 	std::unique_ptr<uint64_t[]> hash_history = std::make_unique<uint64_t[]>(max_ply);
 	std::unique_ptr<Evaluator> evaluator = std::make_unique<Evaluator>();
 
+
     TranspositionTable tt(128);
 	const Position position = position::ParseFen("4Qnk1/p4ppp/8/7n/2P5/2B1P3/PP3q1P/6RK b - - 0 1", hash_history.get());
     Board board(position, evaluator.get());
     const size_t depth = 8;
+
+    if (!test_perft(false))
+        return 1;
 
 	const auto& result = start_search(board, depth, tt);
 

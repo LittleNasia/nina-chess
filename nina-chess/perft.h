@@ -11,21 +11,24 @@
 #include "search_info.h"
 
 template<Color side_to_move>
-inline void perft(const Position& pos, size_t& nodes, int depth)
+inline void perft(const Position& pos, size_t& nodes, SearchInfo& search_info)
 {
-	if (depth <= 0)
+	if (search_info.remaining_depth <= 0)
 	{
 		nodes++;
 		return;
 	}
-	const auto& move_list = generate_moves<side_to_move>(pos);
+	const auto& move_list = generate_moves<side_to_move>(pos, search_info.GetMoveList());
 
 	constexpr Color opposite_side = get_opposite_color<side_to_move>();
 
 	for (uint32_t move_id = 0; move_id < move_list.get_num_moves(); move_id++)
 	{
 		const auto& new_pos = position::MakeMove<side_to_move>(pos, move_list.moves[move_id]);
-		perft<opposite_side>(new_pos, nodes, depth - 1);
+
+		search_info.IncrementDepth();
+		perft<opposite_side>(new_pos, nodes, search_info);
+		search_info.DecrementDepth();
 	}
 }
 
@@ -35,6 +38,10 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 {
 	std::unique_ptr<uint64_t[]> hash_history(new uint64_t[max_ply]);
 	uint64_t* raw_hash_history = hash_history.get();
+	std::unique_ptr<MoveList[]> move_list(new MoveList[max_depth]);
+	MoveList* move_list_ptr = move_list.get();
+	TranspositionTable tt(1);
+
 	std::ifstream perft_test_suite("perftsuite.epd");
 	if (!perft_test_suite.is_open())
 	{
@@ -85,14 +92,15 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 			if (!hideOutput)
 			std::cout << "testing on depth " << curr_depth << ", expected "
 				<< expected_nodes;// << ", received " <<  << "\n";
+			SearchInfo search_info = { 0, curr_depth, move_list_ptr, tt };
 			const auto start = std::chrono::high_resolution_clock::now();
 			if (curr_pos->side_to_move == WHITE)
 			{
-				perft<WHITE>(*curr_pos, curr_nodes, curr_depth);
+				perft<WHITE>(*curr_pos, curr_nodes, search_info);
 			}
 			else
 			{
-				perft<BLACK>(*curr_pos, curr_nodes, curr_depth);
+				perft<BLACK>(*curr_pos, curr_nodes, search_info);
 			}
 			const auto stop = std::chrono::high_resolution_clock::now();
 			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);

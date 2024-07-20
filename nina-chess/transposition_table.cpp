@@ -7,7 +7,7 @@ TranspositionTable::TranspositionTable(const size_t size_in_mb)
 	entries.resize(entry_count);
 }
 
-void TranspositionTable::Insert(TranspositionTableEntry& entry)
+void TranspositionTable::Insert(const TranspositionTableEntry& entry)
 {
 	const size_t index = entry.key % entries.size();
 	

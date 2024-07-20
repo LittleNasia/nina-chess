@@ -13,9 +13,16 @@ struct SearchResult
 	Score score = Score::DRAW;
 };
 
-template<Color side_to_move>
-Score search(const Board& board, const size_t depth, Score alpha, Score beta, TranspositionTable& tt);
+struct AlphaBeta
+{
+	Score alpha;
+	const Score beta;
+	forceinline constexpr AlphaBeta Invert() const { return { -beta, -alpha }; }
+};
 
-SearchResult start_search(const Board& board, const size_t depth, TranspositionTable& tt);
+template<Color side_to_move>
+Score search(const Board& board, AlphaBeta alpha_beta, SearchInfo& search_info);
+
+SearchResult start_search(const Board& board, const int depth, TranspositionTable& tt);
 
 #include "search.inl"

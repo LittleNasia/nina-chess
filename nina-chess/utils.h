@@ -25,7 +25,7 @@ inline constexpr bool is_debug = false;
 // forceinlining everything doesn't seem to give performance benefits anymore
 // maybe not anymore, forceinlining everything seems to be the way to go now for some reason ? ? ?
 // there are functions that probably still shouldn't be inlined but forceinline as a default seems fine now
-#define forceinline inline
+#define forceinline __forceinline
 
 enum Color: uint8_t
 {
@@ -70,14 +70,14 @@ forceinline constexpr PieceType operator++(PieceType& piece, int)
 }
 
 
-enum class Score : int32_t
+enum class Score : int16_t
 {
-	NEGATIVE_INF = -1000000,
+	NEGATIVE_INF = -10001,
 	LOSS = -10000,
 	DRAW = 0,
 	WIN = 10000,
-	POSITIVE_INF = 1000000,
-	UNKNOWN = 1000001
+	POSITIVE_INF = 10001,
+	UNKNOWN = 10002
 };
 
 forceinline constexpr Score operator-(const Score score)

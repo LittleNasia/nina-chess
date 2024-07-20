@@ -43,7 +43,7 @@ forceinline Position::Position(const Side& white_pieces, const Side& black_piece
 	ply(ply),
 	hash(hash),
 	fifty_move_rule(fifty_move_rule),
-	hash_history{hash_history}
+	hash_history{ hash_history }
 {
 	DEBUG_IF(hash != CalculateHash())
 		throw std::runtime_error("hashes don't match");

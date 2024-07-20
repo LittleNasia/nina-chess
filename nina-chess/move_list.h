@@ -3,9 +3,9 @@
 
 #include "move.h"
 
-struct MoveList
+struct alignas(64) MoveList
 {
-	alignas(64) Move moves[50];
+	alignas(64) Move moves[200];
 	forceinline constexpr MoveList() = default;
 	forceinline void push_move(const Move&& move)
 	{

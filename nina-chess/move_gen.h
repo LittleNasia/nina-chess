@@ -224,6 +224,7 @@ forceinline void write_knight_moves(MoveList& move_list, Bitboard movable_knight
 template<Color color, size_t castling, bool hasEP>
 forceinline MoveList& generate_moves(MoveList& move_list, const Position& Position)
 {
+	move_list.reset();
 	constexpr auto opposite_color = get_opposite_color<color>();
 	const auto& curr_pieces = Position.GetSide<color>();
 	const auto& opposite_pieces = Position.GetSide<opposite_color>();
@@ -405,10 +406,8 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 }
 
 template<Color side_to_move>
-forceinline MoveList generate_moves(const Position& position)
+forceinline MoveList& generate_moves(const Position& position, MoveList& move_list)
 {
-	MoveList move_list;
-
 	const bool EP = position.EP_square;
 	const Color color = position.side_to_move;
 	const CastlingType castling = position.GetCurrentCastling();
@@ -425,9 +424,8 @@ forceinline MoveList generate_moves(const Position& position)
 	return move_list;
 }
 
-forceinline MoveList generate_moves(const Position& position)
+forceinline MoveList& generate_moves(const Position& position, MoveList& move_list)
 {
-	MoveList move_list;
 	const bool EP = position.EP_square;
 	const Color color = position.side_to_move;
 	const CastlingType castling = position.GetCurrentCastling();
