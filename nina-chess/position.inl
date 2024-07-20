@@ -11,7 +11,6 @@ forceinline Position::Position(uint64_t* hash_history) :
 	fifty_move_rule(0),
 	hash_history{ hash_history }
 {
-	hash_history[ply] = hash;
 }
 
 forceinline Position::Position(const Side& white_pieces, const Side& black_pieces,
@@ -28,7 +27,6 @@ forceinline Position::Position(const Side& white_pieces, const Side& black_piece
 	fifty_move_rule(fifty_move_rule),
 	hash_history{ hash_history }
 {
-	hash_history[ply] = hash;
 }
 
 forceinline Position::Position(const Side& white_pieces, const Side& black_pieces,
@@ -45,9 +43,6 @@ forceinline Position::Position(const Side& white_pieces, const Side& black_piece
 	fifty_move_rule(fifty_move_rule),
 	hash_history{ hash_history }
 {
-	DEBUG_IF(hash != CalculateHash())
-		throw std::runtime_error("hashes don't match");
-	hash_history[ply] = hash;
 }
 
 forceinline constexpr CastlingType Position::GetCurrentCastling() const
@@ -143,6 +138,13 @@ forceinline constexpr bool Position::IsInsufficientMaterial() const
 	return false;
 }
 
+forceinline constexpr void Position::UpdateOccupiedBitboard()
+{
+	white_pieces.pieces = white_pieces.pawns | white_pieces.knights | white_pieces.bishops | white_pieces.rooks | white_pieces.queens | white_pieces.king;
+	black_pieces.pieces = black_pieces.pawns | black_pieces.knights | black_pieces.bishops | black_pieces.rooks | black_pieces.queens | black_pieces.king;
+	occupied = white_pieces.pieces | black_pieces.pieces;
+}
+
 
 template<Color side_to_move>
 forceinline constexpr uint64_t position::update_hash(uint64_t hash, const PieceType moving_piece, Bitboard move)
@@ -168,31 +170,47 @@ forceinline constexpr const Side& Position::GetSide() const
 	}
 }
 
+template<Color color>
+inline constexpr Side& Position::GetSide()
+{
+	if constexpr (color == WHITE)
+	{
+		return white_pieces;
+	}
+	else
+	{
+		return black_pieces;
+	}
+}
+
 template<Color side_to_move, bool castling, bool EP>
 forceinline Position position::MakeMove(const Position& pos, const Move& m)
 {
-	size_t new_hash = pos.hash;
-	new_hash ^= zobrist_side_to_move;
-	new_hash ^= zobrist_ep_square[bit_index(pos.EP_square)];
-	Bitboard EP_square = 0ULL;
-	uint32_t fifty_move_rule = pos.fifty_move_rule + 1;
-	CastlingType curr_castling_perms = pos.castling;
 	constexpr Color opposite_color = get_opposite_color<side_to_move>();
-	Side own_pieces(pos.GetSide<side_to_move>());
-	Side enemy_pieces(pos.GetSide<opposite_color>());
+
+	Position new_pos(pos);
+	new_pos.hash ^= zobrist_side_to_move;
+	new_pos.hash ^= zobrist_ep_square[bit_index(pos.EP_square)];
+	new_pos.EP_square = 0ULL;
+	new_pos.fifty_move_rule++;
+	new_pos.ply++;
+	new_pos.side_to_move = opposite_color;
+	
+	Side& own_pieces(new_pos.GetSide<side_to_move>());
+	Side& enemy_pieces(new_pos.GetSide<opposite_color>());
 	Side& white_pieces = (side_to_move == WHITE ? own_pieces : enemy_pieces);
 	Side& black_pieces = (side_to_move == BLACK ? own_pieces : enemy_pieces);
 	if constexpr (castling)
 	{
-		new_hash ^= zobrist_castling[curr_castling_perms];
+		new_pos.hash ^= zobrist_castling[new_pos.castling];
 		if (m.to() == queenside_castling_rook<side_to_move>())
 		{
 			const Bitboard rook_move_bb = (m.to() | queenside_castling_rook_dest<side_to_move>());
 			const Bitboard king_move_bb = (m.from() | queenside_castling_king_dest<side_to_move>());
 			own_pieces.rooks ^= rook_move_bb;
 			own_pieces.king ^= king_move_bb;
-			new_hash = update_hash<side_to_move>(new_hash, ROOK, rook_move_bb);
-			new_hash = update_hash<side_to_move>(new_hash, KING, king_move_bb);
+			new_pos.hash = update_hash<side_to_move>(new_pos.hash, ROOK, rook_move_bb);
+			new_pos.hash = update_hash<side_to_move>(new_pos.hash, KING, king_move_bb);
 		}
 		else if (m.to() == kingside_castling_rook<side_to_move>())
 		{
@@ -200,95 +218,97 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 			const Bitboard king_move_bb = (m.from() | kingside_castling_king_dest<side_to_move>());
 			own_pieces.rooks ^= rook_move_bb;
 			own_pieces.king ^= king_move_bb;
-			new_hash = update_hash<side_to_move>(new_hash, ROOK, rook_move_bb);
-			new_hash = update_hash<side_to_move>(new_hash, KING, king_move_bb);
+			new_pos.hash = update_hash<side_to_move>(new_pos.hash, ROOK, rook_move_bb);
+			new_pos.hash = update_hash<side_to_move>(new_pos.hash, KING, king_move_bb);
 		}
-		curr_castling_perms &= ~castling_perms<side_to_move>();
-		new_hash ^= zobrist_castling[curr_castling_perms];
-		new_hash ^= zobrist_ep_square[bit_index(EP_square)];
-
-		return Position(
-			white_pieces, black_pieces, EP_square, curr_castling_perms, opposite_color, pos.ply + 1, fifty_move_rule, new_hash, pos.hash_history
-		);
+		new_pos.castling &= ~castling_perms<side_to_move>();
+		new_pos.hash ^= zobrist_castling[new_pos.castling];
+		new_pos.hash ^= zobrist_ep_square[bit_index(new_pos.EP_square)];
 	}
-	if constexpr (EP)
+	else if constexpr (EP)
 	{
-		fifty_move_rule = 0;
+		new_pos.fifty_move_rule = 0;
 		const auto EP_index = bit_index(pos.EP_square);
 		const auto EP_victim = EP_victims_lookup[EP_index];
 		enemy_pieces.pawns ^= EP_victim;
 		own_pieces.pawns ^= (m.from() | pos.EP_square);
-		new_hash = update_hash<side_to_move>(new_hash, PAWN, (m.from() | pos.EP_square));
-		new_hash = update_hash<opposite_color>(new_hash, PAWN, EP_victim);
-		new_hash ^= zobrist_ep_square[bit_index(EP_square)];
-		return Position(
-			white_pieces, black_pieces, EP_square, curr_castling_perms, opposite_color, pos.ply + 1, fifty_move_rule, new_hash, pos.hash_history
-		);
+		new_pos.hash = update_hash<side_to_move>(new_pos.hash, PAWN, (m.from() | pos.EP_square));
+		new_pos.hash = update_hash<opposite_color>(new_pos.hash, PAWN, EP_victim);
+		new_pos.hash ^= zobrist_ep_square[bit_index(new_pos.EP_square)];
 	}
-	new_hash ^= zobrist_castling[curr_castling_perms];
-	// normal move, maybe capture
-
-	// remove castling perms because nobody wants them
-	if (m.piece() == KING)
+	else
 	{
-		curr_castling_perms &= ~castling_perms<side_to_move>();
-	}
-	
-	if (m.to() & enemy_pieces.pieces)
-	{
-		fifty_move_rule = 0;
-	
-		if(m.to() & enemy_pieces.pawns)
-			new_hash = update_hash<opposite_color>(new_hash, PAWN  , m.to());
-		else if (m.to() & enemy_pieces.knights)
-			new_hash = update_hash<opposite_color>(new_hash, KNIGHT, m.to());
-		else if (m.to() & enemy_pieces.bishops)
-			new_hash = update_hash<opposite_color>(new_hash, BISHOP, m.to());
-		else if (m.to() & enemy_pieces.rooks)
-			new_hash = update_hash<opposite_color>(new_hash, ROOK  , m.to());
-		else if (m.to() & enemy_pieces.queens)
-			new_hash = update_hash<opposite_color>(new_hash, QUEEN , m.to());
-		enemy_pieces.remove_pieces(m.to());
-	}
+		new_pos.hash ^= zobrist_castling[new_pos.castling];
+		// normal move, maybe capture
 
-	Bitboard& piece_bb = own_pieces.get_piece_bb(m.piece());
-	piece_bb ^= m.from() | m.to();
-	new_hash = update_hash<side_to_move>(new_hash, m.piece(), m.from() | m.to());
-
-	if (m.piece() == PAWN)
-	{
-		fifty_move_rule = 0;
-		if (std::abs((long long)bit_index(m.from()) - (long long)bit_index(m.to())) == 16)
+		// remove castling perms because nobody wants them
+		if (m.piece() == KING)
 		{
-			EP_square = get_pawn_advances<side_to_move>(m.from());
+			new_pos.castling &= ~castling_perms<side_to_move>();
 		}
-		if constexpr (side_to_move == WHITE)
+
+		if (m.to() & enemy_pieces.pieces)
 		{
-			piece_bb &= 0xffffffffffffff;
-			if (m.to() & ~0xffffffffffffff)
+			new_pos.fifty_move_rule = 0;
+
+			if (m.to() & enemy_pieces.pawns)
+				new_pos.hash = update_hash<opposite_color>(new_pos.hash, PAWN, m.to());
+			else if (m.to() & enemy_pieces.knights)
+				new_pos.hash = update_hash<opposite_color>(new_pos.hash, KNIGHT, m.to());
+			else if (m.to() & enemy_pieces.bishops)
+				new_pos.hash = update_hash<opposite_color>(new_pos.hash, BISHOP, m.to());
+			else if (m.to() & enemy_pieces.rooks)
+				new_pos.hash = update_hash<opposite_color>(new_pos.hash, ROOK, m.to());
+			else if (m.to() & enemy_pieces.queens)
+				new_pos.hash = update_hash<opposite_color>(new_pos.hash, QUEEN, m.to());
+			enemy_pieces.remove_pieces(m.to());
+		}
+
+		Bitboard& piece_bb = own_pieces.get_piece_bb(m.piece());
+		piece_bb ^= m.from() | m.to();
+		new_pos.hash = update_hash<side_to_move>(new_pos.hash, m.piece(), m.from() | m.to());
+
+		if (m.piece() == PAWN)
+		{
+			new_pos.fifty_move_rule = 0;
+			if (std::abs((long long)bit_index(m.from()) - (long long)bit_index(m.to())) == 16)
 			{
-				new_hash ^= zobrist_keys[bit_index(m.to())][WHITE_PAWN];
+				new_pos.EP_square = get_pawn_advances<side_to_move>(m.from());
+			}
+			if constexpr (side_to_move == WHITE)
+			{
+				piece_bb &= 0xffffffffffffff;
+				if (m.to() & ~0xffffffffffffff)
+				{
+					new_pos.hash ^= zobrist_keys[bit_index(m.to())][WHITE_PAWN];
+				}
+			}
+			else
+			{
+				piece_bb &= 0xffffffffffffff00;
+				if (m.to() & ~0xffffffffffffff00)
+				{
+					new_pos.hash ^= zobrist_keys[bit_index(m.to())][BLACK_PAWN];
+				}
+			}
+			if (m.promotion_piece() != PIECE_TYPE_NONE)
+			{
+				own_pieces.get_piece_bb(m.promotion_piece()) |= m.to();
+				new_pos.hash = update_hash<side_to_move>(new_pos.hash, m.promotion_piece(), m.to());
 			}
 		}
-		else
-		{
-			piece_bb &= 0xffffffffffffff00;
-			if (m.to() & ~0xffffffffffffff00)
-			{
-				new_hash ^= zobrist_keys[bit_index(m.to())][BLACK_PAWN];
-			}
-		}
-		if (m.promotion_piece() != PIECE_TYPE_NONE)
-		{
-			own_pieces.get_piece_bb(m.promotion_piece()) |= m.to();
-			new_hash = update_hash<side_to_move>(new_hash, m.promotion_piece(), m.to());
-		}
+		new_pos.castling &= update_castling_rights(white_pieces.rooks, black_pieces.rooks);
+		new_pos.hash ^= zobrist_ep_square[bit_index(new_pos.EP_square)];
+		new_pos.hash ^= zobrist_castling[new_pos.castling];
 	}
-	curr_castling_perms &= update_castling_rights(white_pieces.rooks, black_pieces.rooks);
-	new_hash ^= zobrist_ep_square[bit_index(EP_square)];
-	new_hash ^= zobrist_castling[curr_castling_perms];
-	return Position(white_pieces, black_pieces,
-		EP_square, curr_castling_perms, opposite_color, pos.ply + 1, fifty_move_rule, new_hash, pos.hash_history);
+	
+	new_pos.hash_history[new_pos.ply] = new_pos.hash;
+	new_pos.UpdateOccupiedBitboard();
+
+	DEBUG_IF(new_pos.hash != new_pos.CalculateHash())
+		throw std::runtime_error("hashes don't match");
+
+	return new_pos;
 }
 
 template<Color side_to_move>

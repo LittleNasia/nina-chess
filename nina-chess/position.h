@@ -27,6 +27,9 @@ struct Position
 	template<Color color>
 	constexpr const Side& GetSide() const;
 
+	template<Color color>
+	constexpr Side& GetSide();
+
 	forceinline constexpr CastlingType GetCurrentCastling() const;
 
 	forceinline uint64_t CalculateHash() const;
@@ -35,6 +38,8 @@ struct Position
 	forceinline constexpr bool IsFiftyMoveRule() const;
 	forceinline constexpr bool IsThreefoldRepetition() const;
 	forceinline constexpr bool IsInsufficientMaterial() const;
+
+	forceinline constexpr void UpdateOccupiedBitboard();
 
 	Side white_pieces;
 	Side black_pieces;

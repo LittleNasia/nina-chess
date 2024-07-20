@@ -16,7 +16,7 @@ SearchResult start_search(const Board& board, const int depth, TranspositionTabl
 	}
 	else
 	{
-		AlphaBeta alpha_beta = { Score::POSITIVE_INF, Score::NEGATIVE_INF };
+		AlphaBeta alpha_beta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
 		result.score = search<Color::BLACK>(board, alpha_beta, search_info);
 	}
 

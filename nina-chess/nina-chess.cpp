@@ -54,9 +54,6 @@ int main()
     Board board(position, evaluator.get());
     const size_t depth = 8;
 
-    if (!test_perft(false))
-        return 1;
-
 	const auto& result = start_search(board, depth, tt);
 
 	for (int pv_move_index = 0; pv_move_index < result.pv_length; pv_move_index++)
