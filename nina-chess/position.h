@@ -36,16 +36,16 @@ struct Position
 	forceinline constexpr bool IsThreefoldRepetition() const;
 	forceinline constexpr bool IsInsufficientMaterial() const;
 
-	const Side white_pieces;
-	const Side black_pieces;
+	Side white_pieces;
+	Side black_pieces;
 
-	const Bitboard occupied;
-	const Bitboard EP_square;
-	const CastlingType castling;
-	const Color side_to_move;
-	const int ply;
-	const uint64_t hash;
-	const uint32_t fifty_move_rule;
+	Bitboard occupied;
+	Bitboard EP_square;
+	CastlingType castling;
+	Color side_to_move;
+	int ply;
+	uint64_t hash;
+	uint32_t fifty_move_rule;
 
 	uint64_t* hash_history;
 };
