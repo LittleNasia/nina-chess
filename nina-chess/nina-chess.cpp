@@ -10,9 +10,9 @@
 
 void do_thing(const Position& pos)
 {
-    std::unique_ptr<MoveList[]> move_lists = std::make_unique<MoveList[]>(max_depth);
+    /*std::unique_ptr<MoveList[]> move_lists = std::make_unique<MoveList[]>(max_depth);
 	TranspositionTable tt(1);
-	SearchInfo search_info{ 0, 0, move_lists.get(), tt };
+	SearchStack search_info{ 0, 0, move_lists.get(), tt };
     while (true)
     {
         const auto& moves = generate_moves(pos, search_info.GetMoveList());
@@ -39,7 +39,7 @@ void do_thing(const Position& pos)
         int move_id_to_play;
         std::cin >> move_id_to_play;
         do_thing(position::MakeMove(pos, moves.moves[move_id_to_play]));
-    }
+    }*/
 }
 
 #if _UCI
@@ -47,18 +47,22 @@ int main()
 {
 	std::unique_ptr<Evaluator> evaluator = std::make_unique<Evaluator>();
 
-
     TranspositionTable tt(128);
-	const Position position = position::ParseFen("4Qnk1/p4ppp/8/7n/2P5/2B1P3/PP3q1P/6RK b - - 0 1");
+	Position position;// = position::ParseFen("4Qnk1/p4ppp/8/7n/2P5/2B1P3/PP3q1P/6RK b - - 0 1");
     Board board(position, evaluator.get());
-    const size_t depth = 8;
+    const size_t depth = 11;
 
+	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 	const auto& result = start_search(board, depth, tt);
+	std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
 
 	for (int pv_move_index = 0; pv_move_index < result.pv_length; pv_move_index++)
 	{
 		std::cout << "pv move: " << pv_move_index + 1 << " " << square_names[bit_index(result.pv[pv_move_index].from())] << " " << square_names[bit_index(result.pv[pv_move_index].to())] << "\n";
 	}
 	std::cout << "score " << result.score << "\n";
+    std::cout << "nodes " << result.nodes << "\n";
+	std::cout << "nps " << size_t(result.nodes / duration.count()) << "\n";
 }
 #endif

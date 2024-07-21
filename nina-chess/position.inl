@@ -165,21 +165,31 @@ inline constexpr Side& Position::GetSide()
 }
 
 template<Color side_to_move, bool castling, bool EP>
-forceinline Position position::MakeMove(const Position& pos, const Move& m)
+forceinline Position& position::MakeMove(const Position& pos, Position& new_pos, const Move& m)
 {
 	constexpr Color opposite_color = get_opposite_color<side_to_move>();
 
-	Position new_pos(pos);
+	// copy the old position's info first
+	new_pos.white_pieces = pos.white_pieces;
+	new_pos.black_pieces = pos.black_pieces;
+	new_pos.occupied = pos.occupied;
+	new_pos.castling = pos.castling;
+	new_pos.hash = pos.hash;
+	new_pos.fifty_move_rule = pos.fifty_move_rule;
+	
+	//update all the things that are easy to update
 	new_pos.hash ^= zobrist_side_to_move;
 	new_pos.hash ^= zobrist_ep_square[bit_index(pos.EP_square)];
 	new_pos.EP_square = 0ULL;
 	new_pos.fifty_move_rule++;
 	new_pos.side_to_move = opposite_color;
 	
+	// start making the move
 	Side& own_pieces(new_pos.GetSide<side_to_move>());
 	Side& enemy_pieces(new_pos.GetSide<opposite_color>());
 	Side& white_pieces = (side_to_move == WHITE ? own_pieces : enemy_pieces);
 	Side& black_pieces = (side_to_move == BLACK ? own_pieces : enemy_pieces);
+
 	if constexpr (castling)
 	{
 		new_pos.hash ^= zobrist_castling[new_pos.castling];
@@ -291,32 +301,32 @@ forceinline Position position::MakeMove(const Position& pos, const Move& m)
 }
 
 template<Color side_to_move>
-forceinline Position position::MakeMove(const Position& pos, const Move& m)
+forceinline Position& position::MakeMove(const Position& pos, Position& new_pos, const Move& m)
 {
 	const auto& own_pieces = pos.GetSide<side_to_move>();
 	const bool castling = m.is_castling();
 	const bool EP = m.is_EP();
 
-	if		(!castling && !EP)  return MakeMove<side_to_move, false, false>(pos, m); 
-	else if ( castling && !EP)  return MakeMove<side_to_move, true , false>(pos, m);
-	else if (!castling &&  EP)  return MakeMove<side_to_move, false, true >(pos, m);
+	if		(!castling && !EP) MakeMove<side_to_move, false, false>(pos, new_pos, m);
+	else if ( castling && !EP) MakeMove<side_to_move, true , false>(pos, new_pos, m);
+	else if (!castling &&  EP) MakeMove<side_to_move, false, true >(pos, new_pos, m);
 
-	return Position();
+	return new_pos;
 }
 
-forceinline Position position::MakeMove(const Position& pos, const Move& m)
+forceinline Position& position::MakeMove(const Position& pos, Position& new_pos, const Move& m)
 {
 	const auto& side_to_move = pos.side_to_move;
 	const auto& own_pieces = ((pos.side_to_move == WHITE) ? pos.white_pieces : pos.black_pieces);
 	const bool castling = m.is_castling();
 	const bool EP = m.is_EP();
 
-	if		(side_to_move == WHITE && !castling && !EP)  return MakeMove<WHITE, false, false>(pos, m);
-	else if (side_to_move == BLACK && !castling && !EP)  return MakeMove<BLACK, false, false>(pos, m);
-	else if (side_to_move == WHITE &&  castling && !EP)  return MakeMove<WHITE, true , false>(pos, m);
-	else if (side_to_move == BLACK &&  castling && !EP)  return MakeMove<BLACK, true , false>(pos, m);
-	else if (side_to_move == WHITE && !castling &&  EP)  return MakeMove<WHITE, false, true >(pos, m);
-	else if (side_to_move == BLACK && !castling &&  EP)  return MakeMove<BLACK, false, true >(pos, m);
+	if		(side_to_move == WHITE && !castling && !EP) MakeMove<WHITE, false, false>(pos, new_pos, m);
+	else if (side_to_move == BLACK && !castling && !EP) MakeMove<BLACK, false, false>(pos, new_pos, m);
+	else if (side_to_move == WHITE &&  castling && !EP) MakeMove<WHITE, true , false>(pos, new_pos, m);
+	else if (side_to_move == BLACK &&  castling && !EP) MakeMove<BLACK, true , false>(pos, new_pos, m);
+	else if (side_to_move == WHITE && !castling &&  EP) MakeMove<WHITE, false, true >(pos, new_pos, m);
+	else if (side_to_move == BLACK && !castling &&  EP) MakeMove<BLACK, false, true >(pos, new_pos, m);
 
-	return Position();
+	return new_pos;
 }

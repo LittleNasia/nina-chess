@@ -2,34 +2,24 @@
 
 #include <stdexcept>
 
-Board::Board(Evaluator* evaluator):
+Board::Board(Position& position, Evaluator* evaluator):
 	evaluator(evaluator),
-	position()
+	position(&position)
 {
 }
 
-Board::Board(const Position position, Evaluator* evaluator):
-	evaluator(evaluator),
-	position(position)
+Board Board::MakeMove(const Move& move, SearchStack& search_stack) const
 {
+	Position& new_position = search_stack.GetNextPosition();
+	position::MakeMove(*position, new_position, move);
+	return Board(new_position, evaluator);
 }
 
-Board Board::MakeMove(const Move move) const
-{
-	return Board(evaluator, position::MakeMove(position, move));
-}
-
-Score Board::Evaluate(const MoveList& move_list) const
+Score Board::Evaluate(const MoveList& move_list, const SearchStack& search_stack) const
 {
 	DEBUG_IF(evaluator == nullptr)
 	{
 		throw std::runtime_error("Evaluator is not set");
 	}
-	return evaluator->Evaluate(position, move_list);
-}
-
-Board::Board(Evaluator* evaluator, const Position&& position):
-	evaluator(evaluator),
-	position(position)
-{
+	return evaluator->Evaluate(*position, move_list, search_stack);
 }

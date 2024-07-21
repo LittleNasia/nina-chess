@@ -3,7 +3,7 @@
 
 #include "board.h"
 #include "move.h"
-#include "search_info.h"
+#include "search_stack.h"
 #include "transposition_table.h"
 
 struct SearchResult
@@ -11,6 +11,7 @@ struct SearchResult
 	Move pv[max_depth];
 	size_t pv_length = 0ULL;
 	Score score = Score::DRAW;
+	size_t nodes = 0;
 };
 
 struct AlphaBeta
@@ -21,7 +22,7 @@ struct AlphaBeta
 };
 
 template<Color side_to_move>
-Score search(const Board& board, AlphaBeta alpha_beta, SearchInfo& search_info);
+Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& search_info);
 
 SearchResult start_search(const Board& board, const int depth, TranspositionTable& tt);
 

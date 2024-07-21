@@ -86,7 +86,7 @@
     <ClInclude Include="transposition_table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="search_info.h">
+    <ClInclude Include="search_stack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

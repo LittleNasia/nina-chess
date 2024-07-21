@@ -58,12 +58,12 @@ struct Position
 namespace position
 {
 	template<Color side_to_move, bool castling, bool EP>
-	forceinline Position MakeMove(const Position& pos, const Move& m);
+	forceinline Position& MakeMove(const Position& pos, Position& new_pos, const Move& m);
 
 	template<Color side_to_move>
-	forceinline Position MakeMove(const Position& pos, const Move& m);
+	forceinline Position& MakeMove(const Position& pos, Position& new_pos, const Move& m);
 
-	forceinline Position MakeMove(const Position& pos, const Move& m);
+	forceinline Position& MakeMove(const Position& pos, Position& new_pos, const Move& m);
 
 	template<Color side_to_move>
 	forceinline constexpr uint64_t update_hash(uint64_t hash, const PieceType moving_piece, Bitboard move);

@@ -9,7 +9,7 @@ TranspositionTable::TranspositionTable(const size_t size_in_mb)
 
 void TranspositionTable::Insert(const TranspositionTableEntry& entry)
 {
-	const size_t index = entry.key % entries.size();
+	const size_t index = ((entry.key >> 32) * (entries.size())) >> 32;
 	
 	const auto& curr_entry = entries[index];
 	if (curr_entry.depth < entry.depth)
@@ -20,6 +20,6 @@ void TranspositionTable::Insert(const TranspositionTableEntry& entry)
 
 const TranspositionTableEntry& TranspositionTable::Get(const uint64_t key) const
 {
-	const size_t index = key % entries.size();
+	const size_t index = ((key>>32) * (entries.size())) >> 32;
 	return entries[index];
 }

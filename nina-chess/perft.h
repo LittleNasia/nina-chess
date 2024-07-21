@@ -8,10 +8,10 @@
 
 #include "move_gen.h"
 #include "position.h"
-#include "search_info.h"
+#include "search_stack.h"
 
 template<Color side_to_move>
-inline void perft(const Position& pos, size_t& nodes, SearchInfo& search_info)
+inline void perft(const Position& pos, size_t& nodes, SearchStack& search_info)
 {
 	if (search_info.remaining_depth <= 0)
 	{
@@ -22,9 +22,11 @@ inline void perft(const Position& pos, size_t& nodes, SearchInfo& search_info)
 
 	constexpr Color opposite_side = get_opposite_color<side_to_move>();
 
+	Position& new_pos = search_info.GetNextPosition();
+
 	for (uint32_t move_id = 0; move_id < move_list.get_num_moves(); move_id++)
 	{
-		const auto& new_pos = position::MakeMove<side_to_move>(pos, move_list.moves[move_id]);
+		position::MakeMove<side_to_move>(pos, new_pos, move_list.moves[move_id]);
 
 		search_info.IncrementDepth();
 		perft<opposite_side>(new_pos, nodes, search_info);
@@ -56,6 +58,18 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 	Position* curr_pos = new Position();
 	size_t combined_nodes = 0;
 	float total_duration = 0;
+
+	SearchStack search_stack;
+
+	// allocate the memory
+	std::unique_ptr<MoveList[]> move_lists = std::make_unique<MoveList[]>(8 + 1);
+	std::unique_ptr<Position[]> positions = std::make_unique<Position[]>(8 + 1);
+	std::unique_ptr<uint64_t[]> hashes = std::make_unique<uint64_t[]>(8 + 1);
+	search_stack.move_list_stack = move_lists.get();
+	search_stack.position_stack = positions.get();
+	search_stack.hash_stack = hashes.get();
+	search_stack.tt = &tt;
+
 	while (perft_test_suite >> token)
 	{
 		size_t expected_nodes;
@@ -92,17 +106,21 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 			if (!hideOutput)
 			std::cout << "testing on depth " << curr_depth << ", expected "
 				<< expected_nodes;// << ", received " <<  << "\n";
-			SearchInfo search_info = { 0, curr_depth, move_list_ptr, tt };
+
+			search_stack.depth = 0;
+			search_stack.remaining_depth = curr_depth;
+
 			const auto start = std::chrono::high_resolution_clock::now();
 			if (curr_pos->side_to_move == WHITE)
 			{
-				perft<WHITE>(*curr_pos, curr_nodes, search_info);
+				perft<WHITE>(*curr_pos, curr_nodes, search_stack);
 			}
 			else
 			{
-				perft<BLACK>(*curr_pos, curr_nodes, search_info);
+				perft<BLACK>(*curr_pos, curr_nodes, search_stack);
 			}
 			const auto stop = std::chrono::high_resolution_clock::now();
+
 			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 			if (!hideOutput)
 			std::cout << ", received " << curr_nodes << "\n";

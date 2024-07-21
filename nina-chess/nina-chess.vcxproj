@@ -234,6 +234,9 @@
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <Optimization>MaxSpeed</Optimization>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <AssemblerOutput>All</AssemblerOutput>
+      <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -325,7 +328,7 @@
     <ClInclude Include="position.h" />
     <ClInclude Include="move_gen.h" />
     <ClInclude Include="search.h" />
-    <ClInclude Include="search_info.h" />
+    <ClInclude Include="search_stack.h" />
     <ClInclude Include="side.h" />
     <ClInclude Include="targets.h" />
     <ClInclude Include="transposition_table.h" />

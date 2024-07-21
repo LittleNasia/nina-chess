@@ -70,7 +70,7 @@ forceinline constexpr PieceType operator++(PieceType& piece, int)
 }
 
 
-enum class Score : int16_t
+enum class Score : int32_t
 {
 	NEGATIVE_INF = -10001,
 	LOSS = -10000,
