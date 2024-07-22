@@ -11,6 +11,7 @@ struct alignas(64) MoveList
 	{
 		moves[num_moves++] = move;
 	}
+
 	forceinline void reset()
 	{
 		num_moves = 0;
@@ -21,6 +22,7 @@ struct alignas(64) MoveList
 		checkers = 0;
 		attacked_squares = 0;
 	}
+
 	forceinline constexpr uint32_t get_num_moves() const { return num_moves; }
 
 	Bitboard piece_moves[PIECE_TYPE_NONE] = { 0,0,0,0,0,0 };

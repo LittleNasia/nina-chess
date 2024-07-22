@@ -38,10 +38,6 @@ inline void perft(const Position& pos, size_t& nodes, SearchStack& search_info)
 
 inline size_t test_perft(const bool hideOutput = false, const size_t node_limit = std::numeric_limits<size_t>::max())
 {
-	std::unique_ptr<uint64_t[]> hash_history(new uint64_t[max_ply]);
-	uint64_t* raw_hash_history = hash_history.get();
-	std::unique_ptr<MoveList[]> move_list(new MoveList[max_depth]);
-	MoveList* move_list_ptr = move_list.get();
 	TranspositionTable tt(1);
 
 	std::ifstream perft_test_suite("perftsuite.epd");
@@ -50,26 +46,20 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 		std::cout << "could not find the test suite\n";
 		return false;
 	}
-	std::string token;
-
-	bool parsing_fen = true;
-	int curr_depth;
+	
 	std::string fen;
 	Position* curr_pos = new Position();
+	int curr_depth = 0;
+	bool parsing_fen = true;
+	
+	const size_t max_depth = 10;
+	SearchStack search_stack(max_depth, tt);
+	search_stack.SetCurrentPositionHash();
+
 	size_t combined_nodes = 0;
 	float total_duration = 0;
 
-	SearchStack search_stack;
-
-	// allocate the memory
-	std::unique_ptr<MoveList[]> move_lists = std::make_unique<MoveList[]>(8 + 1);
-	std::unique_ptr<Position[]> positions = std::make_unique<Position[]>(8 + 1);
-	std::unique_ptr<uint64_t[]> hashes = std::make_unique<uint64_t[]>(8 + 1);
-	search_stack.move_list_stack = move_lists.get();
-	search_stack.position_stack = positions.get();
-	search_stack.hash_stack = hashes.get();
-	search_stack.tt = &tt;
-
+	std::string token;
 	while (perft_test_suite >> token)
 	{
 		size_t expected_nodes;
@@ -80,7 +70,7 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 			{
 				std::cout << "parsing fen " << fen << "\n";
 			}
-			parsing_fen = false;
+
 			delete curr_pos;
 			curr_pos = new Position(position::ParseFen(fen));
 			
@@ -103,9 +93,9 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 		if (expected_nodes < node_limit)
 		{
 			combined_nodes += expected_nodes;
+
 			if (!hideOutput)
-			std::cout << "testing on depth " << curr_depth << ", expected "
-				<< expected_nodes;// << ", received " <<  << "\n";
+				std::cout << "testing on depth " << curr_depth << ", expected " << expected_nodes;
 
 			search_stack.depth = 0;
 			search_stack.remaining_depth = curr_depth;
@@ -120,11 +110,12 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 				perft<BLACK>(*curr_pos, curr_nodes, search_stack);
 			}
 			const auto stop = std::chrono::high_resolution_clock::now();
-
 			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-			if (!hideOutput)
-			std::cout << ", received " << curr_nodes << "\n";
 			total_duration += float(duration.count()) / 1000000;
+
+			if (!hideOutput)
+				std::cout << ", received " << curr_nodes << "\n";
+
 			if (expected_nodes != curr_nodes)
 			{
 				std::cout << "found error in position\n";
@@ -134,8 +125,11 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 			}
 		}
 	}
+
 	size_t nps = (size_t)(combined_nodes / total_duration);
+
 	if(!hideOutput)
-	std::cout << "nps: " << (size_t)(combined_nodes / total_duration) << "\n";
+		std::cout << "nps: " << (size_t)(combined_nodes / total_duration) << "\n";
+
 	return nps;
 }

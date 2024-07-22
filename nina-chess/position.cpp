@@ -3,78 +3,61 @@
 #include <iostream>
 #include <sstream>
 
+template<Color side_to_move>
+forceinline constexpr char GetPieceChar(const Side& side, const Bitboard bit)
+{
+	if (side.pawns & bit)
+		return side_to_move == WHITE ? 'P' : 'p';
+	if (side.knights & bit)
+		return side_to_move == WHITE ? 'N' : 'n';
+	if (side.bishops & bit)
+		return side_to_move == WHITE ? 'B' : 'b';
+	if (side.rooks & bit)
+		return side_to_move == WHITE ? 'R' : 'r';
+	if (side.queens & bit)
+		return side_to_move == WHITE ? 'Q' : 'q';
+	if (side.king & bit)
+		return side_to_move == WHITE ? 'K' : 'k';
+	return ' ';
+}
+
+forceinline constexpr char GetPieceChar(const Position& pos, const Bitboard bit)
+{
+	if (bit & ~pos.occupied)
+		return ' ';
+	else if (bit & pos.white_pieces.pieces)
+		return GetPieceChar<WHITE>(pos.white_pieces, bit);
+	else
+		return GetPieceChar<BLACK>(pos.black_pieces, bit);
+}
+
 void position::PrintBoard(const Position& curr_pos)
 {
+	// rank names and pieces
 	int rank = 8;
 	for (int square = 63; square >= 0; square--)
 	{
-		if ((square + 1) % 8 == 0)
+		const Bitboard curr_bit = 1ULL << square;
+
+		if ((square + 1) % board_cols == 0)
 		{
 			std::cout << "\n";
 			std::cout << rank-- << ' ';
 		}
-		std::cout << '[';
-		const Bitboard curr_bit = 1ULL << square;
-		if (curr_pos.white_pieces.pawns & curr_bit)
-		{
-			std::cout << 'P';
-		}
-		else if (curr_pos.white_pieces.knights & curr_bit)
-		{
-			std::cout << 'N';
-		}
-		else if (curr_pos.white_pieces.bishops & curr_bit)
-		{
-			std::cout << 'B';
-		}
-		else if (curr_pos.white_pieces.rooks & curr_bit)
-		{
-			std::cout << 'R';
-		}
-		else if (curr_pos.white_pieces.queens & curr_bit)
-		{
-			std::cout << 'Q';
-		}
-		else if (curr_pos.white_pieces.king & curr_bit)
-		{
-			std::cout << 'K';
-		}
 
-		else if (curr_pos.black_pieces.pawns & curr_bit)
-		{
-			std::cout << 'p';
-		}
-		else if (curr_pos.black_pieces.knights & curr_bit)
-		{
-			std::cout << 'n';
-		}
-		else if (curr_pos.black_pieces.bishops & curr_bit)
-		{
-			std::cout << 'b';
-		}
-		else if (curr_pos.black_pieces.rooks & curr_bit)
-		{
-			std::cout << 'r';
-		}
-		else if (curr_pos.black_pieces.queens & curr_bit)
-		{
-			std::cout << 'q';
-		}
-		else if (curr_pos.black_pieces.king & curr_bit)
-		{
-			std::cout << 'k';
-		}
-		else
-		{
-			std::cout << ' ';
-		}
+		std::cout << '[';
+		std::cout << GetPieceChar(curr_pos, curr_bit);
 		std::cout << ']';
 	}
+
+	// file names
 	std::cout << "\n  ";
 	for (int file = 0; file < 8; file++)
 	{
 		std::cout << ' ' << char('a' + file) << ' ';
 	}
+
+	// occupied bitboard
 	std::cout << "\n\n";
 	for (int square = 63; square >= 0; square--)
 	{
@@ -82,15 +65,13 @@ void position::PrintBoard(const Position& curr_pos)
 		{
 			std::cout << "\n";
 		}
+
 		std::cout << "[";
-		if (curr_pos.occupied & (1ULL << square))
-		{
-			std::cout << "X";
-		}
-		else
-			std::cout << " ";
+		std::cout << (curr_pos.occupied & (1ULL << square) ? "X" : " ");
 		std::cout << "]";
 	}
+
+	// misc info
 	std::cout << "\n";
 	std::cout << "castling: BLACK: ";
 	std::cout << bool(curr_pos.castling & 0b1000) << bool(curr_pos.castling & 0b0100) << " WHITE: " << bool(curr_pos.castling & 0b0010) << bool(curr_pos.castling & 0b0001) << "\n";

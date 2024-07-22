@@ -28,17 +28,13 @@ Evaluator::Evaluator()
 
 Score Evaluator::Evaluate(const Position& position, const MoveList& move_list, const SearchStack& search_stack)
 {
-	if (position.IsDrawn())
-	{
-		return Score::DRAW;
-	}
-
 	if (move_list.get_num_moves() == 0)
 	{
 		return move_list.checkers ? get_mated_score(search_stack.depth) : get_score(0.0f);
 	}
 
-	float score = (float)(int(popcnt(position.GetSide<WHITE>().pieces)) - int(popcnt(position.GetSide<BLACK>().pieces)));
+	float score = (float)(int(popcnt(position.GetSide<WHITE>().pieces)) - int(popcnt(position.GetSide<BLACK>().pieces))) / 16.f;
+	score *= (position.side_to_move == WHITE ? 1 : -1);
 
-	return get_score(score/16);
+	return get_score(score);
 }

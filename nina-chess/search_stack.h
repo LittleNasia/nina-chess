@@ -7,13 +7,21 @@
 
 struct SearchStack
 {
-	int depth = 0;
-	int remaining_depth = 0;
-	size_t nodes = 0;
+public:
+	forceinline SearchStack(const int depth, TranspositionTable& tt):
+		depth(0),
+		remaining_depth(depth),
+		nodes(0),
+		tt(&tt),
+		move_list_stack(std::make_unique<MoveList[]>(depth + 1)),
+		position_stack(std::make_unique<Position[]>(depth + 1)),
+		hash_stack(std::make_unique<uint64_t[]>(depth + 1))
+	{
+	}
 
-	MoveList* move_list_stack;
-	Position* position_stack;
-	uint64_t* hash_stack;
+	int depth;
+	int remaining_depth;
+	size_t nodes;
 
 	TranspositionTable* tt;
 
@@ -30,6 +38,8 @@ struct SearchStack
 		++remaining_depth;
 	}
 
+	forceinline constexpr void SetCurrentPosition(const Position& position) { position_stack[depth] = position; }
+
 	forceinline constexpr const Position& GetCurrentPosition() const { return position_stack[depth]; }
 
 	forceinline constexpr Position& GetNextPosition() { return position_stack[depth + 1]; }
@@ -37,4 +47,13 @@ struct SearchStack
 	forceinline constexpr MoveList& GetMoveList() { return move_list_stack[depth]; }
 
 	forceinline constexpr void SetCurrentPositionHash() { hash_stack[depth] = GetCurrentPosition().hash; }
+
+	forceinline constexpr void SetNextPositionHash() { hash_stack[depth + 1] = GetNextPosition().hash; }
+	
+	forceinline constexpr uint64_t GetHashAtPly(const int ply) const { return hash_stack[ply]; }
+
+private:
+	std::unique_ptr<MoveList[]> move_list_stack;
+	std::unique_ptr<Position[]> position_stack;
+	std::unique_ptr<uint64_t[]> hash_stack;
 };

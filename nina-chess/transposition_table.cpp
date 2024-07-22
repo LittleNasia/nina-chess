@@ -1,5 +1,10 @@
 #include "transposition_table.h"
 
+forceinline constexpr uint32_t fast_modulo(const size_t input, const size_t ceil)
+{
+	return ((input >> 32) * (ceil)) >> 32;
+}
+
 TranspositionTable::TranspositionTable(const size_t size_in_mb)
 {
 	const size_t size_in_bytes = size_in_mb * 1024 * 1024;
@@ -9,7 +14,7 @@ TranspositionTable::TranspositionTable(const size_t size_in_mb)
 
 void TranspositionTable::Insert(const TranspositionTableEntry& entry)
 {
-	const size_t index = ((entry.key >> 32) * (entries.size())) >> 32;
+	const size_t index = fast_modulo(entry.key, entries.size());
 	
 	const auto& curr_entry = entries[index];
 	if (curr_entry.depth < entry.depth)
@@ -20,6 +25,7 @@ void TranspositionTable::Insert(const TranspositionTableEntry& entry)
 
 const TranspositionTableEntry& TranspositionTable::Get(const uint64_t key) const
 {
-	const size_t index = ((key>>32) * (entries.size())) >> 32;
+	const size_t index = fast_modulo(key, entries.size());
+
 	return entries[index];
 }

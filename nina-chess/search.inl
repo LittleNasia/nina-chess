@@ -4,6 +4,7 @@ forceinline Score get_score_from_tt(const Position& position,
 		const AlphaBeta& alpha_beta, const SearchStack& search_stack)
 {
 	const TranspositionTableEntry& tt_entry = search_stack.GetTranspositionTable().Get(position.hash);
+
 	if (tt_entry.key == position.hash)
 	{
 		if (tt_entry.depth >= search_stack.remaining_depth)
@@ -12,11 +13,13 @@ forceinline Score get_score_from_tt(const Position& position,
 			{
 				return tt_entry.score;
 			}
-			else if (tt_entry.flag == TTFlag::ALPHA && tt_entry.score <= alpha_beta.alpha)
+			else if (tt_entry.flag == TTFlag::ALPHA &&
+				tt_entry.score <= alpha_beta.alpha)
 			{
 				return alpha_beta.alpha;
 			}
-			else if (tt_entry.flag == TTFlag::BETA && tt_entry.score >= alpha_beta.beta)
+			else if (tt_entry.flag == TTFlag::BETA &&
+				tt_entry.score >= alpha_beta.beta)
 			{
 				return alpha_beta.beta;
 			}
@@ -40,15 +43,24 @@ inline Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& searc
 		return score;
 	}
 
-	// is this leaf node
-	const MoveList& move_list = search_stack.GetMoveList();
-	generate_moves<side_to_move>(position, search_stack.GetMoveList());
-	if (search_stack.remaining_depth == 0)
+	// is position drawn
+	if(board.IsDrawn(search_stack))
 	{
 		search_stack.nodes++;
+		return Score::DRAW;
+	}
+
+	// is leaf node for another reason
+	const MoveList& move_list = search_stack.GetMoveList();
+	generate_moves<side_to_move>(position, search_stack.GetMoveList());
+	if (search_stack.remaining_depth == 0 || move_list.get_num_moves() == 0)
+	{
 		score = board.Evaluate(move_list, search_stack);
+
 		const TranspositionTableEntry entry = { position.hash, score, search_stack.remaining_depth, Move(), TTFlag::EXACT };
 		search_stack.GetTranspositionTable().Insert(entry);
+
+		search_stack.nodes++;
 		return score;
 	}
 
@@ -60,7 +72,6 @@ inline Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& searc
 	for (size_t move_index = 0; move_index < move_list.get_num_moves(); move_index++)
 	{
 		const Move& curr_move = move_list.moves[move_index];
-
 		const Board& new_board = board.MakeMove<side_to_move>(curr_move, search_stack);
 
 		search_stack.IncrementDepth();
@@ -72,10 +83,12 @@ inline Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& searc
 			best_value = score;
 			best_move = curr_move;
 		}
+
 		if (score >= alpha_beta.beta)
 		{
 			const TranspositionTableEntry entry = { position.hash, score, search_stack.remaining_depth, best_move, TTFlag::BETA };
 			search_stack.GetTranspositionTable().Insert(entry);
+
 			return alpha_beta.beta;
 		}
 		else if (score > alpha_beta.alpha)

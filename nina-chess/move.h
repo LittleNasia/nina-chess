@@ -23,14 +23,13 @@ public:
 	inline static constexpr uint32_t EP_mask = 0b1 << EP_offset;
 
 
-	forceinline constexpr Bitboard from() const { return 1ULL << (encodedMove & index_from_mask); }
-	forceinline constexpr Bitboard to() const { return 1ULL << ((encodedMove & index_to_mask) >> index_to_offset); }
-	forceinline constexpr PieceType piece() const { return static_cast<PieceType>((encodedMove & piece_mask) >> piece_offset); }
+	forceinline constexpr Bitboard  from()			  const	{ return 1ULL << (encodedMove & index_from_mask); }
+	forceinline constexpr Bitboard  to()			  const	{ return 1ULL << ((encodedMove & index_to_mask) >> index_to_offset); }
+	forceinline constexpr PieceType piece()			  const	{ return static_cast<PieceType>((encodedMove & piece_mask) >> piece_offset); }
 	forceinline constexpr PieceType promotion_piece() const { return static_cast<PieceType>((encodedMove & promotion_piece_mask) >> promotion_piece_offset); }
-	forceinline constexpr bool is_castling() const { return (encodedMove & castling_mask) >> castling_offset; }
-	forceinline constexpr bool is_EP() const { return (encodedMove & EP_mask) >> EP_offset; }
+	forceinline constexpr bool      is_castling()	  const	{ return (encodedMove & castling_mask) >> castling_offset; }
+	forceinline constexpr bool      is_EP()			  const	{ return (encodedMove & EP_mask) >> EP_offset; }
 
-	forceinline constexpr operator bool() const { return from(); }
 	forceinline constexpr bool operator==(const Move& other) const { return encodedMove == other.encodedMove; }
 
 	forceinline constexpr Move() : Move(0, 0, PIECE_TYPE_NONE, PIECE_TYPE_NONE)
@@ -42,7 +41,7 @@ public:
 		(from << index_from_offset) |
 		(to << index_to_offset) |
 		(piece << piece_offset)
-	}
+		}
 	{}
 
 	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const PieceType promotion_piece) :
@@ -51,7 +50,7 @@ public:
 		(to << index_to_offset) |
 		(piece << piece_offset) |
 		(promotion_piece << promotion_piece_offset)
-	}
+		}
 	{}
 
 	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const PieceType promotion_piece, const bool castling) :
@@ -61,7 +60,7 @@ public:
 		(piece << piece_offset) |
 		(promotion_piece << promotion_piece_offset) |
 		(castling << castling_offset)
-	}
+		}
 	{}
 
 	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const PieceType promotion_piece, const bool castling, const bool EP) :
@@ -72,7 +71,7 @@ public:
 		(promotion_piece << promotion_piece_offset) |
 		(castling << castling_offset) |
 		(EP << EP_offset)
-	}
+		}
 	{}
 
 private:

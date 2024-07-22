@@ -5,5 +5,6 @@ forceinline Board Board::MakeMove(const Move& move, SearchStack& search_stack) c
 {
 	Position& new_position = search_stack.GetNextPosition();
 	position::MakeMove<side_to_move>(*position, new_position, move);
+	search_stack.SetNextPositionHash();
 	return Board(new_position, evaluator);
 }

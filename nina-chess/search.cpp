@@ -8,21 +8,9 @@ SearchResult start_search(const Board& board, const int depth, TranspositionTabl
 	SearchResult result;
 	const Position& position = board.GetPosition();
 	
-	/* Prepare the search stack */
-
-	// initialize the search stack
-	SearchStack search_stack;
-	search_stack.depth = 0;
-	search_stack.remaining_depth = depth;
-
-	// allocate the memory
-	std::unique_ptr<MoveList[]> move_lists = std::make_unique<MoveList[]>(depth + 1);
-	std::unique_ptr<Position[]> positions  = std::make_unique<Position[]>(depth + 1);
-	std::unique_ptr<uint64_t[]> hashes     = std::make_unique<uint64_t[]>(depth + 1);
-	search_stack.move_list_stack = move_lists.get();
-	search_stack.position_stack  = positions.get();
-	search_stack.hash_stack		 = hashes.get();
-	search_stack.tt				 = &tt;
+	SearchStack search_stack(depth, tt);
+	search_stack.SetCurrentPosition(board.GetPosition());
+	search_stack.SetCurrentPositionHash();
 
 	if (position.side_to_move == WHITE)
 	{
