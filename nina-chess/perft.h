@@ -5,131 +5,165 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <sstream>
 
 #include "move_gen.h"
 #include "position.h"
 #include "search_stack.h"
 
-template<Color side_to_move>
-inline void perft(const Position& pos, size_t& nodes, SearchStack& search_info)
+struct PerftTestEntry
 {
+	std::string fen;
+	int depth;
+	size_t expected_nodes;
+};
+
+inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& file_path)
+{
+	std::ifstream perft_test_suite(file_path);
+	if (!perft_test_suite.is_open())
+	{
+		const std::string error_message = "could not find the test suite";
+		std::cerr << error_message << "\n";
+		throw std::runtime_error(error_message);
+	}
+
+	// step 1: get the lines in the file
+	std::vector<std::string> lines;
+	std::string line;
+	while (std::getline(perft_test_suite, line))
+	{
+		lines.push_back(line);
+	}
+
+	// step 2: split each line by ';', first entry is the FEN, all the other ones are the depths and expected nodes
+	// the format is: <FEN> ;Dn <expected_nodes>; Dm <expected_nodes>; ...
+	std::vector<PerftTestEntry> test_entries;
+	for (const auto& line : lines)
+	{
+		std::istringstream iss(line);
+		std::vector<std::string> tokens;
+
+		while (iss)
+		{
+			std::string token;
+			std::getline(iss, token, ';');
+			tokens.push_back(token);
+		}
+
+		// step 3: extract the FEN and the depth from the tokens
+		for (int token_id = 1; token_id < tokens.size(); token_id++)
+		{
+			if (tokens[token_id].empty())
+			{
+				continue;
+			}
+
+			PerftTestEntry entry;
+			entry.fen = tokens[0];
+			
+			// ignore the "D" from the depths in the tokens
+			std::string depth_str = tokens[token_id].substr(1);
+			std::istringstream depth_stream(depth_str);
+			depth_stream >> entry.depth;
+			depth_stream >> entry.expected_nodes;
+
+			test_entries.push_back(entry);
+		}
+	}
+
+	return test_entries;
+}
+
+template<Color side_to_move>
+inline void perft(SearchStack& search_info)
+{
+	constexpr Color opposite_side = get_opposite_color<side_to_move>();
+	const Position& pos = search_info.GetCurrentPosition();
+
 	if (search_info.remaining_depth <= 0)
 	{
-		nodes++;
+		search_info.nodes++;
 		return;
 	}
-	const auto& move_list = generate_moves<side_to_move>(pos, search_info.GetMoveList());
-
-	constexpr Color opposite_side = get_opposite_color<side_to_move>();
-
+	
 	Position& new_pos = search_info.GetNextPosition();
-
+	const auto& move_list = generate_moves<side_to_move>(pos, search_info.GetMoveList());
 	for (uint32_t move_id = 0; move_id < move_list.get_num_moves(); move_id++)
 	{
 		position::MakeMove<side_to_move>(pos, new_pos, move_list.moves[move_id]);
 
 		search_info.IncrementDepth();
-		perft<opposite_side>(new_pos, nodes, search_info);
+		perft<opposite_side>(search_info);
 		search_info.DecrementDepth();
 	}
 }
-
-
 
 inline size_t test_perft(const bool hideOutput = false, const size_t node_limit = std::numeric_limits<size_t>::max())
 {
 	TranspositionTable tt(1);
 
-	std::ifstream perft_test_suite("perftsuite.epd");
-	if (!perft_test_suite.is_open())
-	{
-		std::cout << "could not find the test suite\n";
-		return false;
-	}
-	
-	std::string fen;
-	Position* curr_pos = new Position();
-	int curr_depth = 0;
-	bool parsing_fen = true;
-	
-	const size_t max_depth = 10;
+	constexpr size_t max_depth = 10;
 	SearchStack search_stack(max_depth, tt);
 	search_stack.SetCurrentPositionHash();
 
-	size_t combined_nodes = 0;
-	float total_duration = 0;
+	const auto& test_positions = parse_perft_test_suite("./test/perftsuite.epd");
 
-	std::string token;
-	while (perft_test_suite >> token)
+	size_t total_nodes = 0;
+	double total_duration = 0;
+
+	std::string previous_fen;
+	for (const auto& test_position : test_positions)
 	{
-		size_t expected_nodes;
-		if (token[0] == ';')
+		if (test_position.expected_nodes > node_limit)
 		{
-			curr_depth = token.back() - '0';
-			if (parsing_fen && !hideOutput)
-			{
-				std::cout << "parsing fen " << fen << "\n";
-			}
+			continue;
+		}
+		if (!hideOutput && test_position.fen != previous_fen)
+		{
+			std::cout << "position: " << test_position.fen << "\n";
+			previous_fen = test_position.fen;
+		}
 
-			delete curr_pos;
-			curr_pos = new Position(position::ParseFen(fen));
-			
-			perft_test_suite >> expected_nodes;
-			parsing_fen = false;
+		if (!hideOutput)
+			std::cout << "testing on depth " << test_position.depth << ", expected " << test_position.expected_nodes;
+
+		search_stack.nodes = 0;
+		search_stack.depth = 0;
+		search_stack.remaining_depth = test_position.depth;
+		search_stack.SetCurrentPosition(position::ParseFen(test_position.fen));
+
+		const auto start = std::chrono::high_resolution_clock::now();
+		if (search_stack.GetCurrentPosition().side_to_move == WHITE)
+		{
+			perft<WHITE>(search_stack);
 		}
 		else
 		{
-			if (!parsing_fen)
-			{
-				fen.clear();
-				parsing_fen = true;
-			}
-			fen += token;
-			fen += " ";
-			continue;
+			perft<BLACK>(search_stack);
 		}
-		size_t curr_nodes = 0;
-		
-		if (expected_nodes < node_limit)
+		const auto stop = std::chrono::high_resolution_clock::now();
+		const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+		total_duration += double(duration.count()) / 1000000;
+		total_nodes += search_stack.nodes;
+
+		if (!hideOutput)
+			std::cout << ", received " << search_stack.nodes << "\n";
+
+		if (test_position.expected_nodes != search_stack.nodes)
 		{
-			combined_nodes += expected_nodes;
-
-			if (!hideOutput)
-				std::cout << "testing on depth " << curr_depth << ", expected " << expected_nodes;
-
-			search_stack.depth = 0;
-			search_stack.remaining_depth = curr_depth;
-
-			const auto start = std::chrono::high_resolution_clock::now();
-			if (curr_pos->side_to_move == WHITE)
-			{
-				perft<WHITE>(*curr_pos, curr_nodes, search_stack);
-			}
-			else
-			{
-				perft<BLACK>(*curr_pos, curr_nodes, search_stack);
-			}
-			const auto stop = std::chrono::high_resolution_clock::now();
-			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-			total_duration += float(duration.count()) / 1000000;
-
-			if (!hideOutput)
-				std::cout << ", received " << curr_nodes << "\n";
-
-			if (expected_nodes != curr_nodes)
-			{
-				std::cout << "found error in position\n";
-				std::cout << fen << "\n";
-				position::PrintBoard(*curr_pos);
-				return false;
-			}
+			std::cout << "found error in position\n";
+			std::cout << test_position.fen << "\n";
+			position::PrintBoard(search_stack.GetCurrentPosition());
+			return false;
 		}
 	}
 
-	size_t nps = (size_t)(combined_nodes / total_duration);
+	size_t nps = (size_t)(total_nodes / total_duration);
 
 	if(!hideOutput)
-		std::cout << "nps: " << (size_t)(combined_nodes / total_duration) << "\n";
+		std::cout << "nps: " << (size_t)(total_nodes / total_duration) << "\n";
 
 	return nps;
 }

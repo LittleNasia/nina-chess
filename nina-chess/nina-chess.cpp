@@ -17,7 +17,7 @@ int main()
 
 	Position position;// = position::ParseFen("4Qnk1/p4ppp/8/7n/2P5/2B1P3/PP3q1P/6RK b - - 0 1");
     Board board(position, evaluator.get());
-    const size_t depth = 9;
+    const size_t depth = 10;
 
 	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 	const auto& result = start_search(board, depth, tt);
