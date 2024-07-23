@@ -30,9 +30,6 @@
     <ClCompile Include="evaluator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="board.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="search.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -68,9 +65,6 @@
     <ClInclude Include="evaluator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="board.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="search.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -92,9 +86,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="position.inl">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="board.inl">
       <Filter>Source Files</Filter>
     </None>
     <None Include="search.inl">

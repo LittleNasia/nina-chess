@@ -103,8 +103,9 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 {
 	TranspositionTable tt(1);
 
+	Evaluator evaluator;
 	constexpr size_t max_depth = 10;
-	SearchStack search_stack(max_depth, tt);
+	SearchStack search_stack(max_depth, tt, evaluator);
 	search_stack.SetCurrentPositionHash();
 
 	const auto& test_positions = parse_perft_test_suite("./test/perftsuite.epd");

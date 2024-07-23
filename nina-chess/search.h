@@ -1,7 +1,6 @@
 #pragma once
 #include "utils.h"
 
-#include "board.h"
 #include "move.h"
 #include "search_stack.h"
 #include "transposition_table.h"
@@ -22,8 +21,8 @@ struct AlphaBeta
 };
 
 template<Color side_to_move>
-Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& search_info);
+inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack);
 
-SearchResult start_search(const Board& board, const int depth, TranspositionTable& tt);
+SearchResult start_search(const Position& position, const int depth, TranspositionTable& tt, Evaluator& evaluator);
 
 #include "search.inl"

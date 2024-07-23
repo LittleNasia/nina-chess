@@ -3,24 +3,23 @@
 #include "move_gen.h"
 
 
-SearchResult start_search(const Board& board, const int depth, TranspositionTable& tt)
+SearchResult start_search(const Position& position, const int depth, TranspositionTable& tt, Evaluator& evaluator)
 {
 	SearchResult result;
-	const Position& position = board.GetPosition();
 	
-	SearchStack search_stack(depth, tt);
-	search_stack.SetCurrentPosition(board.GetPosition());
+	SearchStack search_stack(depth, tt, evaluator);
+	search_stack.SetCurrentPosition(position);
 	search_stack.SetCurrentPositionHash();
 
 	if (position.side_to_move == WHITE)
 	{
 		AlphaBeta alpha_beta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
-		result.score = search<Color::WHITE>(board, alpha_beta, search_stack);
+		result.score = search<Color::WHITE>(alpha_beta, search_stack);
 	}
 	else
 	{
 		AlphaBeta alpha_beta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
-		result.score = search<Color::BLACK>(board, alpha_beta, search_stack);
+		result.score = search<Color::BLACK>(alpha_beta, search_stack);
 	}
 
 	result.pv[0] = tt.Get(position.hash).best_move;
@@ -28,7 +27,7 @@ SearchResult start_search(const Board& board, const int depth, TranspositionTabl
 	result.nodes = search_stack.nodes;
 
 	Position curr_position;
-	position::MakeMove(board.GetPosition(), curr_position, result.pv[0]);
+	position::MakeMove(search_stack.GetCurrentPosition(), curr_position, result.pv[0]);
 	for (int curr_depth = 1; curr_depth <= depth; curr_depth++)
 	{
 		MoveList curr_position_moves = generate_moves(curr_position, search_stack.GetMoveList());

@@ -30,7 +30,7 @@ forceinline Score get_score_from_tt(const Position& position,
 }
 
 template<Color side_to_move>
-inline Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& search_stack)
+inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack)
 {
 	constexpr Color opposite_side = get_opposite_color<side_to_move>();
 	const Position& position = search_stack.GetCurrentPosition();
@@ -44,7 +44,7 @@ inline Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& searc
 	}
 
 	// is position drawn
-	if(board.IsDrawn(search_stack))
+	if(position.IsDrawn() || search_stack.IsThreefoldRepetition())
 	{
 		search_stack.nodes++;
 		return Score::DRAW;
@@ -55,7 +55,7 @@ inline Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& searc
 	generate_moves<side_to_move>(position, search_stack.GetMoveList());
 	if (search_stack.remaining_depth == 0 || move_list.get_num_moves() == 0)
 	{
-		score = board.Evaluate(move_list, search_stack);
+		score = search_stack.GetEvaluator().Evaluate(position, move_list, search_stack.depth);
 
 		const TranspositionTableEntry entry = { position.hash, score, search_stack.remaining_depth, Move(), TTFlag::EXACT };
 		search_stack.GetTranspositionTable().Insert(entry);
@@ -69,13 +69,15 @@ inline Score search(const Board& board, AlphaBeta alpha_beta, SearchStack& searc
 	Move best_move;
 	Score best_value = Score::NEGATIVE_INF;
 
+	Position& new_pos = search_stack.GetNextPosition();
 	for (size_t move_index = 0; move_index < move_list.get_num_moves(); move_index++)
 	{
 		const Move& curr_move = move_list.moves[move_index];
-		const Board& new_board = board.MakeMove<side_to_move>(curr_move, search_stack);
+		position::MakeMove<side_to_move>(position, new_pos, curr_move);
+		search_stack.SetNextPositionHash();
 
 		search_stack.IncrementDepth();
-		score = -search<opposite_side>(new_board, alpha_beta.Invert(), search_stack);
+		score = -search<opposite_side>(alpha_beta.Invert(), search_stack);
 		search_stack.DecrementDepth();
 
 		if (score > best_value)
