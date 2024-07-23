@@ -20,9 +20,4 @@ struct AlphaBeta
 	forceinline constexpr AlphaBeta Invert() const { return { -beta, -alpha }; }
 };
 
-template<Color side_to_move>
-inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack);
-
 SearchResult start_search(const Position& position, const int depth, TranspositionTable& tt, Evaluator& evaluator);
-
-#include "search.inl"
