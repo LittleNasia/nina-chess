@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Bench|Win32">
@@ -318,6 +318,7 @@
     <ClCompile Include="search.cpp" />
     <ClCompile Include="test_main.cpp" />
     <ClCompile Include="transposition_table.cpp" />
+    <ClCompile Include="uci.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="attacks.h" />
@@ -333,6 +334,7 @@
     <ClInclude Include="side.h" />
     <ClInclude Include="targets.h" />
     <ClInclude Include="transposition_table.h" />
+    <ClInclude Include="uci.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="zobrist.h" />
   </ItemGroup>

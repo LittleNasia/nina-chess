@@ -32,10 +32,21 @@ forceinline Score get_score_from_tt(const Position& position,
 }
 
 template<Color side_to_move>
-inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack)
+inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack, const SearchConstraints& search_constraints)
 {
 	constexpr Color opposite_side = get_opposite_color<side_to_move>();
 	const Position& position = search_stack.GetCurrentPosition();
+
+	// check for search aborted
+	if ((search_stack.nodes & 0xFFF) == 0xFFF)
+	{
+		const int time_taken = search_stack.GetSearchDurationInMs();
+		if (time_taken >= (search_constraints.time * 0.95))
+		{
+			search_stack.AbortSearch();
+			return Score::UNKNOWN;
+		}
+	}
 
 	// is score in TT
 	Score score;
@@ -74,12 +85,17 @@ inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack)
 	Position& new_pos = search_stack.GetNextPosition();
 	for (size_t move_index = 0; move_index < move_list.get_num_moves(); move_index++)
 	{
+		if (search_stack.IsSearchAborted())
+		{
+			return Score::UNKNOWN;
+		}
+
 		const Move& curr_move = move_list.moves[move_index];
 		position::MakeMove<side_to_move>(position, new_pos, curr_move);
 		search_stack.SetNextPositionHash();
 
 		search_stack.IncrementDepth();
-		score = -search<opposite_side>(alpha_beta.Invert(), search_stack);
+		score = -search<opposite_side>(alpha_beta.Invert(), search_stack, search_constraints);
 		search_stack.DecrementDepth();
 
 		if (score > best_value)
@@ -88,15 +104,16 @@ inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack)
 			best_move = curr_move;
 		}
 
-		if (score >= alpha_beta.beta)
+		if (score > alpha_beta.alpha)
 		{
-			const TranspositionTableEntry entry = { position.hash, score, search_stack.remaining_depth, best_move, TTFlag::BETA };
-			search_stack.GetTranspositionTable().Insert(entry);
+			if (score >= alpha_beta.beta)
+			{
+				const TranspositionTableEntry entry = { position.hash, score, search_stack.remaining_depth, best_move, TTFlag::BETA };
+				search_stack.GetTranspositionTable().Insert(entry);
 
-			return alpha_beta.beta;
-		}
-		else if (score > alpha_beta.alpha)
-		{
+				return alpha_beta.beta;
+			}
+		
 			tt_flag = TTFlag::EXACT;
 			alpha_beta.alpha = score;
 		}
@@ -108,50 +125,96 @@ inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack)
 	return alpha_beta.alpha;
 }
 
-
-SearchResult start_search(const Position& position, const int depth, TranspositionTable& tt, Evaluator& evaluator)
+template<Color color>
+std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const SearchConstraints& search_constraints)
 {
-	SearchResult result;
-	
-	SearchStack search_stack(depth, tt, evaluator);
-	search_stack.SetCurrentPosition(position);
-	search_stack.SetCurrentPositionHash();
-
-	if (position.side_to_move == WHITE)
+	std::vector<SearchResult> search_results;
+	for (int depth = 1; depth <= search_constraints.depth; depth++)
 	{
+		SearchConstraints current_search_constraints = search_constraints;
+		current_search_constraints.depth = depth;
+
+		search_stack.remaining_depth = depth;
+
 		AlphaBeta alpha_beta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
-		result.score = search<Color::WHITE>(alpha_beta, search_stack);
+		const auto& score = search<color>(alpha_beta, search_stack, current_search_constraints);
+
+		if (search_stack.IsSearchAborted())
+		{
+			break;
+		}
+		
+		SearchResult result;
+		result.nodes = search_stack.nodes;
+		result.score = score;
+		result.depth = depth;
+
+		const Position& root_pos = search_stack.GetCurrentPosition();
+
+		result.pv[0] = search_stack.GetTranspositionTable().Get(root_pos.hash).best_move;
+		result.pv_length = 1;
+
+		Position curr_position;
+		position::MakeMove(root_pos, curr_position, result.pv[0]);
+		for (int pv_depth = 1; pv_depth < depth; pv_depth++)
+		{
+			MoveList curr_position_moves = generate_moves(curr_position, search_stack.GetMoveList());
+			const auto& curr_tt_entry = search_stack.GetTranspositionTable().Get(curr_position.hash);
+
+			if (curr_tt_entry.best_move.from() == 0 && curr_tt_entry.best_move.to() == 0)
+				break;
+			for (size_t move_index = 0; move_index < curr_position_moves.get_num_moves(); move_index++)
+			{
+				if (curr_position_moves.moves[move_index] == curr_tt_entry.best_move)
+				{
+					result.pv[pv_depth] = curr_tt_entry.best_move;
+					result.pv_length++;
+					Position new_position;
+					position::MakeMove(curr_position, new_position, result.pv[pv_depth]);
+					curr_position = new_position;
+					break;
+				}
+			}
+		}
+
+		result.PrintUciInfo();
+
+		search_results.push_back(result);
+	}
+
+	return search_results;
+}
+
+std::vector<SearchResult> start_search(std::vector<Position> position_stack, TranspositionTable& tt, Evaluator& evaluator, const SearchConstraints& search_constraints)
+{
+	std::vector<SearchResult> results;
+
+	const int depth_to_search_to = search_constraints.depth <= 0 ? max_depth : search_constraints.depth;
+	const int time_limit = search_constraints.time == -1 ? std::numeric_limits<int>::max() : int(search_constraints.time * 0.05);
+	std::cout << "info time limit " << time_limit << std::endl;
+	
+	SearchStack search_stack(position_stack, depth_to_search_to, tt, evaluator);
+	search_stack.StartSearch();
+
+	SearchConstraints current_search_constraints = search_constraints;
+	current_search_constraints.depth = depth_to_search_to;
+	if(search_constraints.movetime != -1)
+		current_search_constraints.time = search_constraints.movetime < time_limit ? search_constraints.movetime : time_limit;
+	else
+		current_search_constraints.time = time_limit;
+
+	const Position& root_position = search_stack.GetCurrentPosition();
+
+	if (root_position.side_to_move == Color::WHITE)
+	{
+		results = iterative_deepening<Color::WHITE>(search_stack, current_search_constraints);
 	}
 	else
 	{
-		AlphaBeta alpha_beta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
-		result.score = search<Color::BLACK>(alpha_beta, search_stack);
+		results = iterative_deepening<Color::BLACK>(search_stack, current_search_constraints);
 	}
 
-	result.pv[0] = tt.Get(position.hash).best_move;
-	result.pv_length = 1;
-	result.nodes = search_stack.nodes;
+	std::cout << "bestmove " << results.back().pv[0].ToUciMove() << std::endl;
 
-	Position curr_position;
-	position::MakeMove(search_stack.GetCurrentPosition(), curr_position, result.pv[0]);
-	for (int curr_depth = 1; curr_depth <= depth; curr_depth++)
-	{
-		MoveList curr_position_moves = generate_moves(curr_position, search_stack.GetMoveList());
-		const auto& curr_tt_entry = tt.Get(curr_position.hash);
-
-		for (size_t move_index = 0; move_index < curr_position_moves.get_num_moves(); move_index++)
-		{
-			if (curr_position_moves.moves[move_index] == curr_tt_entry.best_move)
-			{
-				result.pv[curr_depth] = curr_tt_entry.best_move;
-				result.pv_length++;
-				Position new_position;
-				position::MakeMove(curr_position, new_position, result.pv[curr_depth]);
-				curr_position = new_position;
-				break;
-			}
-		}
-	}
-
-	return result;
+	return results;
 }

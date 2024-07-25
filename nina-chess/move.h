@@ -22,6 +22,8 @@ public:
 	inline static constexpr uint32_t EP_offset = castling_offset + 1;
 	inline static constexpr uint32_t EP_mask = 0b1 << EP_offset;
 
+	forceinline std::string ToUciMove() const { return std::string(square_names[bit_index(from())]) + square_names[bit_index(to())]; }
+
 
 	forceinline constexpr Bitboard  from()			  const	{ return 1ULL << (encodedMove & index_from_mask); }
 	forceinline constexpr Bitboard  to()			  const	{ return 1ULL << ((encodedMove & index_to_mask) >> index_to_offset); }

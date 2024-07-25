@@ -6,11 +6,11 @@
 
 using Bitboard = std::uint64_t;
 
-inline constexpr size_t board_rows = 8;
-inline constexpr size_t board_cols = 8;
-inline constexpr size_t num_board_squares = 64;
-inline constexpr size_t max_ply = 512;
-inline constexpr size_t max_depth = 256;
+inline constexpr uint32_t board_rows = 8;
+inline constexpr uint32_t board_cols = 8;
+inline constexpr uint32_t num_board_squares = 64;
+inline constexpr uint32_t max_ply = 512;
+inline constexpr uint32_t max_depth = 256;
 
 
 #ifdef _DEBUG
@@ -69,7 +69,6 @@ forceinline constexpr PieceType operator++(PieceType& piece, int)
 	return piece = static_cast<PieceType>(piece + 1);
 }
 
-
 enum class Score : int32_t
 {
 	NEGATIVE_INF = -10001,
@@ -90,7 +89,6 @@ forceinline std::ostream& operator<<(std::ostream& os, const Score score)
 	os << static_cast<int32_t>(score);
 	return os;
 }
-
 
 using CastlingType = uint32_t;
 
