@@ -15,9 +15,13 @@ struct SearchResult
 	size_t nodes = 0;
 	int depth;
 
-	void PrintUciInfo() const
+	void PrintUciInfo(size_t duration_in_ms = 0) const
 	{
-		std::cout << "info depth " << depth << " score cp " << int(score) << " nodes " << nodes << " pv ";
+		double duration = duration_in_ms / 1000.0;
+		std::cout << "info depth " << depth << " score cp " << int(score) << " nodes " << nodes;
+		if(duration_in_ms != 0)
+			std::cout << " nps " << int(nodes / duration);
+		std::cout << " pv ";
 
 		for (int pv_id = 0; pv_id < pv_length; pv_id++)
 		{

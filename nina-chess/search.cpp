@@ -137,7 +137,11 @@ std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const S
 		search_stack.remaining_depth = depth;
 
 		AlphaBeta alpha_beta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
+
+		auto start_timepoint = std::chrono::high_resolution_clock::now();
 		const auto& score = search<color>(alpha_beta, search_stack, current_search_constraints);
+		auto end_timepoint = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_timepoint - start_timepoint).count();
 
 		if (search_stack.IsSearchAborted())
 		{
@@ -177,7 +181,7 @@ std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const S
 			}
 		}
 
-		result.PrintUciInfo();
+		result.PrintUciInfo(duration);
 
 		search_results.push_back(result);
 	}
