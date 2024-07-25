@@ -26,10 +26,18 @@ struct UciState
 
 	std::vector<Position> position_stack;
 	std::unique_ptr<TranspositionTable> transposition_table;
-	std::unique_ptr<Evaluator> evaluator;
+	std::unique_ptr<Evaluator> evaluator = std::make_unique<Evaluator>();
 
 	std::atomic_flag search_running = ATOMIC_FLAG_INIT;
 	std::thread search_thread;
+
+	SearchStack search_stack;
+	
+	void OnPositionsChanged()
+	{
+		search_stack.Reset(position_stack);
+		evaluator->Reset(search_stack);
+	}
 };
 static UciState current_state;
 
@@ -52,10 +60,11 @@ void ucinewgame()
 	current_state.position_stack.push_back(Position());
 }
 
-void search_thread_function(TranspositionTable& tt, Evaluator& evaluator, const SearchConstraints& search_constraints)
+void search_thread_function(const SearchConstraints& search_constraints)
 {
 	current_state.search_running.test_and_set();
-	start_search(current_state.position_stack, tt, evaluator, search_constraints);
+	SearchNecessities search_necessities{ current_state.transposition_table.get(), current_state.evaluator.get()};
+	start_search(current_state.search_stack, search_necessities, search_constraints);
 	current_state.search_running.clear();
 }
 
@@ -91,7 +100,7 @@ void go(const GoState& state)
 	constraints.time = time_for_move;
 	constraints.nodes = state.nodes;
 
-	current_state.search_thread = std::thread(search_thread_function, std::ref(*current_state.transposition_table), std::ref(*current_state.evaluator), constraints);
+	current_state.search_thread = std::thread(search_thread_function, constraints);
 	current_state.search_thread.detach();
 }
 
@@ -174,9 +183,9 @@ void parse_moves(std::stringstream& input)
 		generate_moves(last_pos, curr_pos_move_list);
 
 		bool found_move = false;
-		for (uint32_t move_id = 0; move_id < curr_pos_move_list.get_num_moves(); move_id++)
+		for (uint32_t move_id = 0; move_id < curr_pos_move_list.GetNumMoves(); move_id++)
 		{
-			Move curr_move = curr_pos_move_list.moves[move_id];
+			Move curr_move = curr_pos_move_list[move_id];
 			if (move.promotion_piece != PIECE_TYPE_NONE && curr_move.promotion_piece() != move.promotion_piece)
 				continue;
 			if (bit_index(curr_move.from()) == move.move_from && bit_index(curr_move.to()) == move.move_to)
@@ -205,9 +214,9 @@ void parse_moves(std::stringstream& input)
 
 				if (move_to_bb & (kingside_king_destinations | queenside_king_destinations))
 				{
-					for (uint32_t move_id = 0; move_id < curr_pos_move_list.get_num_moves(); move_id++)
+					for (uint32_t move_id = 0; move_id < curr_pos_move_list.GetNumMoves(); move_id++)
 					{
-						Move curr_move = curr_pos_move_list.moves[move_id];
+						Move curr_move = curr_pos_move_list[move_id];
 						if (curr_move.from() & side_to_move_pieces.king &&
 							curr_move.to() & kingside_rooks &&
 							move_to_bb & kingside_king_destinations)
@@ -274,6 +283,8 @@ void setposition(std::stringstream& input)
 		current_state.position_stack.push_back(position::ParseFen(current_fen));
 		current_fen.clear();
 	}
+
+	current_state.OnPositionsChanged();
 }
 
 void setoption(std::stringstream& input)

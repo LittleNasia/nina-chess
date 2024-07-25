@@ -1,11 +1,12 @@
 #include "search.h"
 
+#include "incremental_updater.h"
 #include "move_gen.h"
 
 forceinline Score get_score_from_tt(const Position& position,
-	const AlphaBeta& alpha_beta, const SearchStack& search_stack)
+	const AlphaBeta& alpha_beta, const SearchNecessities& search_necessities, const SearchStack& search_stack)
 {
-	const TranspositionTableEntry& tt_entry = search_stack.GetTranspositionTable().Get(position.hash);
+	const TranspositionTableEntry& tt_entry = search_necessities.GetTranspositionTable().Get(position.hash);
 
 	if (tt_entry.key == position.hash)
 	{
@@ -32,7 +33,8 @@ forceinline Score get_score_from_tt(const Position& position,
 }
 
 template<Color side_to_move>
-inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack, const SearchConstraints& search_constraints)
+inline Score search(AlphaBeta alpha_beta, const SearchNecessities& search_necessities, SearchStack& search_stack, const SearchConstraints& search_constraints,
+	IncrementalUpdater& incremental_updater)
 {
 	constexpr Color opposite_side = get_opposite_color<side_to_move>();
 	const Position& position = search_stack.GetCurrentPosition();
@@ -50,7 +52,7 @@ inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack, const Searc
 
 	// is score in TT
 	Score score;
-	if ((score = get_score_from_tt(position, alpha_beta, search_stack)) != Score::UNKNOWN)
+	if ((score = get_score_from_tt(position, alpha_beta, search_necessities, search_stack)) != Score::UNKNOWN)
 	{
 		search_stack.nodes++;
 		return score;
@@ -64,14 +66,14 @@ inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack, const Searc
 	}
 
 	// is leaf node for another reason
-	const MoveList& move_list = search_stack.GetMoveList();
-	generate_moves<side_to_move>(position, search_stack.GetMoveList());
-	if (search_stack.remaining_depth == 0 || move_list.get_num_moves() == 0)
+	const auto& guard = incremental_updater.MoveGenerationUpdate<side_to_move>();
+	const MoveList& move_list = search_stack.GetMoveList<side_to_move>();
+	if (search_stack.remaining_depth == 0 || move_list.GetNumMoves() == 0)
 	{
-		score = search_stack.GetEvaluator().Evaluate(position, move_list, search_stack.depth);
+		score = search_necessities.GetEvaluator().Evaluate<side_to_move>(position, move_list);
 
 		const TranspositionTableEntry entry = { position.hash, score, search_stack.remaining_depth, Move(), TTFlag::EXACT };
-		search_stack.GetTranspositionTable().Insert(entry);
+		search_necessities.GetTranspositionTable().Insert(entry);
 
 		search_stack.nodes++;
 		return score;
@@ -83,20 +85,18 @@ inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack, const Searc
 	Score best_value = Score::NEGATIVE_INF;
 
 	Position& new_pos = search_stack.GetNextPosition();
-	for (size_t move_index = 0; move_index < move_list.get_num_moves(); move_index++)
+	for (uint32_t move_index = 0; move_index < move_list.GetNumMoves(); move_index++)
 	{
 		if (search_stack.IsSearchAborted())
 		{
 			return Score::UNKNOWN;
 		}
 
-		const Move& curr_move = move_list.moves[move_index];
-		position::MakeMove<side_to_move>(position, new_pos, curr_move);
-		search_stack.SetNextPositionHash();
+		const Move& curr_move = move_list[move_index];
 
-		search_stack.IncrementDepth();
-		score = -search<opposite_side>(alpha_beta.Invert(), search_stack, search_constraints);
-		search_stack.DecrementDepth();
+		incremental_updater.MakeMoveUpdate<side_to_move>(curr_move);
+		score = -search<opposite_side>(alpha_beta.Invert(), search_necessities, search_stack, search_constraints, incremental_updater);
+		incremental_updater.UndoUpdate();
 
 		if (score > best_value)
 		{
@@ -109,7 +109,7 @@ inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack, const Searc
 			if (score >= alpha_beta.beta)
 			{
 				const TranspositionTableEntry entry = { position.hash, score, search_stack.remaining_depth, best_move, TTFlag::BETA };
-				search_stack.GetTranspositionTable().Insert(entry);
+				search_necessities.GetTranspositionTable().Insert(entry);
 
 				return alpha_beta.beta;
 			}
@@ -120,15 +120,17 @@ inline Score search(AlphaBeta alpha_beta, SearchStack& search_stack, const Searc
 	}
 
 	const TranspositionTableEntry entry = { position.hash, score, search_stack.remaining_depth, best_move, tt_flag };
-	search_stack.GetTranspositionTable().Insert(entry);
+	search_necessities.GetTranspositionTable().Insert(entry);
 
 	return alpha_beta.alpha;
 }
 
 template<Color color>
-std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const SearchConstraints& search_constraints)
+std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const SearchNecessities& search_necessities, const SearchConstraints& search_constraints)
 {
 	std::vector<SearchResult> search_results;
+	IncrementalUpdater updater(search_necessities.GetEvaluator(), search_stack);
+
 	for (int depth = 1; depth <= search_constraints.depth; depth++)
 	{
 		SearchConstraints current_search_constraints = search_constraints;
@@ -139,7 +141,7 @@ std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const S
 		AlphaBeta alpha_beta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
 
 		auto start_timepoint = std::chrono::high_resolution_clock::now();
-		const auto& score = search<color>(alpha_beta, search_stack, current_search_constraints);
+		const auto& score = search<color>(alpha_beta, search_necessities, search_stack, current_search_constraints, updater);
 		auto end_timepoint = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_timepoint - start_timepoint).count();
 
@@ -155,7 +157,7 @@ std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const S
 
 		const Position& root_pos = search_stack.GetCurrentPosition();
 
-		result.pv[0] = search_stack.GetTranspositionTable().Get(root_pos.hash).best_move;
+		result.pv[0] = search_necessities.GetTranspositionTable().Get(root_pos.hash).best_move;
 		result.pv_length = 1;
 
 		Position curr_position;
@@ -163,13 +165,13 @@ std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const S
 		for (int pv_depth = 1; pv_depth < depth; pv_depth++)
 		{
 			MoveList curr_position_moves = generate_moves(curr_position, search_stack.GetMoveList());
-			const auto& curr_tt_entry = search_stack.GetTranspositionTable().Get(curr_position.hash);
+			const auto& curr_tt_entry = search_necessities.GetTranspositionTable().Get(curr_position.hash);
 
 			if (curr_tt_entry.best_move.from() == 0 && curr_tt_entry.best_move.to() == 0)
 				break;
-			for (size_t move_index = 0; move_index < curr_position_moves.get_num_moves(); move_index++)
+			for (uint32_t move_index = 0; move_index < curr_position_moves.GetNumMoves(); move_index++)
 			{
-				if (curr_position_moves.moves[move_index] == curr_tt_entry.best_move)
+				if (curr_position_moves[move_index] == curr_tt_entry.best_move)
 				{
 					result.pv[pv_depth] = curr_tt_entry.best_move;
 					result.pv_length++;
@@ -189,7 +191,7 @@ std::vector<SearchResult> iterative_deepening(SearchStack& search_stack, const S
 	return search_results;
 }
 
-std::vector<SearchResult> start_search(std::vector<Position> position_stack, TranspositionTable& tt, Evaluator& evaluator, const SearchConstraints& search_constraints)
+std::vector<SearchResult> start_search(SearchStack& search_stack, const SearchNecessities& search_necessities, const SearchConstraints& search_constraints)
 {
 	std::vector<SearchResult> results;
 
@@ -197,7 +199,6 @@ std::vector<SearchResult> start_search(std::vector<Position> position_stack, Tra
 	const int time_limit = search_constraints.time == -1 ? std::numeric_limits<int>::max() : int(search_constraints.time * 0.05);
 	std::cout << "info time limit " << time_limit << std::endl;
 	
-	SearchStack search_stack(position_stack, depth_to_search_to, tt, evaluator);
 	search_stack.StartSearch();
 
 	SearchConstraints current_search_constraints = search_constraints;
@@ -211,11 +212,11 @@ std::vector<SearchResult> start_search(std::vector<Position> position_stack, Tra
 
 	if (root_position.side_to_move == Color::WHITE)
 	{
-		results = iterative_deepening<Color::WHITE>(search_stack, current_search_constraints);
+		results = iterative_deepening<Color::WHITE>(search_stack, search_necessities, current_search_constraints);
 	}
 	else
 	{
-		results = iterative_deepening<Color::BLACK>(search_stack, current_search_constraints);
+		results = iterative_deepening<Color::BLACK>(search_stack, search_necessities, current_search_constraints);
 	}
 
 	std::cout << "bestmove " << results.back().pv[0].ToUciMove() << std::endl;

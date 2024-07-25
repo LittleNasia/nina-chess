@@ -1,40 +1,27 @@
 #include "evaluator.h"
 
-Score get_score(const float wdl_chances)
+Evaluator::Evaluator() :
+	depth{ 0 }
 {
-	DEBUG_IF(wdl_chances < -1.0f || wdl_chances > 1.0f)
-	{
-		throw std::runtime_error("wdl_chances must be in the range [-1.0, 1.0]");
-	}
+	Position startpos;
+	MoveList startpos_move_list;
+	generate_moves(startpos, startpos_move_list);
 
-	constexpr int32_t win_score = static_cast<int32_t>(Score::WIN);
-	return static_cast<Score>(wdl_chances * win_score);
+	Update<WHITE>(startpos, startpos_move_list);
 }
 
-Score get_mated_score(const int32_t mate_in)
+void Evaluator::Reset(SearchStack& search_stack)
 {
-	DEBUG_IF(mate_in < 0)
+	depth = 0;
+
+	for (int depth = 0; depth < search_stack.depth; depth++)
 	{
-		throw std::runtime_error("mate_in must be non-negative");
+		const auto& curr_position = search_stack.GetPositionAt(depth);
+		const auto& curr_move_list = search_stack.GetMoveListAt(depth);
+
+		if (curr_position.side_to_move == WHITE)
+			IncrementalUpdate<WHITE>(curr_position, curr_move_list);
+		else
+			IncrementalUpdate<BLACK>(curr_position, curr_move_list);
 	}
-
-	return Score(int32_t(Score::LOSS) + mate_in);
-}
-
-Evaluator::Evaluator()
-{
-
-}
-
-Score Evaluator::Evaluate(const Position& position, const MoveList& move_list, const int depth)
-{
-	if (move_list.get_num_moves() == 0)
-	{
-		return move_list.checkers ? get_mated_score(depth) : get_score(0.0f);
-	}
-
-	float score = (float)(int(popcnt(position.GetSide<WHITE>().pieces)) - int(popcnt(position.GetSide<BLACK>().pieces))) / 16.f;
-	score *= (position.side_to_move == WHITE ? 1 : -1);
-
-	return get_score(score);
 }

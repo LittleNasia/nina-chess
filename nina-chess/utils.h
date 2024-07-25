@@ -12,7 +12,6 @@ inline constexpr uint32_t num_board_squares = 64;
 inline constexpr uint32_t max_ply = 512;
 inline constexpr uint32_t max_depth = 256;
 
-
 #ifdef _DEBUG
 inline constexpr bool is_debug = true;
 #else
@@ -26,6 +25,8 @@ inline constexpr bool is_debug = false;
 // maybe not anymore, forceinlining everything seems to be the way to go now for some reason ? ? ?
 // there are functions that probably still shouldn't be inlined but forceinline as a default seems fine now
 #define forceinline __forceinline
+
+inline constexpr size_t cache_line_size = 64;
 
 enum Color: uint8_t
 {
@@ -72,9 +73,9 @@ forceinline constexpr PieceType operator++(PieceType& piece, int)
 enum class Score : int32_t
 {
 	NEGATIVE_INF = -10001,
-	LOSS = -10000,
+	LOSS = -1000,
 	DRAW = 0,
-	WIN = 10000,
+	WIN = 1000,
 	POSITIVE_INF = 10001,
 	UNKNOWN = 10002
 };

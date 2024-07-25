@@ -80,13 +80,13 @@ forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uin
 		const Bitboard move = pop_bit(moves_mask);
 		const uint32_t move_target = bit_index(move);
 		if constexpr (castling)
-			move_list.push_move({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling });
+			move_list.PushMove({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling });
 		else if constexpr (EP)
-			move_list.push_move({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling, EP });
+			move_list.PushMove({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling, EP });
 		else
-			move_list.push_move({ piece_index, move_target, moving_piece });
+			move_list.PushMove({ piece_index, move_target, moving_piece });
 	}
-	move_list.piece_moves[piece_type] |= moves_mask;
+	move_list.move_list_misc.piece_moves[piece_type] |= moves_mask;
 }
 
 template<Color color>
@@ -112,13 +112,13 @@ forceinline void write_pawn_moves(MoveList& move_list, const Bitboard left_pawn_
 			{
 				for (const auto promotion_piece : promotion_pieces)
 				{
-					move_list.push_move({ piece_index, move_target, moving_piece, promotion_piece });
+					move_list.PushMove({ piece_index, move_target, moving_piece, promotion_piece });
 				}
 			}
 			else
-				move_list.push_move({ piece_index, move_target, moving_piece });
+				move_list.PushMove({ piece_index, move_target, moving_piece });
 		}
-		move_list.piece_moves[moving_piece] |= curr_pawn_moves;
+		move_list.move_list_misc.piece_moves[moving_piece] |= curr_pawn_moves;
 	}
 }  
 
@@ -143,7 +143,7 @@ forceinline void write_slider_moves(MoveList& move_list, Bitboard movable_bishop
 		curr_bishop_moves &= ~allies;
 		if(curr_bishop_moves)
 			write_moves<BISHOP, color>(move_list, curr_bishop_moves, bit_index(curr_bishop));
-		move_list.piece_moves[BISHOP] |= curr_bishop_moves;
+		move_list.move_list_misc.piece_moves[BISHOP] |= curr_bishop_moves;
 	}
 	while (movable_rooks)
 	{
@@ -162,7 +162,7 @@ forceinline void write_slider_moves(MoveList& move_list, Bitboard movable_bishop
 		curr_rook_moves &= ~allies;
 		if(curr_rook_moves)
 			write_moves<ROOK, color>(move_list, curr_rook_moves, bit_index(curr_rook));
-		move_list.piece_moves[ROOK] |= curr_rook_moves;
+		move_list.move_list_misc.piece_moves[ROOK] |= curr_rook_moves;
 	}
 	while (queens)
 	{
@@ -186,7 +186,7 @@ forceinline void write_slider_moves(MoveList& move_list, Bitboard movable_bishop
 		}
 		if (curr_queen_moves)
 			write_moves<QUEEN, color>(move_list, curr_queen_moves, bit_index(curr_queen));
-		move_list.piece_moves[QUEEN] |= curr_queen_moves;
+		move_list.move_list_misc.piece_moves[QUEEN] |= curr_queen_moves;
 	}
 }
 
@@ -215,16 +215,18 @@ forceinline void write_knight_moves(MoveList& move_list, Bitboard movable_knight
 			const Bitboard move = pop_bit(curr_knight_moves);
 			const uint32_t move_target = bit_index(move);
 
-			move_list.push_move({ knight_index, move_target, moving_piece });
+			move_list.PushMove({ knight_index, move_target, moving_piece });
 		}
-		move_list.piece_moves[moving_piece] |= curr_knight_moves;
+		move_list.move_list_misc.piece_moves[moving_piece] |= curr_knight_moves;
 	}
 }
 
 template<Color color, size_t castling, bool hasEP>
 forceinline MoveList& generate_moves(MoveList& move_list, const Position& Position)
 {
-	move_list.reset();
+	move_list.Reset();
+	move_list.SetHashOfPosition(Position.hash);
+
 	constexpr auto opposite_color = get_opposite_color<color>();
 	const auto& curr_pieces = Position.GetSide<color>();
 	const auto& opposite_pieces = Position.GetSide<opposite_color>();
@@ -280,11 +282,11 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 		fill_pinmask(king_index, rook_pinmask, rook_pinners);
 	}
 
-	move_list.checkers = rook_checkers | bishop_checkers | knight_checkers | pawn_checkers;
-	move_list.pinners = rook_pinners | bishop_pinners;
-	move_list.checkmask = rook_checkmask | bishop_checkmask;
-	move_list.pinmask = rook_pinmask | bishop_pinmask;
-	move_list.attacked_squares = attacked_squares;
+	move_list.move_list_misc.checkers = rook_checkers | bishop_checkers | knight_checkers | pawn_checkers;
+	move_list.move_list_misc.pinners = rook_pinners | bishop_pinners;
+	move_list.move_list_misc.checkmask = rook_checkmask | bishop_checkmask;
+	move_list.move_list_misc.pinmask = rook_pinmask | bishop_pinmask;
+	move_list.move_list_misc.attacked_squares = attacked_squares;
 
 	const uint32_t num_checkers = popcnt(rook_checkers | bishop_checkers | knight_checkers | pawn_checkers);
 

@@ -3,18 +3,17 @@
 
 #include "move.h"
 
-struct alignas(64) MoveList
+struct alignas(cache_line_size) MoveListMisc
 {
-	alignas(64) Move moves[200];
-	forceinline constexpr MoveList() = default;
-	forceinline void push_move(const Move&& move)
-	{
-		moves[num_moves++] = move;
-	}
+	Bitboard piece_moves[PIECE_TYPE_NONE] = { 0,0,0,0,0,0 };
+	Bitboard pinmask = 0;
+	Bitboard checkmask = 0;
+	Bitboard pinners = 0;
+	Bitboard checkers = 0;
+	Bitboard attacked_squares = 0;
 
-	forceinline void reset()
+	void Reset()
 	{
-		num_moves = 0;
 		std::memset(piece_moves, 0, sizeof(piece_moves));
 		pinmask = 0;
 		checkmask = 0;
@@ -22,14 +21,36 @@ struct alignas(64) MoveList
 		checkers = 0;
 		attacked_squares = 0;
 	}
+};
 
-	forceinline constexpr uint32_t get_num_moves() const { return num_moves; }
+struct alignas(cache_line_size) MoveList
+{
+	forceinline constexpr MoveList() = default;
 
-	Bitboard piece_moves[PIECE_TYPE_NONE] = { 0,0,0,0,0,0 };
-	Bitboard pinmask = 0;
-	Bitboard checkmask = 0;
-	Bitboard pinners = 0;
-	Bitboard checkers = 0;
-	Bitboard attacked_squares = 0;
+	forceinline void PushMove(const Move&& move)
+	{
+		moves[num_moves++] = move;
+	}
+
+	forceinline void Reset()
+	{
+		num_moves = 0;
+		hash_of_position = 0;
+		move_list_misc.Reset();
+	}
+
+	forceinline constexpr uint32_t GetNumMoves() const { return num_moves; }
+	forceinline constexpr const Move* GetMoves() const { return moves; }
+
+	forceinline constexpr void SetHashOfPosition(const uint64_t hash) { hash_of_position = hash; }
+	forceinline constexpr uint64_t GetHashOfPosition() const { return hash_of_position; }
+
+	forceinline constexpr const Move& operator[](const uint32_t index) const { return moves[index]; }
+
+	MoveListMisc move_list_misc;
+
+private:
+	alignas(cache_line_size) Move moves[200];
 	uint32_t num_moves = 0;
+	uint64_t hash_of_position = 0;
 };

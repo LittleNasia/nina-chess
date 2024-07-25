@@ -88,10 +88,11 @@ inline void perft(SearchStack& search_info)
 	}
 	
 	Position& new_pos = search_info.GetNextPosition();
-	const auto& move_list = generate_moves<side_to_move>(pos, search_info.GetMoveList());
-	for (uint32_t move_id = 0; move_id < move_list.get_num_moves(); move_id++)
+	constexpr bool skip_hash_check = true;
+	const auto& move_list = search_info.GetMoveList<side_to_move, skip_hash_check>();
+	for (uint32_t move_id = 0; move_id < move_list.GetNumMoves(); move_id++)
 	{
-		position::MakeMove<side_to_move>(pos, new_pos, move_list.moves[move_id]);
+		position::MakeMove<side_to_move>(pos, new_pos, move_list[move_id]);
 
 		search_info.IncrementDepth();
 		perft<opposite_side>(search_info);
@@ -101,11 +102,7 @@ inline void perft(SearchStack& search_info)
 
 inline size_t test_perft(const bool hideOutput = false, const size_t node_limit = std::numeric_limits<size_t>::max())
 {
-	TranspositionTable tt(1);
-
-	Evaluator evaluator;
-	constexpr size_t max_depth = 10;
-	SearchStack search_stack(max_depth, tt, evaluator);
+	SearchStack search_stack;
 	search_stack.SetCurrentPositionHash();
 
 	const auto& test_positions = parse_perft_test_suite("./test/perftsuite.epd");

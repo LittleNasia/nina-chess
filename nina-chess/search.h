@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include "evaluator.h"
 #include "move.h"
 #include "search_stack.h"
 #include "transposition_table.h"
@@ -46,4 +47,13 @@ struct SearchConstraints
 	int nodes = -1;
 };
 
-std::vector<SearchResult> start_search(std::vector<Position> position_stack, TranspositionTable& tt, Evaluator& evaluator, const SearchConstraints& search_constraints);
+struct SearchNecessities
+{
+	TranspositionTable* transposition_table;
+	Evaluator* evaluator;
+
+	TranspositionTable& GetTranspositionTable() const { return *transposition_table; }
+	Evaluator& GetEvaluator() const { return *evaluator; }
+};
+
+std::vector<SearchResult> start_search(SearchStack& search_stack, const SearchNecessities& search_necessities, const SearchConstraints& search_constraints);

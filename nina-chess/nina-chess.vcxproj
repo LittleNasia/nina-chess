@@ -215,6 +215,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>$(LinkerAdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -274,8 +275,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      <AdditionalOptions>$(LinkerAdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Bench|x64'">
@@ -306,8 +306,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      <AdditionalOptions>$(LinkerAdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -324,6 +323,7 @@
     <ClInclude Include="attacks.h" />
     <ClInclude Include="bitmasks.h" />
     <ClInclude Include="evaluator.h" />
+    <ClInclude Include="incremental_updater.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_list.h" />
     <ClInclude Include="perft.h" />
@@ -339,6 +339,7 @@
     <ClInclude Include="zobrist.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="evaluator.inl" />
     <None Include="position.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
