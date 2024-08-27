@@ -63,7 +63,7 @@ inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& fil
 			entry.fen = tokens[0];
 			
 			// ignore the "D" from the depths in the tokens
-			std::string depth_str = tokens[token_id].substr(1);
+			std::string depth_str = tokens[token_id].substr(tokens[token_id].find_first_of('D') + 1);
 			std::istringstream depth_stream(depth_str);
 			depth_stream >> entry.depth;
 			depth_stream >> entry.expected_nodes;
@@ -88,8 +88,7 @@ inline void perft(SearchStack& search_info)
 	}
 	
 	Position& new_pos = search_info.GetNextPosition();
-	constexpr bool skip_hash_check = true;
-	const auto& move_list = search_info.GetMoveList<side_to_move, skip_hash_check>();
+	const auto& move_list = search_info.GetMoveListSkippingHashCheck<side_to_move>();
 	for (uint32_t move_id = 0; move_id < move_list.GetNumMoves(); move_id++)
 	{
 		position::MakeMove<side_to_move>(pos, new_pos, move_list[move_id]);
@@ -103,7 +102,6 @@ inline void perft(SearchStack& search_info)
 inline size_t test_perft(const bool hideOutput = false, const size_t node_limit = std::numeric_limits<size_t>::max())
 {
 	SearchStack search_stack;
-	search_stack.SetCurrentPositionHash();
 
 	const auto& test_positions = parse_perft_test_suite("./test/perftsuite.epd");
 

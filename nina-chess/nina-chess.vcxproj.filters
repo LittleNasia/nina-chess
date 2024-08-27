@@ -36,7 +36,7 @@
     <ClCompile Include="uci.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="evaluator.cpp">
+    <ClCompile Include="PSQT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -92,6 +92,27 @@
     <ClInclude Include="incremental_updater.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="accumulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="psqt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="weights.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="simd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="avx2_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="chess_bitboard_feature_iterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="board_features.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="position.inl">
@@ -99,6 +120,9 @@
     </None>
     <None Include="evaluator.inl">
       <Filter>Header Files</Filter>
+    </None>
+    <None Include="search_stack.inl">
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
 </Project>

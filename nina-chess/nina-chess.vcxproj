@@ -311,17 +311,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bench_main.cpp" />
-    <ClCompile Include="evaluator.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="nina-chess.cpp" />
+    <ClCompile Include="PSQT.cpp" />
     <ClCompile Include="search.cpp" />
     <ClCompile Include="test_main.cpp" />
     <ClCompile Include="transposition_table.cpp" />
     <ClCompile Include="uci.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="accumulator.h" />
     <ClInclude Include="attacks.h" />
+    <ClInclude Include="avx2_utils.h" />
     <ClInclude Include="bitmasks.h" />
+    <ClInclude Include="board_features.h" />
+    <ClInclude Include="chess_bitboard_feature_iterator.h" />
     <ClInclude Include="evaluator.h" />
     <ClInclude Include="incremental_updater.h" />
     <ClInclude Include="move.h" />
@@ -329,18 +333,22 @@
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="move_gen.h" />
+    <ClInclude Include="psqt.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="search_stack.h" />
     <ClInclude Include="side.h" />
+    <ClInclude Include="simd.h" />
     <ClInclude Include="targets.h" />
     <ClInclude Include="transposition_table.h" />
     <ClInclude Include="uci.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="weights.h" />
     <ClInclude Include="zobrist.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="evaluator.inl" />
     <None Include="position.inl" />
+    <None Include="search_stack.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -241,7 +241,7 @@ forceinline Position& position::MakeMove(const Position& pos, Position& new_pos,
 		{
 			new_pos.fifty_move_rule = 0;
 
-			if (m.to() & enemy_pieces.pawns)
+			if		(m.to() & enemy_pieces.pawns)
 				new_pos.hash = update_hash<opposite_color>(new_pos.hash, PAWN, m.to());
 			else if (m.to() & enemy_pieces.knights)
 				new_pos.hash = update_hash<opposite_color>(new_pos.hash, KNIGHT, m.to());

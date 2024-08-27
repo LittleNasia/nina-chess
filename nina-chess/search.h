@@ -7,6 +7,7 @@
 #include "move.h"
 #include "search_stack.h"
 #include "transposition_table.h"
+#include "incremental_updater.h"
 
 struct SearchResult
 {
@@ -42,7 +43,7 @@ struct AlphaBeta
 struct SearchConstraints
 {
 	int depth = -1;
-	int time = -1;
+	int64_t time = -1;
 	int movetime = -1;
 	int nodes = -1;
 };
@@ -56,4 +57,4 @@ struct SearchNecessities
 	Evaluator& GetEvaluator() const { return *evaluator; }
 };
 
-std::vector<SearchResult> start_search(SearchStack& search_stack, const SearchNecessities& search_necessities, const SearchConstraints& search_constraints);
+std::vector<SearchResult> start_search(IncrementalUpdater& incremental_updater, const SearchNecessities& search_necessities, const SearchConstraints& search_constraints);

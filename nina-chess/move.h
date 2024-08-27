@@ -22,7 +22,20 @@ public:
 	inline static constexpr uint32_t EP_offset = castling_offset + 1;
 	inline static constexpr uint32_t EP_mask = 0b1 << EP_offset;
 
-	forceinline std::string ToUciMove() const { return std::string(square_names[bit_index(from())]) + square_names[bit_index(to())]; }
+	forceinline constexpr std::string GetUciPromotionPiece() const
+	{
+		switch (promotion_piece())
+		{
+		case PIECE_TYPE_NONE: return "";
+		case QUEEN: return "q";
+		case ROOK: return "r";
+		case BISHOP: return "b";
+		case KNIGHT: return "n";
+		default: return "";
+		}
+	}
+
+	forceinline std::string ToUciMove() const { return std::string(square_names[bit_index(from())]) + square_names[bit_index(to())] + GetUciPromotionPiece(); }
 
 
 	forceinline constexpr Bitboard  from()			  const	{ return 1ULL << (encodedMove & index_from_mask); }

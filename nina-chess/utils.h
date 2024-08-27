@@ -24,7 +24,7 @@ inline constexpr bool is_debug = false;
 // forceinlining everything doesn't seem to give performance benefits anymore
 // maybe not anymore, forceinlining everything seems to be the way to go now for some reason ? ? ?
 // there are functions that probably still shouldn't be inlined but forceinline as a default seems fine now
-#define forceinline __forceinline
+#define forceinline inline
 
 inline constexpr size_t cache_line_size = 64;
 
@@ -85,10 +85,20 @@ forceinline constexpr Score operator-(const Score score)
 	return static_cast<Score>(-static_cast<int32_t>(score));
 }
 
+forceinline constexpr Score operator+(const Score left, const Score right)
+{
+	return static_cast<Score>(static_cast<int32_t>(left) + static_cast<int32_t>(right));
+}
+
 forceinline std::ostream& operator<<(std::ostream& os, const Score score)
 {
 	os << static_cast<int32_t>(score);
 	return os;
+}
+
+forceinline constexpr Score GetDrawValueWithSmallVariance(int64_t random_seed)
+{
+	return static_cast<Score>(random_seed & 7);
 }
 
 using CastlingType = uint32_t;

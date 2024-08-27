@@ -6,6 +6,7 @@
 #include <thread>
 
 #include "evaluator.h"
+#include "incremental_updater.h"
 #include "move_gen.h"
 #include "position.h"
 #include "search.h"
@@ -22,22 +23,27 @@ struct UciDefaultSettings
 
 struct UciState
 {
-	int hash_size = UciDefaultSettings::hash_size;
+	UciState():
+		hash_size(UciDefaultSettings::hash_size),
+		transposition_table(std::make_unique<TranspositionTable>(hash_size)),
+		incremental_updater(),
+		search_running{},
+		search_thread{}
+	{
+	}
 
-	std::vector<Position> position_stack;
+	TranspositionTable& GetTranspositionTable() { return *transposition_table; }
+
+	void UpdateRootPos(const Position& new_root_pos, const std::vector<Move> moves)
+	{
+	}
+
+	int hash_size = UciDefaultSettings::hash_size;
 	std::unique_ptr<TranspositionTable> transposition_table;
-	std::unique_ptr<Evaluator> evaluator = std::make_unique<Evaluator>();
+	IncrementalUpdater incremental_updater;
 
 	std::atomic_flag search_running = ATOMIC_FLAG_INIT;
 	std::thread search_thread;
-
-	SearchStack search_stack;
-	
-	void OnPositionsChanged()
-	{
-		search_stack.Reset(position_stack);
-		evaluator->Reset(search_stack);
-	}
 };
 static UciState current_state;
 
@@ -54,23 +60,22 @@ struct GoState
 
 void ucinewgame()
 {
-	current_state.position_stack.resize(0);
 	current_state.transposition_table = std::make_unique<TranspositionTable>(current_state.hash_size);
-	current_state.evaluator = std::make_unique<Evaluator>();
-	current_state.position_stack.push_back(Position());
+	current_state.incremental_updater.Reset();
 }
 
 void search_thread_function(const SearchConstraints& search_constraints)
 {
 	current_state.search_running.test_and_set();
-	SearchNecessities search_necessities{ current_state.transposition_table.get(), current_state.evaluator.get()};
-	start_search(current_state.search_stack, search_necessities, search_constraints);
+	SearchNecessities search_necessities{ current_state.transposition_table.get(), &current_state.incremental_updater.GetEvaluator()};
+	start_search(current_state.incremental_updater, search_necessities, search_constraints);
 	current_state.search_running.clear();
 }
 
 void go(const GoState& state)
 {
-	const Position& current_position = current_state.position_stack.back();
+	current_state.incremental_updater.GetSearchStack().StartSearch();
+	const Position& current_position = current_state.incremental_updater.GetSearchStack().GetCurrentPosition();
 	if (current_state.search_running.test())
 	{
 		return;
@@ -177,7 +182,7 @@ void parse_moves(std::stringstream& input)
 	{
 		UciMove move = parse_move(token);
 
-		const auto& last_pos = current_state.position_stack.back();
+		const auto& last_pos = current_state.incremental_updater.GetSearchStack().GetCurrentPosition();
 
 		MoveList curr_pos_move_list;
 		generate_moves(last_pos, curr_pos_move_list);
@@ -190,9 +195,10 @@ void parse_moves(std::stringstream& input)
 				continue;
 			if (bit_index(curr_move.from()) == move.move_from && bit_index(curr_move.to()) == move.move_to)
 			{
-				Position new_position;
-				position::MakeMove(last_pos, new_position, curr_move);
-				current_state.position_stack.push_back(new_position);
+				if (last_pos.side_to_move == WHITE)
+					current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
+				else
+					current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
 				found_move = true;
 				break;
 			}
@@ -221,18 +227,20 @@ void parse_moves(std::stringstream& input)
 							curr_move.to() & kingside_rooks &&
 							move_to_bb & kingside_king_destinations)
 						{
-							Position new_position;
-							position::MakeMove(last_pos, new_position, curr_move);
-							current_state.position_stack.push_back(new_position);
+							if (last_pos.side_to_move == WHITE)
+								current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
+							else
+								current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
 							break;
 						}
 						else if (curr_move.from() & side_to_move_pieces.king &&
 							curr_move.to() & queenside_rooks &&
 							move_to_bb & queenside_king_destinations)
 						{
-							Position new_position;
-							position::MakeMove(last_pos, new_position, curr_move);
-							current_state.position_stack.push_back(new_position);
+							if (last_pos.side_to_move == WHITE)
+								current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
+							else
+								current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
 							break;
 						}
 					}
@@ -254,17 +262,14 @@ void setposition(std::stringstream& input)
 			parsing_fen = false;
 			if (!current_fen.empty())
 			{
-				current_state.position_stack.clear();
-				current_state.position_stack.push_back(position::ParseFen(current_fen));
-				current_fen.clear();
+				current_state.incremental_updater.Reset(position::ParseFen(current_fen));
 			}
 
 			parse_moves(input);
 		}
 		else if (token == "startpos")
 		{
-			current_state.position_stack.clear();
-			current_state.position_stack.push_back(Position());
+			current_state.incremental_updater.Reset();
 		}
 		else if (parsing_fen || token == "fen")
 		{
@@ -279,12 +284,9 @@ void setposition(std::stringstream& input)
 	if (parsing_fen)
 	{
 		std::cout << current_fen << "\n";
-		current_state.position_stack.clear();
-		current_state.position_stack.push_back(position::ParseFen(current_fen));
+		current_state.incremental_updater.Reset(position::ParseFen(current_fen));
 		current_fen.clear();
 	}
-
-	current_state.OnPositionsChanged();
 }
 
 void setoption(std::stringstream& input)
@@ -319,15 +321,27 @@ void uci_info()
 void uci::Loop()
 {
 	ucinewgame();
-	std::string token;
+	
 	while (true)
 	{
+		std::string token;
 		std::string input;
 		std::getline(std::cin, input);
 
 		std::stringstream input_stream(input);
 		
 		input_stream >> token;
+		if (token == "quit" || token == "stop")
+		{
+			quit();
+		}
+		// wait for search to finish in case it is running before executing further commands
+		while (current_state.search_running.test())
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		}
+
+
 		if (token == "position")
 		{
 			setposition(input_stream);
@@ -345,17 +359,15 @@ void uci::Loop()
 		{
 			uci_info();
 		}
-		if (token == "quit")
-		{
-			quit();
-		}
+		
 		if (token == "setoption")
 		{
 			setoption(input_stream);
 		}
 		if (token == "print")
 		{
-			position::PrintBoard(current_state.position_stack.back());
+			position::PrintBoard(current_state.incremental_updater.GetSearchStack().GetCurrentPosition());
+			std::cout << std::endl;
 		}
 		if (token == "isready")
 		{

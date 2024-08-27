@@ -9,25 +9,55 @@
 class IncrementalUpdater
 {
 public:
-	IncrementalUpdater(Evaluator& evaluator, SearchStack& search_stack) :
-		evaluator(&evaluator),
-		search_stack(&search_stack)
+	IncrementalUpdater() :
+		evaluator(std::make_unique<Evaluator>("weights")),
+		search_stack(std::make_unique<SearchStack>())
 	{}
 
+	Evaluator& GetEvaluator() const { return *evaluator; }
+	SearchStack& GetSearchStack() const { return *search_stack; }
+	
+	forceinline void Reset()
+	{
+		search_stack->Reset();
+		evaluator->Reset(*search_stack);
+	}
+
+	forceinline void Reset(const Position& pos)
+	{
+		search_stack->Reset(pos);
+		evaluator->Reset(*search_stack);
+	}
+
 	template<Color side_to_move>
-	constexpr void MakeMoveUpdate(const Move& move)
+	forceinline constexpr void FullUpdate(const Move& move)
+	{
+		MakeMoveUpdate<side_to_move>(move);
+		MoveGenerationUpdateWithoutGuard<get_opposite_color<side_to_move>()>();
+	}
+
+	template<Color side_to_move>
+	forceinline constexpr void MakeMoveUpdate(const Move& move)
 	{
 		const Position& prev_pos = search_stack->GetCurrentPosition();
 		Position& new_pos = search_stack->GetNextPosition();
 		position::MakeMove<side_to_move>(prev_pos, new_pos, move);
 
-		search_stack->SetCurrentPositionHash();
 		search_stack->IncrementDepth();
 	}
 
-	constexpr void UndoUpdate()
+	forceinline constexpr void UndoUpdate()
 	{
 		search_stack->DecrementDepth();
+	}
+
+	template<Color side_to_move>
+	forceinline constexpr void MoveGenerationUpdateWithoutGuard()
+	{
+		const auto& curr_pos = search_stack->GetCurrentPosition();
+		const auto& move_list = search_stack->GetMoveList<side_to_move>();
+
+		evaluator->IncrementalUpdate<side_to_move>(curr_pos, move_list);
 	}
 
 	// Move generation update is tricky, because it might not happen on every node (as we might return prematurely)
@@ -35,7 +65,7 @@ public:
 	// this object just ensures that if move generation update was done, it will be undone on the next return
 	struct MoveGenerationUpdateGuard
 	{
-		forceinline constexpr MoveGenerationUpdateGuard(Evaluator* evaluator) : 
+		forceinline constexpr MoveGenerationUpdateGuard(Evaluator* evaluator) :
 			evaluator(evaluator)
 		{}
 
@@ -49,17 +79,19 @@ public:
 	};
 
 	template<Color side_to_move>
-	constexpr MoveGenerationUpdateGuard MoveGenerationUpdate()
+	[[nodiscard]] forceinline constexpr MoveGenerationUpdateGuard MoveGenerationUpdate()
 	{
-		const auto& curr_pos = search_stack->GetCurrentPosition();
-		const auto& move_list = search_stack->GetMoveList<side_to_move>();
+		MoveGenerationUpdateWithoutGuard<side_to_move>();
 
-		evaluator->IncrementalUpdate<side_to_move>(curr_pos, move_list);
+		return MoveGenerationUpdateGuard(evaluator.get());
+	}
 
-		return MoveGenerationUpdateGuard(evaluator);
+	forceinline constexpr void UndoMoveGenerationUpdate()
+	{
+		evaluator->UndoUpdate();
 	}
 
 private:
-	Evaluator* evaluator;
-	SearchStack* search_stack;
+	std::unique_ptr<Evaluator> evaluator;
+	std::unique_ptr<SearchStack> search_stack;
 };

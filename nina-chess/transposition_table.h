@@ -26,7 +26,7 @@ class TranspositionTable
 public:
 	TranspositionTable(const size_t size_in_mb);
 
-	void Insert(const TranspositionTableEntry& entry);
+	void Insert(const TranspositionTableEntry& entry, bool force_overwrite);
 	const TranspositionTableEntry& Get(const uint64_t key) const;
 
 private:

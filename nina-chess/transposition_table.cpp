@@ -12,12 +12,12 @@ TranspositionTable::TranspositionTable(const size_t size_in_mb)
 	entries.resize(entry_count);
 }
 
-void TranspositionTable::Insert(const TranspositionTableEntry& entry)
+void TranspositionTable::Insert(const TranspositionTableEntry& entry, bool force_overwrite)
 {
 	const size_t index = fast_modulo(entry.key, entries.size());
 	
 	const auto& curr_entry = entries[index];
-	if (curr_entry.depth < entry.depth)
+	if ((curr_entry.depth <= entry.depth) || force_overwrite)
 	{
 		entries[index] = entry;
 	}

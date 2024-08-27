@@ -1,41 +1,33 @@
 #pragma once
 #include "utils.h"
 
+#include <fstream>
+#include <memory>
+
 #include "move_list.h"
 #include "position.h"
+#include "psqt.h"
 #include "search_stack.h"
-
-struct BoardFeatures
-{
-	const Side* white_pieces;
-	const Side* black_pieces;
-	Bitboard EP_square;
-	CastlingType castling;
-
-};
 
 class Evaluator
 {
 public:
-	Evaluator();
+	forceinline Evaluator(const std::string_view& weights_filename);
 	
-	void Reset(SearchStack& search_stack);
+	forceinline constexpr void Reset(SearchStack& search_stack);
 
 	template<Color side_to_move>
-	constexpr Score Evaluate(const Position& position, const MoveList& move_list);
+	forceinline constexpr Score Evaluate(const Position& position, const MoveList& move_list);
 
 	template<Color side_to_move>
-	constexpr void IncrementalUpdate(const Position& new_pos, const MoveList& move_list);
+	forceinline constexpr void IncrementalUpdate(const Position& new_pos, const MoveList& move_list);
 
-	constexpr void UndoUpdate() { depth--; }
-
-	template<Color side_to_move>
-	constexpr void Update(const Position& position, const MoveList& move_list);
-
+	forceinline constexpr void UndoUpdate() { psqt->UndoUpdate(); depth--; }
 private:
+	forceinline constexpr void ReadWeights(std::ifstream& file);
 	int depth;
-	alignas(cache_line_size) const MoveListMisc* moves_misc[max_ply];
-	alignas(cache_line_size) BoardFeatures board_features[max_ply];
+
+	std::unique_ptr<PSQT> psqt;
 };
 
 forceinline Score get_score(const float wdl_chances)

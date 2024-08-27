@@ -400,3 +400,4 @@ FodyWeavers.xsd
 /test/clone
 /test/clone/*
 /test/*.exe
+/weights

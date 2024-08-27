@@ -1,34 +1,67 @@
 #include "evaluator.h"
+#include "weights.h"
+
+forceinline Evaluator::Evaluator(const std::string_view& weights_filename) :
+	depth{ 0 },
+	psqt{ }
+{
+	std::ifstream file{ weights_filename.data() };
+	if (!file.is_open())
+	{
+		throw std::runtime_error("Could not open file");
+	}
+
+	ReadWeights(file);
+}
+
+forceinline constexpr void Evaluator::Reset(SearchStack& search_stack)
+{
+	depth = 0;
+	psqt->Reset(search_stack.GetPositionAt(0), search_stack.GetMoveListAt(0));
+
+	for (int depth = 0; depth < search_stack.depth; depth++)
+	{
+		const auto& curr_position = search_stack.GetPositionAt(depth);
+		const auto& curr_move_list = search_stack.GetMoveListAt(depth);
+
+		if (curr_position.side_to_move == WHITE)
+			IncrementalUpdate<WHITE>(curr_position, curr_move_list);
+		else
+			IncrementalUpdate<BLACK>(curr_position, curr_move_list);
+	}
+}
+
+forceinline constexpr void Evaluator::ReadWeights(std::ifstream& file)
+{
+	// for now we're hardcoding the weights so we don't give a little pik about file reading
+	// we'll implement this later
+	// for now we're just going to ignore the file
+
+	psqt = std::make_unique<PSQT>(file);
+}
+
 
 template<Color side_to_move>
-constexpr Score Evaluator::Evaluate(const Position& position, const MoveList& move_list)
+forceinline constexpr Score Evaluator::Evaluate(const Position& position, const MoveList& move_list)
 {
 	if (move_list.GetNumMoves() == 0)
 	{
-		return move_list.move_list_misc.checkers ? get_mated_score(depth) : get_score(0.0f);
+		if (move_list.move_list_misc.checkers)
+		{
+			return get_mated_score(depth);
+		}
+		else
+		{
+			return Score::DRAW;
+		}
 	}
 
-	float score = (float)(int(popcnt(position.GetSide<WHITE>().pieces)) - int(popcnt(position.GetSide<BLACK>().pieces))) / 16.f;
-	score *= (side_to_move == WHITE ? 1 : -1);
-
-	return get_score(score);
+	return get_score(psqt->Evaluate() * (side_to_move == Color::WHITE ? 1 : -1));
 }
 
 template<Color side_to_move>
-constexpr void Evaluator::IncrementalUpdate(const Position& new_pos, const MoveList& move_list)
+forceinline constexpr void Evaluator::IncrementalUpdate(const Position& new_pos, const MoveList& move_list)
 {
 	depth++;
-	Update<side_to_move>(new_pos, move_list);
-}
-
-template<Color side_to_move>
-constexpr void Evaluator::Update(const Position& position, const MoveList& move_list)
-{
-	auto& curr_board_features = board_features[depth];
-	curr_board_features.white_pieces = &position.white_pieces;
-	curr_board_features.black_pieces = &position.black_pieces;
-	curr_board_features.EP_square = position.EP_square;
-	curr_board_features.castling = position.castling;
-
-	moves_misc[depth] = &move_list.move_list_misc;
+	psqt->IncrementalUpdate(new_pos, move_list);
 }
