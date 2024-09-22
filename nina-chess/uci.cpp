@@ -6,11 +6,11 @@
 #include <thread>
 
 #include "evaluator.h"
-#include "incremental_updater.h"
 #include "move_gen.h"
 #include "position.h"
 #include "search.h"
 #include "transposition_table.h"
+#include "uci_incremental_updater.h"
 
 using namespace uci;
 
@@ -19,32 +19,38 @@ struct UciDefaultSettings
 	inline static constexpr int hash_size = 16;
 	inline static constexpr int min_hash_size = 1;
 	inline static constexpr int max_hash_size = 1 << 30;
+	inline static const std::string weights_filename = "weights";
 };
 
 struct UciState
 {
 	UciState():
 		hash_size(UciDefaultSettings::hash_size),
+		weights_filename{ UciDefaultSettings::weights_filename },
 		transposition_table(std::make_unique<TranspositionTable>(hash_size)),
-		incremental_updater(),
 		search_running{},
-		search_thread{}
+		search_thread{},
+		evaluator(std::make_unique<Evaluator>(weights_filename)),
+		position_stack(std::make_unique<PositionStack>()),
+		incremental_updater{ evaluator.get(), position_stack.get(), Position() }
 	{
 	}
 
 	TranspositionTable& GetTranspositionTable() { return *transposition_table; }
 
-	void UpdateRootPos(const Position& new_root_pos, const std::vector<Move> moves)
-	{
-	}
-
-	int hash_size = UciDefaultSettings::hash_size;
-	std::unique_ptr<TranspositionTable> transposition_table;
-	IncrementalUpdater incremental_updater;
+	int hash_size;
+	std::string weights_filename;
 
 	std::atomic_flag search_running = ATOMIC_FLAG_INIT;
 	std::thread search_thread;
+
+	std::unique_ptr<PositionStack> position_stack;
+	std::unique_ptr<Evaluator> evaluator;
+	std::unique_ptr<TranspositionTable> transposition_table;
+
+	UciIncrementalUpdater incremental_updater;
 };
+
 static UciState current_state;
 
 struct GoState
@@ -58,24 +64,37 @@ struct GoState
 	int movetime = -1;
 };
 
+void dump_uci_state(const std::string_view& file_name)
+{
+	std::ofstream file(file_name.data(), std::ios::binary);
+
+	current_state.transposition_table->Serialize(file);
+}
+
+void load_uci_state(const std::string_view& file_name)
+{
+	std::ifstream file(file_name.data(), std::ios::binary);
+
+	current_state.transposition_table->Deserialize(file);
+}
+
 void ucinewgame()
 {
 	current_state.transposition_table = std::make_unique<TranspositionTable>(current_state.hash_size);
-	current_state.incremental_updater.Reset();
 }
 
-void search_thread_function(const SearchConstraints& search_constraints)
+void search_thread_function(const TimePoint& search_start_timepoint, const SearchConstraints& search_constraints)
 {
 	current_state.search_running.test_and_set();
-	SearchNecessities search_necessities{ current_state.transposition_table.get(), &current_state.incremental_updater.GetEvaluator()};
-	start_search(current_state.incremental_updater, search_necessities, search_constraints);
+	SharedSearchContext search_context(search_constraints, search_start_timepoint, &current_state.GetTranspositionTable());
+	start_search(current_state.incremental_updater, search_context);
 	current_state.search_running.clear();
 }
 
 void go(const GoState& state)
 {
-	current_state.incremental_updater.GetSearchStack().StartSearch();
-	const Position& current_position = current_state.incremental_updater.GetSearchStack().GetCurrentPosition();
+	const TimePoint search_start_timepoint = std::chrono::high_resolution_clock::now();
+	const Position& current_position = current_state.incremental_updater.GetPositionStack().GetCurrentPosition();
 	if (current_state.search_running.test())
 	{
 		return;
@@ -105,8 +124,8 @@ void go(const GoState& state)
 	constraints.time = time_for_move;
 	constraints.nodes = state.nodes;
 
-	current_state.search_thread = std::thread(search_thread_function, constraints);
-	current_state.search_thread.detach();
+	current_state.search_thread = std::thread(search_thread_function, search_start_timepoint, constraints);
+	current_state.search_thread.join();
 }
 
 GoState parse_go(std::stringstream& input)
@@ -182,7 +201,7 @@ void parse_moves(std::stringstream& input)
 	{
 		UciMove move = parse_move(token);
 
-		const auto& last_pos = current_state.incremental_updater.GetSearchStack().GetCurrentPosition();
+		const auto& last_pos = current_state.incremental_updater.GetPositionStack().GetCurrentPosition();
 
 		MoveList curr_pos_move_list;
 		generate_moves(last_pos, curr_pos_move_list);
@@ -231,6 +250,7 @@ void parse_moves(std::stringstream& input)
 								current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
 							else
 								current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
+							found_move = true;
 							break;
 						}
 						else if (curr_move.from() & side_to_move_pieces.king &&
@@ -241,11 +261,16 @@ void parse_moves(std::stringstream& input)
 								current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
 							else
 								current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
+							found_move = true;
 							break;
 						}
 					}
 				}
 			}
+		}
+		DEBUG_IF(!found_move)
+		{
+			throw std::runtime_error("Move not found");
 		}
 	}
 }
@@ -262,14 +287,16 @@ void setposition(std::stringstream& input)
 			parsing_fen = false;
 			if (!current_fen.empty())
 			{
-				current_state.incremental_updater.Reset(position::ParseFen(current_fen));
+				current_state.incremental_updater = 
+					UciIncrementalUpdater(current_state.evaluator.get(), current_state.position_stack.get(), position::ParseFen(current_fen));
 			}
 
 			parse_moves(input);
 		}
 		else if (token == "startpos")
 		{
-			current_state.incremental_updater.Reset();
+			current_state.incremental_updater =
+				UciIncrementalUpdater(current_state.evaluator.get(), current_state.position_stack.get(), Position());
 		}
 		else if (parsing_fen || token == "fen")
 		{
@@ -283,9 +310,8 @@ void setposition(std::stringstream& input)
 	// we did not receive any moves and as such the parsing loop has exited
 	if (parsing_fen)
 	{
-		std::cout << current_fen << "\n";
-		current_state.incremental_updater.Reset(position::ParseFen(current_fen));
-		current_fen.clear();
+		current_state.incremental_updater =
+			UciIncrementalUpdater(current_state.evaluator.get(), current_state.position_stack.get(), position::ParseFen(current_fen));
 	}
 }
 
@@ -341,7 +367,14 @@ void uci::Loop()
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
 
+		//dump_uci_state(token);
 
+		if (token == "load")
+		{
+			std::string file_name;
+			input_stream >> file_name;
+			load_uci_state(file_name);
+		}
 		if (token == "position")
 		{
 			setposition(input_stream);
@@ -366,7 +399,7 @@ void uci::Loop()
 		}
 		if (token == "print")
 		{
-			position::PrintBoard(current_state.incremental_updater.GetSearchStack().GetCurrentPosition());
+			position::PrintBoard(current_state.incremental_updater.GetPositionStack().GetCurrentPosition());
 			std::cout << std::endl;
 		}
 		if (token == "isready")

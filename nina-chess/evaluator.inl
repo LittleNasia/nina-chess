@@ -1,5 +1,25 @@
 #include "evaluator.h"
-#include "weights.h"
+
+forceinline Score get_score(const float wdl_chances)
+{
+	DEBUG_IF(wdl_chances < -1.0f || wdl_chances > 1.0f)
+	{
+		throw std::runtime_error("wdl_chances must be in the range [-1.0, 1.0]");
+	}
+
+	constexpr int32_t win_score = static_cast<int32_t>(Score::WIN);
+	return static_cast<Score>(wdl_chances * win_score);
+}
+
+forceinline Score get_mated_score(const int64_t mate_in)
+{
+	DEBUG_IF(mate_in < 0)
+	{
+		throw std::runtime_error("mate_in must be non-negative");
+	}
+
+	return Score(int32_t(Score::LOSS) + mate_in);
+}
 
 forceinline Evaluator::Evaluator(const std::string_view& weights_filename) :
 	depth{ 0 },
@@ -14,15 +34,15 @@ forceinline Evaluator::Evaluator(const std::string_view& weights_filename) :
 	ReadWeights(file);
 }
 
-forceinline constexpr void Evaluator::Reset(SearchStack& search_stack)
+forceinline constexpr void Evaluator::Reset(PositionStack& position_stack)
 {
 	depth = 0;
-	psqt->Reset(search_stack.GetPositionAt(0), search_stack.GetMoveListAt(0));
+	psqt->Reset(position_stack.GetPositionAt(0), position_stack.GetMoveListAt(0));
 
-	for (int depth = 0; depth < search_stack.depth; depth++)
+	for (int depth = 0; depth < position_stack.GetDepth(); depth++)
 	{
-		const auto& curr_position = search_stack.GetPositionAt(depth);
-		const auto& curr_move_list = search_stack.GetMoveListAt(depth);
+		const auto& curr_position = position_stack.GetPositionAt(depth);
+		const auto& curr_move_list = position_stack.GetMoveListAt(depth);
 
 		if (curr_position.side_to_move == WHITE)
 			IncrementalUpdate<WHITE>(curr_position, curr_move_list);
@@ -33,22 +53,20 @@ forceinline constexpr void Evaluator::Reset(SearchStack& search_stack)
 
 forceinline constexpr void Evaluator::ReadWeights(std::ifstream& file)
 {
-	// for now we're hardcoding the weights so we don't give a little pik about file reading
-	// we'll implement this later
-	// for now we're just going to ignore the file
-
 	psqt = std::make_unique<PSQT>(file);
 }
 
 
 template<Color side_to_move>
-forceinline constexpr Score Evaluator::Evaluate(const Position& position, const MoveList& move_list)
+forceinline constexpr Score Evaluator::Evaluate(const Position& position, const MoveList& move_list, const int64_t search_depth)
 {
 	if (move_list.GetNumMoves() == 0)
 	{
 		if (move_list.move_list_misc.checkers)
 		{
-			return get_mated_score(depth);
+			Score mated_score = get_mated_score(search_depth);
+			ValidateScore(mated_score);
+			return mated_score;
 		}
 		else
 		{
@@ -56,7 +74,10 @@ forceinline constexpr Score Evaluator::Evaluate(const Position& position, const 
 		}
 	}
 
-	return get_score(psqt->Evaluate() * (side_to_move == Color::WHITE ? 1 : -1));
+	Score score = get_score(psqt->Evaluate() * (side_to_move == Color::WHITE ? 1 : -1));
+	ValidateScore(score);
+
+	return score;
 }
 
 template<Color side_to_move>

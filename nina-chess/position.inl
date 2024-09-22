@@ -126,7 +126,6 @@ forceinline constexpr void Position::UpdateOccupiedBitboard()
 	occupied = white_pieces.pieces | black_pieces.pieces;
 }
 
-
 template<Color side_to_move>
 forceinline constexpr uint64_t position::update_hash(uint64_t hash, const PieceType moving_piece, Bitboard move)
 {

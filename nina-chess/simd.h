@@ -16,7 +16,7 @@ struct simd_pack
 {
 public:
 	forceinline constexpr float& operator[] (const size_t index) { return values[index]; }
-	forceinline constexpr const float& operator[] (const size_t index) const { return values[index]; }
+	forceinline constexpr float operator[] (const size_t index) const { return values[index]; }
 private:
 	float values[floats_per_register];
 };

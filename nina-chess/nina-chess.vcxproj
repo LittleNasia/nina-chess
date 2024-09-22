@@ -313,7 +313,6 @@
     <ClCompile Include="bench_main.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="nina-chess.cpp" />
-    <ClCompile Include="PSQT.cpp" />
     <ClCompile Include="search.cpp" />
     <ClCompile Include="test_main.cpp" />
     <ClCompile Include="transposition_table.cpp" />
@@ -326,8 +325,9 @@
     <ClInclude Include="bitmasks.h" />
     <ClInclude Include="board_features.h" />
     <ClInclude Include="chess_bitboard_feature_iterator.h" />
+    <ClInclude Include="common_incremental_updater.h" />
     <ClInclude Include="evaluator.h" />
-    <ClInclude Include="incremental_updater.h" />
+    <ClInclude Include="uci_incremental_updater.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_list.h" />
     <ClInclude Include="perft.h" />
@@ -335,9 +335,17 @@
     <ClInclude Include="move_gen.h" />
     <ClInclude Include="psqt.h" />
     <ClInclude Include="search.h" />
-    <ClInclude Include="search_stack.h" />
+    <ClInclude Include="search_cancellation_policy.h" />
+    <ClInclude Include="search_constraints.h" />
+    <ClInclude Include="search_context.h" />
+    <ClInclude Include="search_incremental_updater.h" />
+    <ClInclude Include="search_nodes_cancellation_policy.h" />
+    <ClInclude Include="position_stack.h" />
+    <ClInclude Include="search_time_cancellation_policy.h" />
+    <ClInclude Include="serializable.h" />
     <ClInclude Include="side.h" />
     <ClInclude Include="simd.h" />
+    <ClInclude Include="individual_search_context.h" />
     <ClInclude Include="targets.h" />
     <ClInclude Include="transposition_table.h" />
     <ClInclude Include="uci.h" />
@@ -346,9 +354,12 @@
     <ClInclude Include="zobrist.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="accumulator.inl" />
+    <None Include="cpp.hint" />
     <None Include="evaluator.inl" />
     <None Include="position.inl" />
-    <None Include="search_stack.inl" />
+    <None Include="psqt.inl" />
+    <None Include="position_stack.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

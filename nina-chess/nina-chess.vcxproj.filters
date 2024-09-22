@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\SearchContext">
+      <UniqueIdentifier>{fe4df698-008a-473c-a278-e1293efae67b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SearchContext\SearchCancellationPolicies">
+      <UniqueIdentifier>{45747f32-d1a1-4d60-a6bc-81bb87024597}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\IncrementalUpdater">
+      <UniqueIdentifier>{5b004387-05e9-43d8-8de8-b7dbe987c292}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nina-chess.cpp">
@@ -34,9 +43,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="uci.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PSQT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,16 +86,13 @@
     <ClInclude Include="transposition_table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="search_stack.h">
+    <ClInclude Include="position_stack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="zobrist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="uci.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="incremental_updater.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="accumulator.h">
@@ -113,15 +116,52 @@
     <ClInclude Include="board_features.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="serializable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="search_constraints.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="search_nodes_cancellation_policy.h">
+      <Filter>Header Files\SearchContext\SearchCancellationPolicies</Filter>
+    </ClInclude>
+    <ClInclude Include="search_time_cancellation_policy.h">
+      <Filter>Header Files\SearchContext\SearchCancellationPolicies</Filter>
+    </ClInclude>
+    <ClInclude Include="search_cancellation_policy.h">
+      <Filter>Header Files\SearchContext\SearchCancellationPolicies</Filter>
+    </ClInclude>
+    <ClInclude Include="search_context.h">
+      <Filter>Header Files\SearchContext</Filter>
+    </ClInclude>
+    <ClInclude Include="individual_search_context.h">
+      <Filter>Header Files\SearchContext</Filter>
+    </ClInclude>
+    <ClInclude Include="uci_incremental_updater.h">
+      <Filter>Header Files\IncrementalUpdater</Filter>
+    </ClInclude>
+    <ClInclude Include="search_incremental_updater.h">
+      <Filter>Header Files\IncrementalUpdater</Filter>
+    </ClInclude>
+    <ClInclude Include="common_incremental_updater.h">
+      <Filter>Header Files\IncrementalUpdater</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="position.inl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="evaluator.inl">
-      <Filter>Header Files</Filter>
+    <None Include="position_stack.inl">
+      <Filter>Source Files</Filter>
     </None>
-    <None Include="search_stack.inl">
+    <None Include="evaluator.inl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="cpp.hint" />
+    <None Include="accumulator.inl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="psqt.inl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

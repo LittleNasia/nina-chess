@@ -101,6 +101,14 @@ forceinline constexpr Score GetDrawValueWithSmallVariance(int64_t random_seed)
 	return static_cast<Score>(random_seed & 7);
 }
 
+forceinline constexpr void ValidateScore(Score score)
+{
+	DEBUG_IF(score <= Score::NEGATIVE_INF || score >= Score::POSITIVE_INF)
+	{
+		throw std::runtime_error("Score is unknown");
+	}
+}
+
 using CastlingType = uint32_t;
 
 inline constexpr Bitboard empty_bitboard = 0ULL;
@@ -123,7 +131,7 @@ forceinline size_t pext(const Bitboard b, const Bitboard mask)
 }
 
 #pragma warning( push )
-#pragma warning (disable:4244)
+#pragma warning( disable:4244) 
 forceinline uint32_t popcnt(const Bitboard bb)
 {
 	return __popcnt64(bb);
@@ -138,37 +146,12 @@ forceinline Bitboard pop_bit(Bitboard& bb)
 }
 
 #pragma warning( push )
-#pragma warning ( disable:4244 )
+#pragma warning( disable:4244 )
 forceinline uint32_t bit_index(const Bitboard bb)
 {
 	return _tzcnt_u64(bb);
 }
 #pragma warning( pop ) 
-
-inline constexpr Bitboard row_bitmasks[board_rows] =
-{
-	255ULL,
-	65280ULL,
-	16711680ULL,
-	4278190080ULL,
-	1095216660480ULL,
-	280375465082880ULL,
-	71776119061217280ULL,
-	18374686479671623680ULL,
-};
-
-
-inline constexpr Bitboard col_bitmasks[board_cols] =
-{
-	72340172838076673ULL,
-	144680345676153346ULL,
-	289360691352306692ULL,
-	578721382704613384ULL,
-	1157442765409226768ULL,
-	2314885530818453536ULL,
-	4629771061636907072ULL,
-	9259542123273814144ULL,
-};
 
 inline constexpr int square_row[num_board_squares] =
 {
@@ -612,4 +595,9 @@ forceinline constexpr uint32_t square_index_from_square_name(const char* square_
 	uint32_t row = get_row_from_rank(square_name[1]);
 	uint32_t col = get_col_from_file(square_name[0]);
 	return two_d_to_one_d(row, col);
+}
+
+forceinline constexpr uint32_t fast_modulo(const size_t input, const size_t ceil)
+{
+	return ((input >> 32) * (ceil)) >> 32;
 }

@@ -5,9 +5,10 @@
 
 #include "evaluator.h"
 #include "move.h"
-#include "search_stack.h"
+#include "position_stack.h"
+#include "search_context.h"
 #include "transposition_table.h"
-#include "incremental_updater.h"
+#include "uci_incremental_updater.h"
 
 struct SearchResult
 {
@@ -15,7 +16,7 @@ struct SearchResult
 	size_t pv_length = 0ULL;
 	Score score = Score::DRAW;
 	size_t nodes = 0;
-	int depth;
+	int64_t depth;
 
 	void PrintUciInfo(size_t duration_in_ms = 0) const
 	{
@@ -40,21 +41,4 @@ struct AlphaBeta
 	forceinline constexpr AlphaBeta Invert() const { return { -beta, -alpha }; }
 };
 
-struct SearchConstraints
-{
-	int depth = -1;
-	int64_t time = -1;
-	int movetime = -1;
-	int nodes = -1;
-};
-
-struct SearchNecessities
-{
-	TranspositionTable* transposition_table;
-	Evaluator* evaluator;
-
-	TranspositionTable& GetTranspositionTable() const { return *transposition_table; }
-	Evaluator& GetEvaluator() const { return *evaluator; }
-};
-
-std::vector<SearchResult> start_search(IncrementalUpdater& incremental_updater, const SearchNecessities& search_necessities, const SearchConstraints& search_constraints);
+std::vector<SearchResult> start_search(UciIncrementalUpdater& uci_incremental_updater, SharedSearchContext& search_context);

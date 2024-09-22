@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "move.h"
+#include "serializable.h"
 
 enum class TTFlag
 {
@@ -16,12 +17,12 @@ struct TranspositionTableEntry
 {
 	uint64_t key = 0;
 	Score score = Score::DRAW;
-	int depth = 0;
+	int64_t depth = 0;
 	Move best_move;
 	TTFlag flag = TTFlag::EXACT;
 };
 
-class TranspositionTable
+class TranspositionTable : public Serializable
 {
 public:
 	TranspositionTable(const size_t size_in_mb);
@@ -29,6 +30,8 @@ public:
 	void Insert(const TranspositionTableEntry& entry, bool force_overwrite);
 	const TranspositionTableEntry& Get(const uint64_t key) const;
 
+	void Serialize(std::ofstream& output);
+	void Deserialize(std::ifstream& input);
 private:
 	std::vector<TranspositionTableEntry> entries;
 };

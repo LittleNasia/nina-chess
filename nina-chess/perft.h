@@ -9,7 +9,7 @@
 
 #include "move_gen.h"
 #include "position.h"
-#include "search_stack.h"
+#include "position_stack.h"
 
 struct PerftTestEntry
 {
@@ -75,33 +75,42 @@ inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& fil
 	return test_entries;
 }
 
+
+struct PerftInfo
+{
+	size_t nodes;
+	int remaining_depth;
+};
+
 template<Color side_to_move>
-inline void perft(SearchStack& search_info)
+inline void perft(PositionStack& position_stack, PerftInfo& perft_info)
 {
 	constexpr Color opposite_side = get_opposite_color<side_to_move>();
-	const Position& pos = search_info.GetCurrentPosition();
+	const Position& pos = position_stack.GetCurrentPosition();
 
-	if (search_info.remaining_depth <= 0)
+	if (perft_info.remaining_depth <= 0)
 	{
-		search_info.nodes++;
+		perft_info.nodes++;
 		return;
 	}
 	
-	Position& new_pos = search_info.GetNextPosition();
-	const auto& move_list = search_info.GetMoveListSkippingHashCheck<side_to_move>();
+	Position& new_pos = position_stack.GetNextPosition();
+	const auto& move_list = position_stack.GetMoveListSkippingHashCheck<side_to_move>();
 	for (uint32_t move_id = 0; move_id < move_list.GetNumMoves(); move_id++)
 	{
 		position::MakeMove<side_to_move>(pos, new_pos, move_list[move_id]);
 
-		search_info.IncrementDepth();
-		perft<opposite_side>(search_info);
-		search_info.DecrementDepth();
+		position_stack.IncrementDepth();
+		perft_info.remaining_depth--;
+		perft<opposite_side>(position_stack, perft_info);
+		position_stack.DecrementDepth();
+		perft_info.remaining_depth++;
 	}
 }
 
 inline size_t test_perft(const bool hideOutput = false, const size_t node_limit = std::numeric_limits<size_t>::max())
 {
-	SearchStack search_stack;
+	PositionStack position_stack;
 
 	const auto& test_positions = parse_perft_test_suite("./test/perftsuite.epd");
 
@@ -123,35 +132,35 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 
 		if (!hideOutput)
 			std::cout << "testing on depth " << test_position.depth << ", expected " << test_position.expected_nodes;
-
-		search_stack.nodes = 0;
-		search_stack.depth = 0;
-		search_stack.remaining_depth = test_position.depth;
-		search_stack.SetCurrentPosition(position::ParseFen(test_position.fen));
+		
+		PerftInfo perft_info;
+		perft_info.nodes = 0;
+		perft_info.remaining_depth = test_position.depth;
+		position_stack.SetCurrentPosition(position::ParseFen(test_position.fen));
 
 		const auto start = std::chrono::high_resolution_clock::now();
-		if (search_stack.GetCurrentPosition().side_to_move == WHITE)
+		if (position_stack.GetCurrentPosition().side_to_move == WHITE)
 		{
-			perft<WHITE>(search_stack);
+			perft<WHITE>(position_stack, perft_info);
 		}
 		else
 		{
-			perft<BLACK>(search_stack);
+			perft<BLACK>(position_stack, perft_info);
 		}
 		const auto stop = std::chrono::high_resolution_clock::now();
 		const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
 		total_duration += double(duration.count()) / 1000000;
-		total_nodes += search_stack.nodes;
+		total_nodes += perft_info.nodes;
 
 		if (!hideOutput)
-			std::cout << ", received " << search_stack.nodes << "\n";
+			std::cout << ", received " << perft_info.nodes << "\n";
 
-		if (test_position.expected_nodes != search_stack.nodes)
+		if (test_position.expected_nodes != perft_info.nodes)
 		{
 			std::cout << "found error in position\n";
 			std::cout << test_position.fen << "\n";
-			position::PrintBoard(search_stack.GetCurrentPosition());
+			position::PrintBoard(position_stack.GetCurrentPosition());
 			return false;
 		}
 	}

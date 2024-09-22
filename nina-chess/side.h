@@ -25,15 +25,8 @@ struct Side
 	Bitboard queens = 0;
 	Bitboard king = 0;
 
-	constexpr Bitboard& get_piece_bb(const PieceType piece_type)
-	{
-		return (&pawns)[piece_type];
-	}
-
-	constexpr const Bitboard get_piece_bb(const PieceType piece_type) const
-	{
-		return (&pawns)[piece_type];
-	}
+	constexpr Bitboard& get_piece_bb(const PieceType piece_type) { return (&pawns)[piece_type]; }
+	constexpr const Bitboard get_piece_bb(const PieceType piece_type) const { return (&pawns)[piece_type]; }
 
 	forceinline constexpr void remove_pieces(const Bitboard piece)
 	{
