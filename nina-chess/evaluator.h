@@ -22,12 +22,11 @@ public:
 	template<Color side_to_move>
 	forceinline constexpr void IncrementalUpdate(const Position& new_pos, const MoveList& move_list);
 
-	forceinline constexpr void UndoUpdate() { psqt->UndoUpdate(); depth--; }
+	forceinline constexpr void UndoUpdate() { psqt.UndoUpdate(); depth--; }
 private:
-	forceinline constexpr void ReadWeights(std::ifstream& file);
 	int depth;
 
-	std::unique_ptr<PSQT> psqt;
+	PSQT psqt;
 };
 
 #include "evaluator.inl"

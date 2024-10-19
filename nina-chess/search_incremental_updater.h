@@ -27,14 +27,14 @@ private:
 
 
 template<Color side_to_move>
-inline constexpr void SearchIncrementalUpdater::MakeMoveUpdate(const Move& move)
+forceinline constexpr void SearchIncrementalUpdater::MakeMoveUpdate(const Move& move)
 {
 	remaining_depth--;
 	search_depth++;
 	CommonIncrementalUpdater::MakeMoveUpdate<side_to_move>(move);
 }
 
-inline constexpr void SearchIncrementalUpdater::UndoMoveUpdate()
+forceinline constexpr void SearchIncrementalUpdater::UndoMoveUpdate()
 {
 	remaining_depth++;
 	search_depth--;

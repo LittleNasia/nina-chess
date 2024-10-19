@@ -337,7 +337,7 @@
     <ClInclude Include="search.h" />
     <ClInclude Include="search_cancellation_policy.h" />
     <ClInclude Include="search_constraints.h" />
-    <ClInclude Include="search_context.h" />
+    <ClInclude Include="shared_search_context.h" />
     <ClInclude Include="search_incremental_updater.h" />
     <ClInclude Include="search_nodes_cancellation_policy.h" />
     <ClInclude Include="position_stack.h" />

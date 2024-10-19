@@ -1,7 +1,7 @@
 #pragma once
 #include "utils.h"
 
-#include "search_context.h"
+#include "shared_search_context.h"
 
 class IndividualSearchContext
 {

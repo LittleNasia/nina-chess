@@ -168,8 +168,8 @@ GoState parse_go(std::stringstream& input)
 
 struct UciMove
 {
-	uint32_t move_from;
-	uint32_t move_to;
+	uint32_t move_from_index;
+	uint32_t move_to_index;
 	PieceType promotion_piece = PIECE_TYPE_NONE;
 };
 
@@ -194,6 +194,63 @@ UciMove parse_move(const std::string& move)
 	return { move_from_index, move_to_index };
 }
 
+void find_and_make_uci_move(const Position& pos, const MoveList& move_list, const UciMove& move)
+{
+	for (uint32_t move_id = 0; move_id < move_list.GetNumMoves(); move_id++)
+	{
+		Move curr_move = move_list[move_id];
+		if (curr_move.from_index() == move.move_from_index && curr_move.to_index() == move.move_to_index)
+		{
+			if (move.promotion_piece != PIECE_TYPE_NONE && curr_move.promotion_piece() != move.promotion_piece)
+				continue;
+
+			if (pos.side_to_move == WHITE)
+				current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
+			else
+				current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
+
+			return;
+		}
+	}
+	throw std::runtime_error("Move not found");
+}
+
+void find_castling_move_fallback(const Position& pos, const MoveList& move_list, const UciMove& move)
+{
+	Bitboard move_from_bb = 1ULL << move.move_from_index;
+	Bitboard move_to_bb = 1ULL << move.move_to_index;
+
+	const Side& side_to_move_pieces = pos.side_to_move == WHITE ? pos.white_pieces : pos.black_pieces;
+
+	if (move_from_bb & side_to_move_pieces.king)
+	{
+		constexpr Bitboard kingside_king_destinations = kingside_castling_king_dest<WHITE>() | kingside_castling_king_dest<BLACK>();
+		constexpr Bitboard queenside_king_destinations = queenside_castling_king_dest<WHITE>() | queenside_castling_king_dest<BLACK>();
+
+		const bool is_kingside_castling = move_to_bb & (kingside_king_destinations);
+		const bool is_queenside_castling = move_to_bb & (queenside_king_destinations);
+		if (is_kingside_castling || is_queenside_castling)
+		{
+			for (uint32_t move_id = 0; move_id < move_list.GetNumMoves(); move_id++)
+			{
+				Move curr_move = move_list[move_id];
+				if ((curr_move.is_kingside_castling() && is_kingside_castling)
+					||
+					(curr_move.is_queenside_castling() && is_queenside_castling))
+				{
+					if (pos.side_to_move == WHITE)
+						current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
+					else
+						current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
+
+					return;
+				}
+			}
+		}
+	}
+	throw std::runtime_error("Move not found");
+}
+
 void parse_moves(std::stringstream& input)
 {
 	std::string token;
@@ -207,70 +264,13 @@ void parse_moves(std::stringstream& input)
 		generate_moves(last_pos, curr_pos_move_list);
 
 		bool found_move = false;
-		for (uint32_t move_id = 0; move_id < curr_pos_move_list.GetNumMoves(); move_id++)
+		try
 		{
-			Move curr_move = curr_pos_move_list[move_id];
-			if (move.promotion_piece != PIECE_TYPE_NONE && curr_move.promotion_piece() != move.promotion_piece)
-				continue;
-			if (bit_index(curr_move.from()) == move.move_from && bit_index(curr_move.to()) == move.move_to)
-			{
-				if (last_pos.side_to_move == WHITE)
-					current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
-				else
-					current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
-				found_move = true;
-				break;
-			}
+			find_and_make_uci_move(last_pos, curr_pos_move_list, move);
 		}
-		if (!found_move)
+		catch(...)
 		{
-			// some guis give castling not as king takes rook, but as king moves somewhere idk where probably to castling dest
-			Bitboard move_from_bb = 1ULL << move.move_from;
-			Bitboard move_to_bb = 1ULL << move.move_to;
-
-			const Side& side_to_move_pieces = last_pos.side_to_move == WHITE ? last_pos.white_pieces : last_pos.black_pieces;
-
-			if (move_from_bb & side_to_move_pieces.king)
-			{
-				constexpr Bitboard kingside_king_destinations = kingside_castling_king_dest<WHITE>() | kingside_castling_king_dest<BLACK>();
-				constexpr Bitboard queenside_king_destinations = queenside_castling_king_dest<WHITE>() | queenside_castling_king_dest<BLACK>();
-				constexpr Bitboard kingside_rooks = kingside_castling_rook<WHITE>() | kingside_castling_rook<BLACK>();
-				constexpr Bitboard queenside_rooks = queenside_castling_rook<WHITE>() | queenside_castling_rook<BLACK>();
-
-				if (move_to_bb & (kingside_king_destinations | queenside_king_destinations))
-				{
-					for (uint32_t move_id = 0; move_id < curr_pos_move_list.GetNumMoves(); move_id++)
-					{
-						Move curr_move = curr_pos_move_list[move_id];
-						if (curr_move.from() & side_to_move_pieces.king &&
-							curr_move.to() & kingside_rooks &&
-							move_to_bb & kingside_king_destinations)
-						{
-							if (last_pos.side_to_move == WHITE)
-								current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
-							else
-								current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
-							found_move = true;
-							break;
-						}
-						else if (curr_move.from() & side_to_move_pieces.king &&
-							curr_move.to() & queenside_rooks &&
-							move_to_bb & queenside_king_destinations)
-						{
-							if (last_pos.side_to_move == WHITE)
-								current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
-							else
-								current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
-							found_move = true;
-							break;
-						}
-					}
-				}
-			}
-		}
-		DEBUG_IF(!found_move)
-		{
-			throw std::runtime_error("Move not found");
+			find_castling_move_fallback(last_pos, curr_pos_move_list, move);
 		}
 	}
 }
@@ -366,8 +366,6 @@ void uci::Loop()
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
-
-		//dump_uci_state(token);
 
 		if (token == "load")
 		{

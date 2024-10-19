@@ -23,21 +23,14 @@ forceinline Score get_mated_score(const int64_t mate_in)
 
 forceinline Evaluator::Evaluator(const std::string_view& weights_filename) :
 	depth{ 0 },
-	psqt{ }
+	psqt{ std::ifstream{ weights_filename.data() } }
 {
-	std::ifstream file{ weights_filename.data() };
-	if (!file.is_open())
-	{
-		throw std::runtime_error("Could not open file");
-	}
-
-	ReadWeights(file);
 }
 
 forceinline constexpr void Evaluator::Reset(PositionStack& position_stack)
 {
 	depth = 0;
-	psqt->Reset(position_stack.GetPositionAt(0), position_stack.GetMoveListAt(0));
+	psqt.Reset(position_stack.GetPositionAt(0), position_stack.GetMoveListAt(0));
 
 	for (int depth = 0; depth < position_stack.GetDepth(); depth++)
 	{
@@ -50,12 +43,6 @@ forceinline constexpr void Evaluator::Reset(PositionStack& position_stack)
 			IncrementalUpdate<BLACK>(curr_position, curr_move_list);
 	}
 }
-
-forceinline constexpr void Evaluator::ReadWeights(std::ifstream& file)
-{
-	psqt = std::make_unique<PSQT>(file);
-}
-
 
 template<Color side_to_move>
 forceinline constexpr Score Evaluator::Evaluate(const Position& position, const MoveList& move_list, const int64_t search_depth)
@@ -74,7 +61,7 @@ forceinline constexpr Score Evaluator::Evaluate(const Position& position, const 
 		}
 	}
 
-	Score score = get_score(psqt->Evaluate() * (side_to_move == Color::WHITE ? 1 : -1));
+	Score score = get_score(psqt.Evaluate() * (side_to_move == Color::WHITE ? 1 : -1));
 	ValidateScore(score);
 
 	return score;
@@ -84,5 +71,5 @@ template<Color side_to_move>
 forceinline constexpr void Evaluator::IncrementalUpdate(const Position& new_pos, const MoveList& move_list)
 {
 	depth++;
-	psqt->IncrementalUpdate(new_pos, move_list);
+	psqt.IncrementalUpdate(new_pos, move_list);
 }

@@ -6,7 +6,7 @@
 #include "evaluator.h"
 #include "move.h"
 #include "position_stack.h"
-#include "search_context.h"
+#include "shared_search_context.h"
 #include "transposition_table.h"
 #include "uci_incremental_updater.h"
 

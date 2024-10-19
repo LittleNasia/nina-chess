@@ -1,3 +1,9 @@
+#include "psqt.h"
+
+inline PSQT::PSQT(std::ifstream&& weights_file):
+	PSQT(weights_file)
+{
+}
 
 PSQT::PSQT(std::ifstream& weights_file) :
 	depth{ 0 },

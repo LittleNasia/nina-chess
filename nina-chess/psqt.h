@@ -12,6 +12,7 @@ public:
 	inline static constexpr size_t accumulator_output_size = 1;
 	using AccumulatorType = BitboardFeatureAccumulator<ChessBitboardFeatureIterator, accumulator_output_size>;
 
+	forceinline PSQT(std::ifstream&& weights_file);
 	forceinline PSQT(std::ifstream& weights_file);
 
 	forceinline constexpr void Reset(const Position& pos, const MoveList& move_list);

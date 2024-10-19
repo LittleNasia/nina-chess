@@ -18,7 +18,7 @@ public:
 	forceinline constexpr PositionStack& GetPositionStack() const { return *position_stack; }
 	template<Color side_to_move>
 	forceinline constexpr void MakeMoveUpdate(const Move& move);
-	forceinline constexpr void UndoMoveUpdate(); 
+	forceinline constexpr void UndoMoveUpdate();
 	template<Color side_to_move>
 	forceinline constexpr void MoveGenerationUpdateWithoutGuard();
 

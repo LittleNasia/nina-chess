@@ -38,8 +38,10 @@ public:
 	forceinline std::string ToUciMove() const { return std::string(square_names[bit_index(from())]) + square_names[bit_index(to())] + GetUciPromotionPiece(); }
 
 
-	forceinline constexpr Bitboard  from()			  const	{ return 1ULL << (encodedMove & index_from_mask); }
-	forceinline constexpr Bitboard  to()			  const	{ return 1ULL << ((encodedMove & index_to_mask) >> index_to_offset); }
+	forceinline constexpr Bitboard  from()			  const	{ return 1ULL << from_index(); }
+	forceinline constexpr Bitboard  to()			  const	{ return 1ULL << to_index(); }
+	forceinline constexpr uint32_t  from_index()	  const { return (encodedMove & index_from_mask); }
+	forceinline constexpr uint32_t  to_index()		  const { return (encodedMove & index_to_mask) >> index_to_offset; }
 	forceinline constexpr PieceType piece()			  const	{ return static_cast<PieceType>((encodedMove & piece_mask) >> piece_offset); }
 	forceinline constexpr PieceType promotion_piece() const { return static_cast<PieceType>((encodedMove & promotion_piece_mask) >> promotion_piece_offset); }
 	forceinline constexpr bool      is_castling()	  const	{ return (encodedMove & castling_mask) >> castling_offset; }
@@ -88,6 +90,22 @@ public:
 		(EP << EP_offset)
 		}
 	{}
+
+	forceinline constexpr bool is_kingside_castling() const
+	{
+		constexpr Bitboard king_startpos_bitmask = king_startpos<WHITE>() | king_startpos<BLACK>();
+		constexpr Bitboard kingside_rooks = kingside_castling_rook<WHITE>() | kingside_castling_rook<BLACK>();
+
+		return (from() & king_startpos_bitmask) && (to() & kingside_rooks);
+	}
+
+	forceinline constexpr bool is_queenside_castling() const
+	{
+		constexpr Bitboard king_startpos_bitmask = king_startpos<WHITE>() | king_startpos<BLACK>();
+		constexpr Bitboard queenside_rooks = queenside_castling_rook<WHITE>() | queenside_castling_rook<BLACK>();
+
+		return (from() & king_startpos_bitmask) && (to() & queenside_rooks);
+	}
 
 private:
 	uint32_t encodedMove;

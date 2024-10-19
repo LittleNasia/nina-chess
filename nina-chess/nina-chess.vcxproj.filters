@@ -131,7 +131,7 @@
     <ClInclude Include="search_cancellation_policy.h">
       <Filter>Header Files\SearchContext\SearchCancellationPolicies</Filter>
     </ClInclude>
-    <ClInclude Include="search_context.h">
+    <ClInclude Include="shared_search_context.h">
       <Filter>Header Files\SearchContext</Filter>
     </ClInclude>
     <ClInclude Include="individual_search_context.h">
