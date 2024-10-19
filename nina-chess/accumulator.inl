@@ -95,10 +95,7 @@ template<typename BitboardFeatureIterator, size_t output_size>
 forceinline constexpr size_t BitboardFeatureAccumulator<BitboardFeatureIterator, output_size>::getWeightsIndex(const size_t bitboard_index, const uint32_t feature_in_bitboard_index)
 {
 	const size_t weights_index = bitboard_index * bits_in_bitboard + feature_in_bitboard_index;
-	DEBUG_IF(weights_index >= BitboardFeatureIterator::NumBitboardFeatures() * bits_in_bitboard)
-	{
-		throw std::runtime_error("weights index out of bounds");
-	}
+	DEBUG_ASSERT(weights_index < BitboardFeatureIterator::NumBitboardFeatures() * bits_in_bitboard);
 	return weights_index;
 }
 

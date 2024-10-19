@@ -184,14 +184,8 @@ std::vector<SearchResult> iterative_deepening(UciIncrementalUpdater& incremental
 			}
 		}
 
-		DEBUG_IF(result.pv_length == 0)
-		{
-			throw std::runtime_error("PV length is 0");
-		}
-		DEBUG_IF(result.score >= Score::POSITIVE_INF || result.score <= Score::NEGATIVE_INF)
-		{
-			throw std::runtime_error("Score is unknown");
-		}
+		DEBUG_ASSERT(result.pv_length != 0);
+		ValidateScore(result.score);
 
 		result.PrintUciInfo(duration);
 

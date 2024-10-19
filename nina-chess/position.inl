@@ -293,8 +293,7 @@ forceinline Position& position::MakeMove(const Position& pos, Position& new_pos,
 	
 	new_pos.UpdateOccupiedBitboard();
 
-	DEBUG_IF(new_pos.hash != new_pos.CalculateHash())
-		throw std::runtime_error("hashes don't match");
+	DEBUG_ASSERT(new_pos.hash == new_pos.CalculateHash());
 
 	return new_pos;
 }

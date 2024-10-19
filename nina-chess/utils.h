@@ -15,10 +15,11 @@ inline constexpr uint32_t max_depth = 256;
 #ifdef _DEBUG
 inline constexpr bool is_debug = true;
 #else
-inline constexpr bool is_debug = false;
+inline constexpr bool is_debug = true;
 #endif
 
 #define DEBUG_IF(x) if constexpr(is_debug) if (x)
+#define DEBUG_ASSERT(x) DEBUG_IF(!(x)) throw std::runtime_error("Assertion failed: " #x)
 
 // TODO determine which functions should be forceinlined and which shouldnt
 // forceinlining everything doesn't seem to give performance benefits anymore
@@ -103,10 +104,7 @@ forceinline constexpr Score GetDrawValueWithSmallVariance(int64_t random_seed)
 
 forceinline constexpr void ValidateScore(Score score)
 {
-	DEBUG_IF(score <= Score::NEGATIVE_INF || score >= Score::POSITIVE_INF)
-	{
-		throw std::runtime_error("Score is unknown");
-	}
+	DEBUG_ASSERT(score > Score::NEGATIVE_INF && score < Score::POSITIVE_INF);
 }
 
 using CastlingType = uint32_t;

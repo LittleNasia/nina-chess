@@ -2,10 +2,7 @@
 
 forceinline Score get_score(const float wdl_chances)
 {
-	DEBUG_IF(wdl_chances < -1.0f || wdl_chances > 1.0f)
-	{
-		throw std::runtime_error("wdl_chances must be in the range [-1.0, 1.0]");
-	}
+	DEBUG_ASSERT(wdl_chances >= -1.0f && wdl_chances <= 1.0f);
 
 	constexpr int32_t win_score = static_cast<int32_t>(Score::WIN);
 	return static_cast<Score>(wdl_chances * win_score);
@@ -13,10 +10,7 @@ forceinline Score get_score(const float wdl_chances)
 
 forceinline Score get_mated_score(const int64_t mate_in)
 {
-	DEBUG_IF(mate_in < 0)
-	{
-		throw std::runtime_error("mate_in must be non-negative");
-	}
+	DEBUG_ASSERT(mate_in >= 0);
 
 	return Score(int32_t(Score::LOSS) + mate_in);
 }

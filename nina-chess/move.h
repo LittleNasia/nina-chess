@@ -37,7 +37,6 @@ public:
 
 	forceinline std::string ToUciMove() const { return std::string(square_names[bit_index(from())]) + square_names[bit_index(to())] + GetUciPromotionPiece(); }
 
-
 	forceinline constexpr Bitboard  from()			  const	{ return 1ULL << from_index(); }
 	forceinline constexpr Bitboard  to()			  const	{ return 1ULL << to_index(); }
 	forceinline constexpr uint32_t  from_index()	  const { return (encodedMove & index_from_mask); }
