@@ -1,6 +1,8 @@
 #pragma once
 #include "utils.h"
 
+#include "architecture.h"
+#include "intrinsics.h"
 #include "move.h"
 
 struct alignas(cache_line_size) MoveListMisc

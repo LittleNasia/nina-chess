@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "move.h"
+#include "score.h"
 #include "serializable.h"
 
 enum class TTFlag

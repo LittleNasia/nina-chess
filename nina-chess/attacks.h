@@ -2,6 +2,7 @@
 #include "utils.h"
 
 #include "bitmasks.h"
+#include "intrinsics.h"
 #include "side.h"
 
 template <Color color>

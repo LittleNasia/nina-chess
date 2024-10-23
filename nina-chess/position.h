@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include "attacks.h"
+#include "castling.h"
 #include "move.h"
 #include "side.h"
 
@@ -15,7 +16,7 @@ struct Position
 		const Side& white_pieces,
 		const Side& black_pieces,
 		const Bitboard EP_square,
-		const CastlingType castling,
+		const Castling castling,
 		const Color side_to_move,
 		const uint32_t fifty_move_rule);
 
@@ -23,7 +24,7 @@ struct Position
 		const Side& white_pieces,
 		const Side& black_pieces,
 		const Bitboard EP_square,
-		const CastlingType castling,
+		const Castling castling,
 		const Color side_to_move,
 		const uint32_t fifty_move_rule,
 		const uint64_t hash);
@@ -34,7 +35,7 @@ struct Position
 	template<Color color>
 	constexpr Side& GetSide();
 
-	forceinline constexpr CastlingType GetCurrentCastling() const;
+	forceinline constexpr Castling GetCurrentCastling() const;
 
 	forceinline uint64_t CalculateHash() const;
 
@@ -49,7 +50,7 @@ struct Position
 
 	Bitboard occupied;
 	Bitboard EP_square;
-	CastlingType castling;
+	Castling castling;
 	Color side_to_move;
 	uint64_t hash;
 	uint32_t fifty_move_rule;

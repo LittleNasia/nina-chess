@@ -202,7 +202,7 @@ Position position::ParseFen(const std::string_view fen)
 
 	std::string fen_castling_rights;
 	ss >> fen_castling_rights;
-	CastlingType castling_rights = 0;
+	Castling castling_rights = 0;
 	for (int castling_index = 0; castling_index < fen_castling_rights.length(); castling_index++)
 	{
 		if (fen_castling_rights[castling_index] == '-')

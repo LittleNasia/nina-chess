@@ -1,9 +1,84 @@
 #pragma once
 #include "utils.h"
 
-inline constexpr Bitboard light_squares = 0xAA55AA55AA55AA55;
+#include "chess.h"
 
+
+inline constexpr Bitboard empty_bitboard = 0ULL;
+inline constexpr Bitboard full_bitboard = ~empty_bitboard;
+inline constexpr Bitboard light_squares = 0xAA55AA55AA55AA55;
 inline constexpr Bitboard dark_squares = ~light_squares;
+
+inline constexpr Bitboard pawns_can_attack_left = 0x7f7f7f7f7f7f7f7f;
+inline constexpr Bitboard pawns_can_attack_right = 0xfefefefefefefefe;
+
+template<Color color>
+forceinline constexpr Bitboard king_startpos()
+{
+	if constexpr (color == WHITE)
+	{
+		return 0x8;
+	}
+	else
+	{
+		return 0x800000000000000;
+	}
+}
+
+template<Color color>
+forceinline constexpr Bitboard promotion_rank()
+{
+	if constexpr (color == WHITE)
+	{
+		return 0xff00000000000000;
+	}
+	else
+	{
+		return 0xff;
+	}
+}
+
+// gets the pawns that can capture EP on a given square
+inline constexpr Bitboard EP_candidates_lookup[64] =
+{
+	0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,
+	0x2000000,0x5000000, 0xa000000, 0x14000000,0x28000000,0x50000000,0xa0000000, 0x40000000,
+	0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,
+	0x200000000,0x500000000, 0xa00000000, 0x1400000000, 0x2800000000, 0x5000000000, 0xa000000000, 0x4000000000,
+	0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,
+};
+
+// gets the pawns that will be captured by EP on a given square
+inline constexpr Bitboard EP_victims_lookup[64] =
+{
+	0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,
+	0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000,
+	0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,
+	0x100000000, 0x200000000, 0x400000000, 0x800000000, 0x1000000000, 0x2000000000, 0x4000000000, 0x8000000000,
+	0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,
+};
+
+// this lookup table returns a bitmask of all squares between the two column indices in a row
+// for example, given pieces in the same row, one in column 1, another one in column 4
+// [1][4] will return bitmask of all squares between these two
+// in this case, it will be bits on index 2 and 3 set
+inline constexpr Bitboard bitmask_between_coords[board_cols][board_cols] =
+{
+	{0, 0, 2, 6, 14, 30, 62, 126, },
+	{0, 0, 0, 4, 12, 28, 60, 124, },
+	{2, 0, 0, 0, 8, 24, 56, 120, },
+	{6, 4, 0, 0, 0, 16, 48, 112, },
+	{14, 12, 8, 0, 0, 0, 32, 96, },
+	{30, 28, 24, 16, 0, 0, 0, 64, },
+	{62, 60, 56, 48, 32, 0, 0, 0, },
+	{126, 124, 120, 112, 96, 64, 0, 0, },
+};
 
 inline constexpr Bitboard row_bitmasks[board_rows] =
 {

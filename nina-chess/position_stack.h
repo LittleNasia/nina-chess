@@ -6,6 +6,7 @@
 
 #include "move_gen.h"
 #include "position.h"
+#include "search_core.h"
 #include "serializable.h"
 
 struct PositionStack

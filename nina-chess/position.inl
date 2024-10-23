@@ -12,7 +12,7 @@ forceinline Position::Position() :
 }
 
 forceinline Position::Position(const Side& white_pieces, const Side& black_pieces,
-		const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
+		const Bitboard EP_square, const Castling castling, const Color side_to_move,
 		const uint32_t fifty_move_rule) :
 	white_pieces(white_pieces.pawns, white_pieces.knights, white_pieces.bishops, white_pieces.rooks, white_pieces.queens, white_pieces.king),
 	black_pieces(black_pieces.pawns, black_pieces.knights, black_pieces.bishops, black_pieces.rooks, black_pieces.queens, black_pieces.king),
@@ -26,7 +26,7 @@ forceinline Position::Position(const Side& white_pieces, const Side& black_piece
 }
 
 forceinline Position::Position(const Side& white_pieces, const Side& black_pieces,
-		const Bitboard EP_square, const CastlingType castling, const Color side_to_move,
+		const Bitboard EP_square, const Castling castling, const Color side_to_move,
 		const uint32_t fifty_move_rule, const uint64_t hash) :
 	white_pieces(white_pieces.pawns, white_pieces.knights, white_pieces.bishops, white_pieces.rooks, white_pieces.queens, white_pieces.king),
 	black_pieces(black_pieces.pawns, black_pieces.knights, black_pieces.bishops, black_pieces.rooks, black_pieces.queens, black_pieces.king),
@@ -39,7 +39,7 @@ forceinline Position::Position(const Side& white_pieces, const Side& black_piece
 {
 }
 
-forceinline constexpr CastlingType Position::GetCurrentCastling() const
+forceinline constexpr Castling Position::GetCurrentCastling() const
 {
 	return castling >> (2 * side_to_move) & 0b11;
 }

@@ -4,10 +4,11 @@
 #include <fstream>
 #include <memory>
 
+#include "chess.h"
 #include "move_list.h"
-#include "position.h"
 #include "position_stack.h"
 #include "psqt.h"
+#include "score.h"
 
 class Evaluator
 {

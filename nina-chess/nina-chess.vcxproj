@@ -320,13 +320,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="accumulator.h" />
+    <ClInclude Include="architecture.h" />
     <ClInclude Include="attacks.h" />
     <ClInclude Include="avx2_utils.h" />
     <ClInclude Include="bitmasks.h" />
     <ClInclude Include="board_features.h" />
+    <ClInclude Include="castling.h" />
+    <ClInclude Include="chess.h" />
     <ClInclude Include="chess_bitboard_feature_iterator.h" />
+    <ClInclude Include="chess_constants.h" />
+    <ClInclude Include="color.h" />
     <ClInclude Include="common_incremental_updater.h" />
     <ClInclude Include="evaluator.h" />
+    <ClInclude Include="intrinsics.h" />
+    <ClInclude Include="move_gen_core.h" />
+    <ClInclude Include="piece.h" />
+    <ClInclude Include="piece_type.h" />
+    <ClInclude Include="score.h" />
+    <ClInclude Include="search_core.h" />
+    <ClInclude Include="search_result.h" />
     <ClInclude Include="uci_incremental_updater.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_list.h" />

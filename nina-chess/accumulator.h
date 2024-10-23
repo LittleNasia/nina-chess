@@ -1,6 +1,8 @@
 #pragma once
 #include "utils.h"
 
+#include "architecture.h"
+
 template<typename BitboardFeatureIterator, size_t output_size>
 class BitboardFeatureAccumulator
 {

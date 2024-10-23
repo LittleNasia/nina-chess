@@ -1,6 +1,10 @@
 #pragma once
 #include "utils.h"
 
+#include "bitmasks.h"
+#include "castling.h"
+#include "intrinsics.h"
+
 struct Move
 {
 public:
