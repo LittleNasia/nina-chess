@@ -13,9 +13,9 @@
 
 struct PerftTestEntry
 {
-	std::string fen;
-	int depth;
-	size_t expected_nodes;
+	std::string fen{};
+	int depth{};
+	size_t expected_nodes{};
 };
 
 inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& file_path)
@@ -30,10 +30,10 @@ inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& fil
 
 	// step 1: get the lines in the file
 	std::vector<std::string> lines;
-	std::string line;
-	while (std::getline(perft_test_suite, line))
+	std::string current_line;
+	while (std::getline(perft_test_suite, current_line))
 	{
-		lines.push_back(line);
+		lines.push_back(current_line);
 	}
 
 	// step 2: split each line by ';', first entry is the FEN, all the other ones are the depths and expected nodes
@@ -52,7 +52,7 @@ inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& fil
 		}
 
 		// step 3: extract the FEN and the depth from the tokens
-		for (int token_id = 1; token_id < tokens.size(); token_id++)
+		for (uint32_t token_id = 1; token_id < tokens.size(); token_id++)
 		{
 			if (tokens[token_id].empty())
 			{
@@ -110,7 +110,8 @@ inline void perft(PositionStack& position_stack, PerftInfo& perft_info)
 
 inline size_t test_perft(const bool hideOutput = false, const size_t node_limit = std::numeric_limits<size_t>::max())
 {
-	PositionStack position_stack;
+	PositionStack* position_stack_memory = new PositionStack;
+	PositionStack& position_stack = *position_stack_memory;
 
 	const auto& test_positions = parse_perft_test_suite("./test/perftsuite.epd");
 
@@ -165,10 +166,11 @@ inline size_t test_perft(const bool hideOutput = false, const size_t node_limit 
 		}
 	}
 
-	size_t nps = (size_t)(total_nodes / total_duration);
+	size_t nps = static_cast<size_t>(static_cast<double>(total_nodes) / total_duration);
 
 	if(!hideOutput)
-		std::cout << "nps: " << (size_t)(total_nodes / total_duration) << "\n";
+		std::cout << "nps: " << nps << "\n";
 
+	delete position_stack_memory;
 	return nps;
 }

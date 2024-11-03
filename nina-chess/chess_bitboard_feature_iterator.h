@@ -24,6 +24,7 @@ public:
 
 	forceinline constexpr Bitboard Get(const size_t index) const
 	{
+		DEBUG_ASSERT(index < NumBitboardFeatures());
 		// bleh
 		switch (index)
 		{
@@ -35,7 +36,7 @@ public:
 		case 5:
 		{
 			const auto piece_type = static_cast<PieceType>(index);
-			return board_features.white_pieces->get_piece_bb(piece_type);
+			return board_features.white_pieces->GetPieceBitboard(piece_type);
 		}
 		case 6:
 		case 7:
@@ -45,7 +46,7 @@ public:
 		case 11:
 		{
 			const auto piece_type = static_cast<PieceType>(index - 6);
-			return board_features.black_pieces->get_piece_bb(piece_type);
+			return board_features.black_pieces->GetPieceBitboard(piece_type);
 		}
 		case 12:
 			return board_features.EP_square;
@@ -69,7 +70,7 @@ public:
 		case 24:
 			return move_list_misc.attacked_squares;
 		default:
-			throw std::runtime_error("Invalid index");
+			return 0ULL;
 		}
 	}
 

@@ -28,7 +28,7 @@ class TranspositionTable : public Serializable
 public:
 	TranspositionTable(const size_t size_in_mb);
 
-	void Insert(const TranspositionTableEntry& entry, bool force_overwrite);
+	void Insert(const TranspositionTableEntry& entry, const bool force_overwrite);
 	const TranspositionTableEntry& Get(const uint64_t key) const;
 
 	void Serialize(std::ofstream& output);

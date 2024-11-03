@@ -22,6 +22,11 @@ enum Piece : uint32_t
 	PIECE_NONE
 };
 
+template<Piece piece>
+consteval void validate_piece()
+{
+	static_assert(piece < PIECE_NONE);
+}
 
 constexpr char piece_names[] =
 {
@@ -29,50 +34,52 @@ constexpr char piece_names[] =
 	'p','n','b','r','q','k',
 };
 
-template<PieceType piece, Color color>
+template<PieceType piece_type, Color color>
 forceinline constexpr Piece get_piece_from_type()
 {
-	if constexpr (piece == KING && color == WHITE)
+	validate_color<color>();
+	validate_piece_type<piece_type>();
+	if constexpr (piece_type == KING && color == WHITE)
 	{
 		return WHITE_KING;
 	}
-	else if constexpr (piece == KNIGHT && color == WHITE)
+	else if constexpr (piece_type == KNIGHT && color == WHITE)
 	{
 		return WHITE_KNIGHT;
 	}
-	else if constexpr (piece == BISHOP && color == WHITE)
+	else if constexpr (piece_type == BISHOP && color == WHITE)
 	{
 		return WHITE_BISHOP;
 	}
-	else if constexpr (piece == PAWN && color == WHITE)
+	else if constexpr (piece_type == PAWN && color == WHITE)
 	{
 		return WHITE_PAWN;
 	}
-	else if constexpr (piece == ROOK && color == WHITE)
+	else if constexpr (piece_type == ROOK && color == WHITE)
 	{
 		return WHITE_ROOK;
 	}
-	else if constexpr (piece == QUEEN && color == WHITE)
+	else if constexpr (piece_type == QUEEN && color == WHITE)
 	{
 		return WHITE_QUEEN;
 	}
-	else if constexpr (piece == KING && color == BLACK)
+	else if constexpr (piece_type == KING && color == BLACK)
 	{
 		return BLACK_KING;
 	}
-	else if constexpr (piece == PAWN && color == BLACK)
+	else if constexpr (piece_type == PAWN && color == BLACK)
 	{
 		return BLACK_PAWN;
 	}
-	else if constexpr (piece == KNIGHT && color == BLACK)
+	else if constexpr (piece_type == KNIGHT && color == BLACK)
 	{
 		return BLACK_KNIGHT;
 	}
-	else if constexpr (piece == BISHOP && color == BLACK)
+	else if constexpr (piece_type == BISHOP && color == BLACK)
 	{
 		return BLACK_BISHOP;
 	}
-	else if constexpr (piece == ROOK && color == BLACK)
+	else if constexpr (piece_type == ROOK && color == BLACK)
 	{
 		return BLACK_ROOK;
 	}

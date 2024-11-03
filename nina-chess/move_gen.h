@@ -77,14 +77,13 @@ forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uin
 	constexpr PieceType moving_piece = piece_type;
 	while (moves_mask)
 	{
-		const Bitboard move = pop_bit(moves_mask);
-		const uint32_t move_target = bit_index(move);
+		const uint32_t move_target_index = pop_bit_and_get_index(moves_mask);
 		if constexpr (castling)
-			move_list.PushMove({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling });
+			move_list.PushMove({ piece_index, move_target_index, moving_piece, PIECE_TYPE_NONE, castling });
 		else if constexpr (EP)
-			move_list.PushMove({ piece_index, move_target, moving_piece, PIECE_TYPE_NONE, castling, EP });
+			move_list.PushMove({ piece_index, move_target_index, moving_piece, PIECE_TYPE_NONE, castling, EP });
 		else
-			move_list.PushMove({ piece_index, move_target, moving_piece });
+			move_list.PushMove({ piece_index, move_target_index, moving_piece });
 	}
 	move_list.move_list_misc.piece_moves[piece_type] |= moves_mask;
 }
@@ -93,6 +92,7 @@ template<Color color>
 forceinline void write_pawn_moves(MoveList& move_list, const Bitboard left_pawn_captures, const Bitboard right_pawn_captures,
 	const Bitboard legal_pawn_advances, const Bitboard pawn_double_advances, Bitboard pawns)
 {
+	validate_color<color>();
 	constexpr PieceType moving_piece = PAWN;
 	while (pawns)
 	{
@@ -197,8 +197,7 @@ forceinline void write_knight_moves(MoveList& move_list, Bitboard movable_knight
 	constexpr PieceType moving_piece = KNIGHT;
 	while (movable_knights)
 	{
-		const Bitboard curr_knight = pop_bit(movable_knights);
-		const uint32_t knight_index = bit_index(curr_knight);
+		const uint32_t knight_index = pop_bit_and_get_index(movable_knights);
 		Bitboard curr_knight_moves = knight_moves[knight_index];
 		if constexpr (check && unblockable_check)
 		{
@@ -237,8 +236,6 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 	// king can't move to these squares
 	const Bitboard attacked_squares = get_all_attacks<opposite_color>(opposite_pieces, Position.occupied ^ king);
 
-	const bool in_check = curr_pieces.king & attacked_squares;
-
 	Bitboard bishop_checkers = 0ULL;
 	Bitboard bishop_pinners = 0ULL;
 	Bitboard bishop_pinmask = 0ULL;
@@ -251,7 +248,6 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 
 	const Bitboard knight_checkers = knight_moves[king_index] & opposite_pieces.knights;
 	const Bitboard pawn_checkers = get_pawn_attacks<color>(king) & opposite_pieces.pawns;
-	const Bitboard unblockable_checkers = knight_checkers | pawn_checkers;
 
 	const Bitboard enemy_rook_queen = opposite_pieces.rooks | opposite_pieces.queens;
 	const Bitboard enemy_bishop_queen = opposite_pieces.bishops | opposite_pieces.queens;
@@ -374,9 +370,9 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 				!(king_rook_attacks & enemy_rook_queen)
 				)
 			{
-				constexpr bool castling = false;
-				constexpr bool EP = true;
-				write_moves<PAWN, color, castling, EP>(move_list, Position.EP_square, bit_index(EP_candidate));
+				constexpr bool castling_allowed = false;
+				constexpr bool is_EP = true;
+				write_moves<PAWN, color, castling_allowed, is_EP>(move_list, Position.EP_square, bit_index(EP_candidate));
 			}
 		}
 	}
@@ -389,8 +385,8 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 			(Position.occupied & (kingside_castling_castling_rook_path<color>() & ~king)));
 		if (can_castle)
 		{
-			constexpr bool castling = true;
-			write_moves<KING, color, castling>(move_list, kingside_castling_rook<color>(), king_index);
+			constexpr bool castling_allowed = true;
+			write_moves<KING, color, castling_allowed>(move_list, kingside_castling_rook<color>(), king_index);
 		}
 	}
 	// queenside castling
@@ -400,8 +396,8 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 			(Position.occupied & (queenside_castling_rook_path<color>() & ~king)));
 		if (can_castle)
 		{
-			constexpr bool castling = true;
-			write_moves<KING, color, castling>(move_list, queenside_castling_rook<color>(), king_index);
+			constexpr bool castling_allowed = true;
+			write_moves<KING, color, castling_allowed>(move_list, queenside_castling_rook<color>(), king_index);
 		}
 	}
 	return move_list;
@@ -410,8 +406,7 @@ forceinline MoveList& generate_moves(MoveList& move_list, const Position& Positi
 template<Color side_to_move>
 forceinline MoveList& generate_moves(const Position& position, MoveList& move_list)
 {
-	const bool EP = position.EP_square;
-	const Color color = position.side_to_move;
+	const bool EP = static_cast<bool>(position.EP_square);
 	const Castling castling = position.GetCurrentCastling();
 
 		 if (castling == 0b11 && !EP) generate_moves<side_to_move, 0b11, false>(move_list, position);
@@ -428,7 +423,7 @@ forceinline MoveList& generate_moves(const Position& position, MoveList& move_li
 
 forceinline MoveList& generate_moves(const Position& position, MoveList& move_list)
 {
-	const bool EP = position.EP_square;
+	const bool EP = static_cast<bool>(position.EP_square);
 	const Color color = position.side_to_move;
 	const Castling castling = position.GetCurrentCastling();
 

@@ -128,9 +128,6 @@
     <ClInclude Include="chess_constants.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="move_gen_core.h">
-      <Filter>Header Files\MoveGen</Filter>
-    </ClInclude>
     <ClInclude Include="search_core.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
@@ -157,9 +154,6 @@
     </ClInclude>
     <ClInclude Include="position.h">
       <Filter>Header Files\Chess</Filter>
-    </ClInclude>
-    <ClInclude Include="zobrist.h">
-      <Filter>Header Files\Search</Filter>
     </ClInclude>
     <ClInclude Include="avx2_utils.h">
       <Filter>Header Files\Hardware</Filter>
@@ -208,6 +202,12 @@
     </ClInclude>
     <ClInclude Include="intrinsics.h">
       <Filter>Header Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="bit_manip.h">
+      <Filter>Header Files\Core\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="zobrist.h">
+      <Filter>Header Files\Chess</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

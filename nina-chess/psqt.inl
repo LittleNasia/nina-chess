@@ -6,17 +6,17 @@ inline PSQT::PSQT(std::ifstream&& weights_file):
 }
 
 PSQT::PSQT(std::ifstream& weights_file) :
-	depth{ 0 },
+	moves_misc{},
+	board_features{},
 	accumulator_context{},
 	accumulators{},
-	board_features{},
-	moves_misc{}
+	depth{ 0 }
 {
 	accumulator_context.accumulator_weights.SetWeights(weights_file);
 
-	for (auto& accumulators : accumulators)
+	for (auto& accumulator : accumulators)
 	{
-		accumulators.SetWeights(accumulator_context.accumulator_weights);
+		accumulator.SetWeights(accumulator_context.accumulator_weights);
 	}
 }
 

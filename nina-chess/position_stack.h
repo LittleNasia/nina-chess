@@ -13,9 +13,9 @@ struct PositionStack
 {
 public:
 	forceinline PositionStack() :
-		depth{ 0 },
 		move_list_stack{},
-		position_stack{}
+		position_stack{},
+		depth{ 0 }
 	{}
 
 	forceinline void Reset();

@@ -9,8 +9,8 @@ class SharedSearchContext
 public:
 	SharedSearchContext(const SearchConstraints search_constraints, const TimePoint& search_start_timepoint,
 		TranspositionTable* transposition_table) :
-		cancellation_policy(search_start_timepoint, search_constraints),
 		transposition_table(transposition_table),
+		cancellation_policy(search_start_timepoint, search_constraints),
 		search_depth( calculateSearchDepth(search_constraints) )
 	{
 	}

@@ -66,9 +66,6 @@ namespace position
 
 	forceinline Position& MakeMove(const Position& pos, Position& new_pos, const Move& m);
 
-	template<Color side_to_move>
-	forceinline constexpr uint64_t update_hash(uint64_t hash, const PieceType moving_piece, Bitboard move);
-
 	void PrintBoard(const Position& curr_pos);
 
 	Position ParseFen(const std::string_view fen);

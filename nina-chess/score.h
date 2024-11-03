@@ -27,7 +27,7 @@ forceinline std::ostream& operator<<(std::ostream& os, const Score score)
 	return os;
 }
 
-forceinline constexpr Score GetDrawValueWithSmallVariance(int64_t random_seed)
+forceinline constexpr Score GetDrawValueWithSmallVariance(uint64_t random_seed)
 {
 	return static_cast<Score>(random_seed & 7);
 }

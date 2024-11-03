@@ -27,11 +27,11 @@ struct UciState
 	UciState():
 		hash_size(UciDefaultSettings::hash_size),
 		weights_filename{ UciDefaultSettings::weights_filename },
-		transposition_table(std::make_unique<TranspositionTable>(hash_size)),
 		search_running{},
 		search_thread{},
-		evaluator(std::make_unique<Evaluator>(weights_filename)),
 		position_stack(std::make_unique<PositionStack>()),
+		evaluator(std::make_unique<Evaluator>(weights_filename)),
+		transposition_table(std::make_unique<TranspositionTable>(hash_size)),
 		incremental_updater{ evaluator.get(), position_stack.get(), Position() }
 	{
 	}
@@ -263,7 +263,6 @@ void parse_moves(std::stringstream& input)
 		MoveList curr_pos_move_list;
 		generate_moves(last_pos, curr_pos_move_list);
 
-		bool found_move = false;
 		try
 		{
 			find_and_make_uci_move(last_pos, curr_pos_move_list, move);
@@ -317,8 +316,9 @@ void setposition(std::stringstream& input)
 
 void setoption(std::stringstream& input)
 {
-	
-
+	std::string token;
+	input >> token;
+	throw new std::runtime_error("Not implemented");
 }
 
 void isready()

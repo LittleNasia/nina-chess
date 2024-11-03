@@ -73,11 +73,11 @@ inline Score search(AlphaBeta alpha_beta, SearchIncrementalUpdater& incremental_
 	
 
 	// is leaf node for another reason
-	const auto& guard = incremental_updater.MoveGenerationUpdate<side_to_move>();
+	[[maybe_unused]] const auto& guard = incremental_updater.MoveGenerationUpdate<side_to_move>();
 	const MoveList& move_list = position_stack.GetMoveList<side_to_move>();
 	if (incremental_updater.GetRemainingDepth() == 0 || move_list.GetNumMoves() == 0)
 	{
-		score = evaluator.Evaluate<side_to_move>(position, move_list, incremental_updater.GetSearchDepth());
+		score = evaluator.Evaluate<side_to_move>(move_list, incremental_updater.GetSearchDepth());
 		ValidateScore(score);
 
 		const TranspositionTableEntry entry = { position.hash, score, incremental_updater.GetRemainingDepth(), Move(), TTFlag::EXACT };
@@ -150,7 +150,7 @@ std::vector<SearchResult> iterative_deepening(UciIncrementalUpdater& incremental
 		auto start_timepoint = std::chrono::high_resolution_clock::now();
 		const auto score = search<color, true>(alpha_beta, search_incremental_updater, individual_search_context);
 		auto end_timepoint = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_timepoint - start_timepoint).count();
+		size_t duration = (size_t)std::chrono::duration_cast<std::chrono::milliseconds>(end_timepoint - start_timepoint).count();
 
 		if (search_context.GetCancellationPolicy().IsAborted())
 		{

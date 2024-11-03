@@ -40,19 +40,19 @@ inline int64_t SearchTimeCancellationPolicy::getSearchDurationInMs() const
 
 forceinline constexpr int64_t SearchTimeCancellationPolicy::calculateMaxSearchDuration(const int64_t total_time, const int64_t movetime) const
 {
-	constexpr float time_per_move_factor = 0.05f;
-	constexpr float compensation_factor = 0.98f;
+	constexpr double time_per_move_factor = 0.05f;
+	constexpr double compensation_factor = 0.98f;
 
 	// 5% of total time allocated to each move, otherwise infinity sekonds
 	const int64_t allocation_from_total_time = total_time == -1
 		? std::numeric_limits<int64_t>::max()
-		: int64_t(total_time * time_per_move_factor);
+		: int64_t(static_cast<double>(total_time) * time_per_move_factor);
 
 	const int64_t movetime_duration = movetime == -1
 		? std::numeric_limits<int64_t>::max()
 		: movetime;
 
 	// little window to compensate for the time it takes to abort the search
-	return int64_t(std::min(allocation_from_total_time, movetime_duration) * compensation_factor);
+	return int64_t(static_cast<double>(std::min(allocation_from_total_time, movetime_duration)) * compensation_factor);
 }
 

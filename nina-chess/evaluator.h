@@ -18,7 +18,7 @@ public:
 	forceinline constexpr void Reset(PositionStack& position_stack);
 
 	template<Color side_to_move>
-	forceinline constexpr Score Evaluate(const Position& position, const MoveList& move_list, const int64_t search_depth);
+	forceinline constexpr Score Evaluate(const MoveList& move_list, const int64_t search_depth);
 
 	template<Color side_to_move>
 	forceinline constexpr void IncrementalUpdate(const Position& new_pos, const MoveList& move_list);

@@ -26,10 +26,10 @@ forceinline constexpr void Evaluator::Reset(PositionStack& position_stack)
 	depth = 0;
 	psqt.Reset(position_stack.GetPositionAt(0), position_stack.GetMoveListAt(0));
 
-	for (int depth = 0; depth < position_stack.GetDepth(); depth++)
+	for (int position_depth = 0; position_depth < position_stack.GetDepth(); position_depth++)
 	{
-		const auto& curr_position = position_stack.GetPositionAt(depth);
-		const auto& curr_move_list = position_stack.GetMoveListAt(depth);
+		const auto& curr_position = position_stack.GetPositionAt(position_depth);
+		const auto& curr_move_list = position_stack.GetMoveListAt(position_depth);
 
 		if (curr_position.side_to_move == WHITE)
 			IncrementalUpdate<WHITE>(curr_position, curr_move_list);
@@ -39,8 +39,9 @@ forceinline constexpr void Evaluator::Reset(PositionStack& position_stack)
 }
 
 template<Color side_to_move>
-forceinline constexpr Score Evaluator::Evaluate(const Position& position, const MoveList& move_list, const int64_t search_depth)
+forceinline constexpr Score Evaluator::Evaluate(const MoveList& move_list, const int64_t search_depth)
 {
+	validate_color<side_to_move>();
 	if (move_list.GetNumMoves() == 0)
 	{
 		if (move_list.move_list_misc.checkers)
@@ -64,6 +65,7 @@ forceinline constexpr Score Evaluator::Evaluate(const Position& position, const 
 template<Color side_to_move>
 forceinline constexpr void Evaluator::IncrementalUpdate(const Position& new_pos, const MoveList& move_list)
 {
+	validate_color<side_to_move>();
 	depth++;
 	psqt.IncrementalUpdate(new_pos, move_list);
 }

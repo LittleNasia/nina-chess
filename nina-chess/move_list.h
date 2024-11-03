@@ -5,7 +5,7 @@
 #include "intrinsics.h"
 #include "move.h"
 
-struct alignas(cache_line_size) MoveListMisc
+struct MoveListMisc
 {
 	Bitboard piece_moves[PIECE_TYPE_NONE] = { 0,0,0,0,0,0 };
 	Bitboard pinmask = 0;
@@ -25,7 +25,7 @@ struct alignas(cache_line_size) MoveListMisc
 	}
 };
 
-struct alignas(cache_line_size) MoveList
+struct MoveList
 {
 	forceinline constexpr MoveList() = default;
 

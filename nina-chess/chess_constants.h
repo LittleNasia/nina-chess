@@ -31,6 +31,8 @@ inline constexpr int square_col[num_board_squares] =
 
 forceinline constexpr uint32_t two_d_to_one_d(const uint32_t row, const uint32_t col)
 {
+	DEBUG_ASSERT(row < board_rows);
+	DEBUG_ASSERT(col < board_cols);
 	return row * board_cols + col;
 }
 
@@ -49,7 +51,8 @@ inline const char* square_names[num_board_squares] =
 
 forceinline constexpr uint32_t get_col_from_file(const char file)
 {
-	int col = file - 'a';
+	DEBUG_ASSERT(file >= 'a' && file <= 'h');
+	uint32_t col = static_cast<uint32_t>(file - 'a');
 	// "h" file is actually column number 0 internally
 	col = board_cols - (col + 1);
 	return col;
@@ -57,11 +60,14 @@ forceinline constexpr uint32_t get_col_from_file(const char file)
 
 forceinline constexpr uint32_t get_row_from_rank(const char rank)
 {
-	return rank - '1';
+	DEBUG_ASSERT(rank >= '1' && rank <= '8');
+	return static_cast<uint32_t>(rank - '1');
 }
 
 forceinline constexpr uint32_t square_index_from_square_name(const char* square_name)
 {
+	DEBUG_ASSERT(square_name[0] >= 'a' && square_name[0] <= 'h');
+	DEBUG_ASSERT(square_name[1] >= '1' && square_name[1] <= '8');
 	uint32_t row = get_row_from_rank(square_name[1]);
 	uint32_t col = get_col_from_file(square_name[0]);
 	return two_d_to_one_d(row, col);

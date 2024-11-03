@@ -7,15 +7,19 @@
 template<typename BitboardFeatureIterator, size_t output_size>
 forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, output_size>::Weights::SetWeights(std::ifstream& weights_file)
 {
+	if (!weights_file.is_open())
+	{
+		throw std::runtime_error("weights file is not open");
+	}
 	constexpr size_t weights_size = BitboardFeatureIterator::NumBitboardFeatures() * bits_in_bitboard;
-	float weights[weights_size];
-	float bias = 0;
+	float weights_from_file[weights_size];
+	float bias_from_file = 0;
 
 	// for now we're hardcoding the weights so we don't give a little pik about file reading
-	std::memset(weights, 0, weights_size * sizeof(float));
-	std::memcpy(weights, hardcoded_psqt_weights, sizeof(hardcoded_psqt_weights));
+	std::memset(weights_from_file, 0, weights_size * sizeof(float));
+	std::memcpy(weights_from_file, hardcoded_psqt_weights, sizeof(hardcoded_psqt_weights));
 
-	for (auto& value : weights)
+	for (auto& value : weights_from_file)
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -24,8 +28,8 @@ forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, o
 		value += dis(gen);
 	}
 
-	std::memcpy(this->weights, weights, sizeof(this->weights));
-	std::memcpy(this->bias, &bias, sizeof(this->bias));
+	std::memcpy(this->weights, weights_from_file, sizeof(this->weights));
+	std::memcpy(this->bias, &bias_from_file, sizeof(this->bias));
 }
 
 template<typename BitboardFeatureIterator, size_t output_size>

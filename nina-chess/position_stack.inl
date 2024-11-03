@@ -11,7 +11,6 @@ inline constexpr bool PositionStack::IsThreefoldRepetition() const
 {
 	const Position& current_position = GetCurrentPosition();
 	const int64_t ply_to_search_to = 0;
-	int repetition_count = 0;
 
 	for (int64_t ply = depth - 2; ply >= ply_to_search_to; ply -= 2)
 	{
@@ -33,9 +32,9 @@ forceinline constexpr void PositionStack::SetCurrentPosition(const Position& pos
 	position_stack[depth] = position;
 }
 
-forceinline constexpr Position& PositionStack::GetPositionAt(const int64_t depth)
+forceinline constexpr Position& PositionStack::GetPositionAt(const int64_t depth_of_position)
 {
-	return position_stack[depth];
+	return position_stack[depth_of_position];
 }
 
 forceinline constexpr const Position& PositionStack::GetCurrentPosition() const
@@ -48,11 +47,11 @@ forceinline constexpr Position& PositionStack::GetNextPosition()
 	return position_stack[depth + 1];
 }
 
-forceinline constexpr MoveList& PositionStack::GetMoveListAt(const int64_t depth)
+forceinline constexpr MoveList& PositionStack::GetMoveListAt(const int64_t depth_of_position)
 {
-	if (move_list_stack[depth].GetHashOfPosition() != position_stack[depth].hash)
-		generate_moves(position_stack[depth], move_list_stack[depth]);
-	return move_list_stack[depth];
+	if (move_list_stack[depth_of_position].GetHashOfPosition() != position_stack[depth_of_position].hash)
+		generate_moves(position_stack[depth_of_position], move_list_stack[depth_of_position]);
+	return move_list_stack[depth_of_position];
 }
 
 forceinline constexpr MoveList& PositionStack::GetMoveList()

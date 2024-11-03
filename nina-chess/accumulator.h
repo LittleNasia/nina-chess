@@ -22,7 +22,7 @@ public:
 	forceinline constexpr void Reset(const BitboardFeatureIterator& new_features_iterator);
 
 	forceinline constexpr const float* GetOutput() const { return output; } 
-	forceinline constexpr void SetWeights(Weights& weights) { this->weights = &weights; }
+	forceinline constexpr void SetWeights(Weights& weights_to_set) { weights = &weights_to_set; }
 
 private:
 	forceinline constexpr size_t getWeightsIndex(const size_t bitboard_index, const uint32_t feature_in_bitboard_index);

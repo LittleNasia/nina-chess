@@ -8,6 +8,8 @@ using Castling = uint32_t;
 template<Color color, Castling castling>
 forceinline constexpr Castling get_castling()
 {
+	static_assert(castling <= 0b1111);
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return castling & 0b11;
@@ -22,6 +24,7 @@ forceinline constexpr Castling get_castling()
 template<Color color>
 forceinline constexpr Bitboard kingside_castling_castling_king_path()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0xe;
@@ -36,6 +39,7 @@ forceinline constexpr Bitboard kingside_castling_castling_king_path()
 template<Color color>
 forceinline constexpr Bitboard kingside_castling_castling_rook_path()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x6;
@@ -50,6 +54,7 @@ forceinline constexpr Bitboard kingside_castling_castling_rook_path()
 template<Color color>
 forceinline constexpr Bitboard queenside_castling_king_path()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x38;
@@ -64,6 +69,7 @@ forceinline constexpr Bitboard queenside_castling_king_path()
 template<Color color>
 forceinline constexpr Bitboard queenside_castling_rook_path()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x70;
@@ -77,6 +83,7 @@ forceinline constexpr Bitboard queenside_castling_rook_path()
 template<Color color>
 forceinline constexpr Bitboard kingside_castling_rook()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x1;
@@ -90,6 +97,7 @@ forceinline constexpr Bitboard kingside_castling_rook()
 template<Color color>
 forceinline constexpr Bitboard queenside_castling_rook()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x80;
@@ -103,6 +111,7 @@ forceinline constexpr Bitboard queenside_castling_rook()
 template<Color color>
 forceinline constexpr Bitboard kingside_castling_king_dest()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x2;
@@ -116,6 +125,7 @@ forceinline constexpr Bitboard kingside_castling_king_dest()
 template<Color color>
 forceinline constexpr Bitboard queenside_castling_king_dest()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x20;
@@ -129,6 +139,7 @@ forceinline constexpr Bitboard queenside_castling_king_dest()
 template<Color color>
 forceinline constexpr Bitboard queenside_castling_rook_dest()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x10;
@@ -142,6 +153,7 @@ forceinline constexpr Bitboard queenside_castling_rook_dest()
 template<Color color>
 forceinline constexpr Bitboard kingside_castling_rook_dest()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x4;
@@ -177,6 +189,7 @@ forceinline constexpr Castling update_castling_rights(const Bitboard white_rooks
 template<Color color>
 forceinline constexpr Castling castling_perms()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0b11;
@@ -190,6 +203,7 @@ forceinline constexpr Castling castling_perms()
 template<Color color>
 forceinline constexpr Castling kingside_castling_perms()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0b1;
@@ -203,6 +217,7 @@ forceinline constexpr Castling kingside_castling_perms()
 template<Color color>
 forceinline constexpr Castling queenside_castling_perms()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0b10;

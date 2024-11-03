@@ -1,9 +1,9 @@
 #pragma once
 #include "utils.h"
 
+#include "bit_manip.h"
 #include "bitmasks.h"
 #include "castling.h"
-#include "intrinsics.h"
 
 struct Move
 {
@@ -35,7 +35,8 @@ public:
 		case ROOK: return "r";
 		case BISHOP: return "b";
 		case KNIGHT: return "n";
-		default: return "";
+		default: 
+			return "";
 		}
 	}
 

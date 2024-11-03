@@ -1,13 +1,14 @@
 #pragma once
 #include "utils.h"
 
+#include "bit_manip.h"
 #include "bitmasks.h"
-#include "intrinsics.h"
 #include "side.h"
 
 template <Color color>
 forceinline constexpr Bitboard get_pawn_advances(const Bitboard pawns)
 {
+	validate_color<color>();
     if constexpr (color == WHITE)
     {
         return pawns << 8;
@@ -21,6 +22,7 @@ forceinline constexpr Bitboard get_pawn_advances(const Bitboard pawns)
 template <Color color>
 forceinline constexpr Bitboard get_double_advance_target(const Bitboard pawns)
 {
+    validate_color<color>();
     if constexpr (color == WHITE)
     {
         return pawns << 16;
@@ -34,6 +36,7 @@ forceinline constexpr Bitboard get_double_advance_target(const Bitboard pawns)
 template<Color color>
 forceinline constexpr Bitboard get_push_candidates_bitmask()
 {
+    validate_color<color>();
     if constexpr (color == WHITE)
     {
         return row_bitmasks[2];
@@ -47,7 +50,8 @@ forceinline constexpr Bitboard get_push_candidates_bitmask()
 template <Color color>
 forceinline constexpr Bitboard get_pawn_left_attacks(Bitboard pawns)
 {
-    pawns &= pawns_can_attack_left;
+    validate_color<color>();
+    pawns &= pawns_that_can_attack_left;
     if constexpr (color == WHITE)
     {
         return pawns << 9;
@@ -61,6 +65,7 @@ forceinline constexpr Bitboard get_pawn_left_attacks(Bitboard pawns)
 template<Color color>
 forceinline constexpr Bitboard get_pawn_left_attackers(const Bitboard attackers)
 {
+    validate_color<color>();
     if constexpr (color == WHITE)
     {
         return attackers >> 9;
@@ -74,7 +79,8 @@ forceinline constexpr Bitboard get_pawn_left_attackers(const Bitboard attackers)
 template <Color color>
 forceinline constexpr Bitboard get_pawn_right_attacks(Bitboard pawns)
 {
-    pawns &= pawns_can_attack_right;
+    validate_color<color>();
+    pawns &= pawns_that_can_attack_right;
     if constexpr (color == WHITE)
     {
         return pawns << 7;
@@ -88,6 +94,7 @@ forceinline constexpr Bitboard get_pawn_right_attacks(Bitboard pawns)
 template<Color color>
 forceinline constexpr Bitboard get_pawn_right_attackers(const Bitboard attackers)
 {
+    validate_color<color>();
     if constexpr (color == WHITE)
     {
         return attackers >> 7;
@@ -101,6 +108,7 @@ forceinline constexpr Bitboard get_pawn_right_attackers(const Bitboard attackers
 template<Color color>
 forceinline constexpr Bitboard get_pawn_attacks(Bitboard pieces)
 {
+    validate_color<color>();
     return get_pawn_left_attacks<color>(pieces) | get_pawn_right_attacks<color>(pieces);
 }
 

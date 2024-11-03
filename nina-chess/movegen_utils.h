@@ -177,8 +177,8 @@ inline constexpr point bishop_moves[num_directions] =
 	{-1,-1},
 };
 
-inline constexpr bitboard pawns_can_attack_left = 0x7f7f7f7f7f7f7f7f;
-inline constexpr bitboard pawns_can_attack_right = 0xfefefefefefefefe;
+inline constexpr bitboard pawns_that_can_attack_left = 0x7f7f7f7f7f7f7f7f;
+inline constexpr bitboard pawns_that_can_attack_right = 0xfefefefefefefefe;
 
 template<Color color>
 forceinline constexpr Color get_opposite_color()

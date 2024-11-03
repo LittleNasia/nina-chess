@@ -7,7 +7,7 @@ TranspositionTable::TranspositionTable(const size_t size_in_mb)
 	entries.resize(entry_count);
 }
 
-void TranspositionTable::Insert(const TranspositionTableEntry& entry, bool force_overwrite)
+void TranspositionTable::Insert(const TranspositionTableEntry& entry, const bool force_overwrite)
 {
 	const size_t index = fast_modulo(entry.key, entries.size());
 	

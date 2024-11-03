@@ -9,12 +9,13 @@ inline constexpr Bitboard full_bitboard = ~empty_bitboard;
 inline constexpr Bitboard light_squares = 0xAA55AA55AA55AA55;
 inline constexpr Bitboard dark_squares = ~light_squares;
 
-inline constexpr Bitboard pawns_can_attack_left = 0x7f7f7f7f7f7f7f7f;
-inline constexpr Bitboard pawns_can_attack_right = 0xfefefefefefefefe;
+inline constexpr Bitboard pawns_that_can_attack_left = 0x7f7f7f7f7f7f7f7f;
+inline constexpr Bitboard pawns_that_can_attack_right = 0xfefefefefefefefe;
 
 template<Color color>
 forceinline constexpr Bitboard king_startpos()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x8;
@@ -28,6 +29,7 @@ forceinline constexpr Bitboard king_startpos()
 template<Color color>
 forceinline constexpr Bitboard promotion_rank()
 {
+	validate_color<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0xff00000000000000;

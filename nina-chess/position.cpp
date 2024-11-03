@@ -6,6 +6,7 @@
 template<Color side_to_move>
 forceinline constexpr char GetPieceChar(const Side& side, const Bitboard bit)
 {
+	validate_color<side_to_move>();
 	if (side.pawns & bit)
 		return side_to_move == WHITE ? 'P' : 'p';
 	if (side.knights & bit)
@@ -80,13 +81,12 @@ void position::PrintBoard(const Position& curr_pos)
 
 Position position::ParseFen(const std::string_view fen)
 {
-	int row = 7;
-	int col = 7;
-	int index = 0;
+	uint32_t row = 7;
+	uint32_t col = 7;
+	uint32_t index = 0;
 	Side white_pieces;
 	Side black_pieces;
 	const uint32_t fifty_move_rule = 0;
-	const uint32_t ply = 0;
 	for (index = 0; index < fen.length(); index++)
 	{
 		// "col 0" is actually on the right of the board (where square 0 is)
@@ -203,7 +203,7 @@ Position position::ParseFen(const std::string_view fen)
 	std::string fen_castling_rights;
 	ss >> fen_castling_rights;
 	Castling castling_rights = 0;
-	for (int castling_index = 0; castling_index < fen_castling_rights.length(); castling_index++)
+	for (uint32_t castling_index = 0; castling_index < fen_castling_rights.length(); castling_index++)
 	{
 		if (fen_castling_rights[castling_index] == '-')
 		{
