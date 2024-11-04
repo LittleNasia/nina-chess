@@ -19,7 +19,7 @@ inline constexpr bool IS_DEBUG = false;
 // forceinlining everything doesn't seem to give performance benefits anymore
 // maybe not anymore, forceinlining everything seems to be the way to go now for some reason ? ? ?
 // there are functions that probably still shouldn't be inlined but forceinline as a default seems fine now
-#define forceinline inline
+#define forceinline __forceinline
 
 forceinline constexpr uint32_t FastModulo(const size_t input, const size_t ceil)
 {

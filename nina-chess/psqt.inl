@@ -20,7 +20,7 @@ PSQT::PSQT(std::ifstream& weightsFile) :
 	}
 }
 
-inline constexpr void PSQT::Reset(const Position& position, const MoveList& moveList)
+forceinline constexpr void PSQT::Reset(const Position& position, const MoveList& moveList)
 {
 	m_Depth = 0;
 	update(position, moveList);
@@ -32,7 +32,7 @@ inline constexpr void PSQT::Reset(const Position& position, const MoveList& move
 	m_Accumulators[m_Depth].Reset(featuresIterator);
 }
 
-inline constexpr void PSQT::IncrementalUpdate(const Position& position, const MoveList& moveList)
+forceinline constexpr void PSQT::IncrementalUpdate(const Position& position, const MoveList& moveList)
 {
 	m_Depth++;
 	update(position, moveList);
@@ -51,7 +51,7 @@ inline constexpr void PSQT::IncrementalUpdate(const Position& position, const Mo
 	m_Accumulators[m_Depth].AccumulateFeatures(newFeaturesIterator, oldFeaturesIterator, oldAccumulator.GetOutput());
 }
 
-inline constexpr void PSQT::update(const Position& position, const MoveList& moveList)
+forceinline constexpr void PSQT::update(const Position& position, const MoveList& moveList)
 {
 	auto& currentBoardFeatures = m_BoardFeatures[m_Depth];
 	currentBoardFeatures.WhitePieces = &position.WhitePieces;

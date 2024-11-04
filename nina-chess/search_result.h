@@ -20,7 +20,10 @@ struct SearchResult
 		const double duration = static_cast<double>(duration_in_ms) / 1000.0;
 		std::cout << "info depth " << Depth << " score cp " << int(Score) << " nodes " << Nodes;
 		if (duration_in_ms != 0)
+		{
 			std::cout << " nps " << static_cast<size_t>(static_cast<double>(Nodes) / duration);
+			std::cout << " time " << duration_in_ms;
+		}
 		std::cout << " pv ";
 
 		for (uint32_t pv_id = 0; pv_id < PvLength; pv_id++)

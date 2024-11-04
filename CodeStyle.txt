@@ -4,7 +4,7 @@ MethodNames
 FunctionNames
 StructMembers
 privateMethodNames
-m_member_variables
+m_MemberVariables
 localVariables
 functionArguments
 templateArguments
