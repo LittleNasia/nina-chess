@@ -9,29 +9,29 @@
 class SearchCancellationPolicy
 {
 public:
-	SearchCancellationPolicy(const TimePoint& start_time, const SearchConstraints& search_constraints) :
-		node_cancellation_policy(search_constraints),
-		time_cancellation_policy(start_time, search_constraints)
+	SearchCancellationPolicy(const TimePoint& startTime, const SearchConstraints& searchConstraints) :
+		m_NodeCancellationPolicy(searchConstraints),
+		m_TimeCancellationPolicy(startTime, searchConstraints)
 	{}
 
 	forceinline bool CheckForAbort(uint64_t nodes);
-	forceinline bool IsAborted() const { return aborted_flag.test(); }
-	forceinline constexpr size_t GetNodeLimit() const { return node_cancellation_policy.GetNodeLimit();}
-	forceinline constexpr int64_t GetTimeLimit() const { return time_cancellation_policy.GetTimeLimit(); }
+	forceinline bool IsAborted() const { return m_SearchAbortedFlag.test(); }
+	forceinline constexpr size_t GetNodeLimit() const { return m_NodeCancellationPolicy.GetNodeLimit();}
+	forceinline constexpr int64_t GetTimeLimit() const { return m_TimeCancellationPolicy.GetTimeLimit(); }
 
 private:
-	SearchNodesCancellationPolicy node_cancellation_policy;
-	SearchTimeCancellationPolicy time_cancellation_policy;
+	SearchNodesCancellationPolicy m_NodeCancellationPolicy;
+	SearchTimeCancellationPolicy m_TimeCancellationPolicy;
 
-	std::atomic_flag aborted_flag = ATOMIC_FLAG_INIT;
+	std::atomic_flag m_SearchAbortedFlag = ATOMIC_FLAG_INIT;
 };
 
 
 forceinline bool SearchCancellationPolicy::CheckForAbort(uint64_t nodes)
 {
-	if (time_cancellation_policy.ShouldAbort() || node_cancellation_policy.ShouldAbort(nodes))
+	if (m_TimeCancellationPolicy.ShouldAbort() || m_NodeCancellationPolicy.ShouldAbort(nodes))
 	{
-		aborted_flag.test_and_set();
+		m_SearchAbortedFlag.test_and_set();
 		return true;
 	}
 	return false;

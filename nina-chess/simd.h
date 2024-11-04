@@ -5,18 +5,18 @@
 #include <xmmintrin.h>
 
 #ifdef __AVX2__
-using simd_vector = __m256;
+using SimdVector = __m256;
 #else
-using simd_vector = __m128;
+using SimdVector = __m128;
 #endif
 
-inline constexpr int floats_per_register = sizeof(simd_vector) / sizeof(float);
+inline constexpr int FLOATS_PER_REGISTER = sizeof(SimdVector) / sizeof(float);
 
 struct simd_pack
 {
 public:
-	forceinline constexpr float& operator[] (const size_t index) { return values[index]; }
-	forceinline constexpr float operator[] (const size_t index) const { return values[index]; }
+	forceinline constexpr float& operator[] (const size_t index) { return m_Values[index]; }
+	forceinline constexpr float operator[] (const size_t index) const { return m_Values[index]; }
 private:
-	float values[floats_per_register];
+	float m_Values[FLOATS_PER_REGISTER];
 };

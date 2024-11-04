@@ -5,7 +5,7 @@
 
 int main()
 {
-	if (!test_perft(false, _PERFTNODES))
+	if (!TestPerft(false, _PERFTNODES))
 		return 1;
 }
 

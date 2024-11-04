@@ -2,23 +2,23 @@
 #include "intrinsics.h"
 #include "utils.h"
 
-forceinline Bitboard pop_bit(Bitboard& bb)
+forceinline Bitboard PopBit(Bitboard& bitboard)
 {
-	const uint64_t lsb = blsi(bb);
-	bb ^= lsb;
+	const uint64_t lsb = Blsi(bitboard);
+	bitboard ^= lsb;
 	return lsb;
 }
 
 #pragma warning( push )
 #pragma warning( disable:4244 )
-forceinline uint32_t bit_index(const Bitboard bb)
+forceinline uint32_t BitIndex(const Bitboard bitboard)
 {
-	return tzcnt(bb);
+	return Tzcnt(bitboard);
 }
 #pragma warning( pop )
 
-forceinline uint32_t pop_bit_and_get_index(Bitboard& bb)
+forceinline uint32_t PopBitAndGetIndex(Bitboard& bitboard)
 {
-	const uint64_t lsb = pop_bit(bb);
-	return bit_index(lsb);
+	const uint64_t lsb = PopBit(bitboard);
+	return BitIndex(lsb);
 }

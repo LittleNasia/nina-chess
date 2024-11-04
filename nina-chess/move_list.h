@@ -5,23 +5,23 @@
 #include "intrinsics.h"
 #include "move.h"
 
-struct MoveListMisc
+struct MoveListMiscellaneous
 {
-	Bitboard piece_moves[PIECE_TYPE_NONE] = { 0,0,0,0,0,0 };
-	Bitboard pinmask = 0;
-	Bitboard checkmask = 0;
-	Bitboard pinners = 0;
-	Bitboard checkers = 0;
-	Bitboard attacked_squares = 0;
+	Bitboard PieceMoves[PIECE_TYPE_NONE] = { 0,0,0,0,0,0 };
+	Bitboard Pinmask = 0;
+	Bitboard Checkmask = 0;
+	Bitboard Pinners = 0;
+	Bitboard Checkers = 0;
+	Bitboard AttackedSquares = 0;
 
 	void Reset()
 	{
-		std::memset(piece_moves, 0, sizeof(piece_moves));
-		pinmask = 0;
-		checkmask = 0;
-		pinners = 0;
-		checkers = 0;
-		attacked_squares = 0;
+		std::memset(PieceMoves, 0, sizeof(PieceMoves));
+		Pinmask = 0;
+		Checkmask = 0;
+		Pinners = 0;
+		Checkers = 0;
+		AttackedSquares = 0;
 	}
 };
 
@@ -31,28 +31,28 @@ struct MoveList
 
 	forceinline void PushMove(const Move&& move)
 	{
-		moves[num_moves++] = move;
+		m_Moves[m_NumMoves++] = move;
 	}
 
 	forceinline void Reset()
 	{
-		num_moves = 0;
-		hash_of_position = 0;
-		move_list_misc.Reset();
+		m_NumMoves = 0;
+		m_HashOfPosition = 0;
+		MoveListMisc.Reset();
 	}
 
-	forceinline constexpr uint32_t GetNumMoves() const { return num_moves; }
-	forceinline constexpr const Move* GetMoves() const { return moves; }
+	forceinline constexpr uint32_t GetNumMoves() const { return m_NumMoves; }
+	forceinline constexpr const Move* GetMoves() const { return m_Moves; }
 
-	forceinline constexpr void SetHashOfPosition(const uint64_t hash) { hash_of_position = hash; }
-	forceinline constexpr uint64_t GetHashOfPosition() const { return hash_of_position; }
+	forceinline constexpr void SetHashOfPosition(const uint64_t hash) { m_HashOfPosition = hash; }
+	forceinline constexpr uint64_t GetHashOfPosition() const { return m_HashOfPosition; }
 
-	forceinline constexpr const Move& operator[](const uint32_t index) const { return moves[index]; }
+	forceinline constexpr const Move& operator[](const uint32_t index) const { return m_Moves[index]; }
 
-	MoveListMisc move_list_misc;
+	MoveListMiscellaneous MoveListMisc;
 
 private:
-	alignas(cache_line_size) Move moves[200];
-	uint32_t num_moves = 0;
-	uint64_t hash_of_position = 0;
+	alignas(CACHE_LINE_SIZE) Move m_Moves[200];
+	uint32_t m_NumMoves = 0;
+	uint64_t m_HashOfPosition = 0;
 };

@@ -6,443 +6,442 @@
 #include "move_list.h"
 #include "position.h"
 
-forceinline void fill_pinmask(const size_t square, Bitboard& pinmask, Bitboard pinners)
+forceinline void FillPinmask(const size_t square, Bitboard& pinmask, Bitboard pinners)
 {
 	// Evil branch
 	while (pinners)
 	{
-		const Bitboard pinner = pop_bit(pinners);
-		pinmask |= pin_between_table[square][bit_index(pinner)];
+		const Bitboard pinner = PopBit(pinners);
+		pinmask |= PIN_BETWEEN_TABLE[square][BitIndex(pinner)];
 	}
 }
 
-forceinline void fill_checkmask(const size_t square, Bitboard& checkmask, Bitboard checkers)
+forceinline void FillCheckmask(const size_t square, Bitboard& checkmask, Bitboard checkers)
 {
 	// More evil branches
 	while (checkers)
 	{
-		const Bitboard checker = pop_bit(checkers);
-		checkmask |= pin_between_table[square][bit_index(checker)] | (1ULL<<square);
+		const Bitboard checker = PopBit(checkers);
+		checkmask |= PIN_BETWEEN_TABLE[square][BitIndex(checker)] | (1ULL<<square);
 	}
 }
 template<Color color>
-forceinline constexpr Bitboard get_legal_left_pawn_captures(const Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard enemy_pieces)
+forceinline constexpr Bitboard GetLegalPawnCapturesLeft(const Bitboard pawns, const Bitboard bishopPinmask, const Bitboard rookPinmask, const Bitboard enemyPieces)
 {
-	const Bitboard pinmask = (bishop_pinmask | rook_pinmask);
-	const Bitboard unpinned_pawns = pawns & ~pinmask;
-	const Bitboard pinned_pawns = pawns & pinmask;
-	const Bitboard unpinned_pawn_captures = get_pawn_left_attacks<color>(unpinned_pawns) & enemy_pieces;
+	const Bitboard pinmask = (bishopPinmask | rookPinmask);
+	const Bitboard unpinnedPawns = pawns & ~pinmask;
+	const Bitboard pinnedPawns = pawns & pinmask;
+	const Bitboard unpinnedPawnCaptures = GetPawnsLeftAttacks<color>(unpinnedPawns) & enemyPieces;
 	// pawns pinned by rooks can't capture, pawns pinned by bishops can only capture in the direction of a bishop
-	const Bitboard pinned_pawn_captures = (get_pawn_left_attacks<color>(pinned_pawns & ~rook_pinmask) & bishop_pinmask) & enemy_pieces;
-	return unpinned_pawn_captures | pinned_pawn_captures;
+	const Bitboard pinnedPawnCaptures = (GetPawnsLeftAttacks<color>(pinnedPawns & ~rookPinmask) & bishopPinmask) & enemyPieces;
+	return unpinnedPawnCaptures | pinnedPawnCaptures;
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_legal_right_pawn_captures(const Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard enemy_pieces)
+forceinline constexpr Bitboard GetLegalPawnCapturesRight(const Bitboard pawns, const Bitboard bishopPinmask, const Bitboard rookPinmask, const Bitboard enemyPieces)
 {
-	const Bitboard pinmask = (bishop_pinmask | rook_pinmask);
-	const Bitboard unpinned_pawns = pawns & ~pinmask;
-	const Bitboard pinned_pawns = pawns & pinmask;
-	const Bitboard unpinned_pawn_captures = get_pawn_right_attacks<color>(unpinned_pawns) & enemy_pieces;
+	const Bitboard pinmask = (bishopPinmask | rookPinmask);
+	const Bitboard unpinnedPawns = pawns & ~pinmask;
+	const Bitboard pinnedPawns = pawns & pinmask;
+	const Bitboard unpinnedPawnCaptures = GetPawnsRightAttacks<color>(unpinnedPawns) & enemyPieces;
 	// pawns pinned by rooks can't capture, pawns pinned by bishops can only capture in the direction of a bishop
-	const Bitboard pinned_pawn_captures = (get_pawn_right_attacks<color>(pinned_pawns & ~rook_pinmask) & bishop_pinmask) & enemy_pieces;
-	return unpinned_pawn_captures | pinned_pawn_captures;
+	const Bitboard pinnedPawnCaptures = (GetPawnsRightAttacks<color>(pinnedPawns & ~rookPinmask) & bishopPinmask) & enemyPieces;
+	return unpinnedPawnCaptures | pinnedPawnCaptures;
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_legal_pawn_advances(const Bitboard pawns, const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard occupied)
+forceinline constexpr Bitboard GetLegalPawnAdvances(const Bitboard pawns, const Bitboard bishopPinmask, const Bitboard rookPinmask, const Bitboard occupied)
 {
-	const Bitboard pinmask = bishop_pinmask | rook_pinmask;
-	const Bitboard unpinned_pawns = pawns & ~pinmask;
-	const Bitboard pinned_pawns = pawns & pinmask;
-	const Bitboard unpinned_pawn_advances = get_pawn_advances<color>(unpinned_pawns) & ~occupied;
-	const Bitboard pinned_pawn_advances = (get_pawn_advances<color>(pinned_pawns & ~bishop_pinmask) & rook_pinmask) & ~occupied;
-	return unpinned_pawn_advances | pinned_pawn_advances;
+	const Bitboard pinmask = bishopPinmask | rookPinmask;
+	const Bitboard unpinnedPawns = pawns & ~pinmask;
+	const Bitboard pinnedPawns = pawns & pinmask;
+	const Bitboard unpinnedPawnAdvances = GetPawnAdvances<color>(unpinnedPawns) & ~occupied;
+	const Bitboard pinnedPawnAdvances = (GetPawnAdvances<color>(pinnedPawns & ~bishopPinmask) & rookPinmask) & ~occupied;
+	return unpinnedPawnAdvances | pinnedPawnAdvances;
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_pawn_double_advances(const Bitboard pushed_pawn_moves, const Bitboard occupied)
+forceinline constexpr Bitboard GetPawnDoubleAdvances(const Bitboard singleAdvancePawnMoves, const Bitboard occupied)
 {
-	return pawn_advances<color>(pushed_pawn_moves & get_push_candidates_bitmask<color>()) & ~occupied;
+	return GetPawnAdvances<color>(singleAdvancePawnMoves & GetDoubleAdvancesCandidates<color>()) & ~occupied;
 }
 
-forceinline constexpr Bitboard get_king_moves(const size_t king_index, const Bitboard attacked_squares)
+forceinline constexpr Bitboard GetKingMoves(const size_t kingIndex, const Bitboard attackedSquares)
 {
-	return king_moves[king_index] & ~attacked_squares;
+	return KING_MOVE_BITMASKS[kingIndex] & ~attackedSquares;
 }
 
-template<PieceType piece_type, Color color, bool castling = false, bool EP = false>
-forceinline void write_moves(MoveList& move_list, Bitboard moves_mask, const uint32_t piece_index)
+template<PieceType pieceType, Color color, bool isCastling = false, bool isEnPassant = false>
+forceinline void WriteMoves(MoveList& moveList, Bitboard movesMask, const uint32_t pieceIndex)
 {
-	constexpr PieceType moving_piece = piece_type;
-	while (moves_mask)
+	constexpr PieceType movingPieceType = pieceType;
+	while (movesMask)
 	{
-		const uint32_t move_target_index = pop_bit_and_get_index(moves_mask);
-		if constexpr (castling)
-			move_list.PushMove({ piece_index, move_target_index, moving_piece, PIECE_TYPE_NONE, castling });
-		else if constexpr (EP)
-			move_list.PushMove({ piece_index, move_target_index, moving_piece, PIECE_TYPE_NONE, castling, EP });
+		const uint32_t moveTargetIndex = PopBitAndGetIndex(movesMask);
+		if constexpr (isCastling)
+			moveList.PushMove({ pieceIndex, moveTargetIndex, movingPieceType, PIECE_TYPE_NONE, isCastling });
+		else if constexpr (isEnPassant)
+			moveList.PushMove({ pieceIndex, moveTargetIndex, movingPieceType, PIECE_TYPE_NONE, isCastling, isEnPassant });
 		else
-			move_list.PushMove({ piece_index, move_target_index, moving_piece });
+			moveList.PushMove({ pieceIndex, moveTargetIndex, movingPieceType });
 	}
-	move_list.move_list_misc.piece_moves[piece_type] |= moves_mask;
+	moveList.MoveListMisc.PieceMoves[pieceType] |= movesMask;
 }
 
 template<Color color>
-forceinline void write_pawn_moves(MoveList& move_list, const Bitboard left_pawn_captures, const Bitboard right_pawn_captures,
-	const Bitboard legal_pawn_advances, const Bitboard pawn_double_advances, Bitboard pawns)
+forceinline void WritePawnMoves(MoveList& moveList, const Bitboard leftPawnCaptures, const Bitboard rightPawnCaptures,
+	const Bitboard legalPawnAdvances, const Bitboard pawnDoubleAdvances, Bitboard pawns)
 {
-	validate_color<color>();
-	constexpr PieceType moving_piece = PAWN;
+	ValidateColor<color>();
+	constexpr PieceType movingPieceType = PAWN;
 	while (pawns)
 	{
-		const auto pawn = pop_bit(pawns);
-		const auto piece_index = bit_index(pawn);
-		Bitboard curr_pawn_moves = 0ULL;
-		curr_pawn_moves |= get_pawn_left_attacks<color>(pawn) & left_pawn_captures;
-		curr_pawn_moves |= get_pawn_right_attacks<color>(pawn) & right_pawn_captures;
-		curr_pawn_moves |= get_pawn_advances<color>(pawn) & legal_pawn_advances;
-		curr_pawn_moves |= get_double_advance_target<color>(pawn) & pawn_double_advances;
-		while (curr_pawn_moves)
+		const auto pawn = PopBit(pawns);
+		const auto pawnIndex = BitIndex(pawn);
+		Bitboard currentPawnMoves = 0ULL;
+		currentPawnMoves |= GetPawnsLeftAttacks<color>(pawn) & leftPawnCaptures;
+		currentPawnMoves |= GetPawnsRightAttacks<color>(pawn) & rightPawnCaptures;
+		currentPawnMoves |= GetPawnAdvances<color>(pawn) & legalPawnAdvances;
+		currentPawnMoves |= GetDoubleAdvances<color>(pawn) & pawnDoubleAdvances;
+		while (currentPawnMoves)
 		{
-			const Bitboard move = pop_bit(curr_pawn_moves);
-			const uint32_t move_target = bit_index(move);
+			const Bitboard move = PopBit(currentPawnMoves);
+			const uint32_t moveIndex = BitIndex(move);
 
-			if (move & promotion_rank<color>())
+			if (move & PromotionRankBitmask<color>())
 			{
-				for (const auto promotion_piece : promotion_pieces)
+				for (const auto promotion_piece : PROMOTION_PIECE_TYPES)
 				{
-					move_list.PushMove({ piece_index, move_target, moving_piece, promotion_piece });
+					moveList.PushMove({ pawnIndex, moveIndex, movingPieceType, promotion_piece });
 				}
 			}
 			else
-				move_list.PushMove({ piece_index, move_target, moving_piece });
+				moveList.PushMove({ pawnIndex, moveIndex, movingPieceType });
 		}
-		move_list.move_list_misc.piece_moves[moving_piece] |= curr_pawn_moves;
+		moveList.MoveListMisc.PieceMoves[movingPieceType] |= currentPawnMoves;
 	}
 }  
 
-template<Color color, bool check, bool unblockable_check>
-forceinline void write_slider_moves(MoveList& move_list, Bitboard movable_bishops, Bitboard movable_rooks, Bitboard queens, const Bitboard occupied, const Bitboard allies,
-	const Bitboard bishop_pinmask, const Bitboard rook_pinmask, const Bitboard checkers, const Bitboard bishop_checkmask, const Bitboard rook_checkmask)
+template<Color color, bool isCheck, bool isUnblockableCheck>
+forceinline void WriteSliderMoves(MoveList& moveList, Bitboard movableBishops, Bitboard movableRooks, Bitboard queens, const Bitboard occupied, const Bitboard allies,
+	const Bitboard bishopPinmask, const Bitboard rookPinmask, const Bitboard checkers, const Bitboard bishopCheckmask, const Bitboard rookCheckmask)
 {
-	while (movable_bishops)
+	while (movableBishops)
 	{
-		const Bitboard curr_bishop = pop_bit(movable_bishops);
-		Bitboard curr_bishop_moves = get_single_bishop_attacks(curr_bishop, occupied);
-		if constexpr (check && unblockable_check)
+		const Bitboard currentBishop = PopBit(movableBishops);
+		Bitboard currentBishopMoves = GetSingleBishopAttacks(currentBishop, occupied);
+		if constexpr (isCheck && isUnblockableCheck)
 		{
-			curr_bishop_moves &= checkers;
+			currentBishopMoves &= checkers;
 		}
-		else if constexpr (check && !unblockable_check)
+		else if constexpr (isCheck && !isUnblockableCheck)
 		{
-			curr_bishop_moves &= (rook_checkmask | bishop_checkmask);
+			currentBishopMoves &= (rookCheckmask | bishopCheckmask);
 		}
-		if(curr_bishop & bishop_pinmask)
-			curr_bishop_moves &= bishop_pinmask;
-		curr_bishop_moves &= ~allies;
-		if(curr_bishop_moves)
-			write_moves<BISHOP, color>(move_list, curr_bishop_moves, bit_index(curr_bishop));
-		move_list.move_list_misc.piece_moves[BISHOP] |= curr_bishop_moves;
+		if(currentBishop & bishopPinmask)
+			currentBishopMoves &= bishopPinmask;
+		currentBishopMoves &= ~allies;
+		if(currentBishopMoves)
+			WriteMoves<BISHOP, color>(moveList, currentBishopMoves, BitIndex(currentBishop));
+		moveList.MoveListMisc.PieceMoves[BISHOP] |= currentBishopMoves;
 	}
-	while (movable_rooks)
+	while (movableRooks)
 	{
-		const Bitboard curr_rook = pop_bit(movable_rooks);
-		Bitboard curr_rook_moves = get_single_rook_attacks(curr_rook, occupied);
-		if constexpr (check && unblockable_check)
+		const Bitboard currentRook = PopBit(movableRooks);
+		Bitboard currentRookMoves = GetSingleRookAttacks(currentRook, occupied);
+		if constexpr (isCheck && isUnblockableCheck)
 		{
-			curr_rook_moves &= checkers;
+			currentRookMoves &= checkers;
 		}
-		else if constexpr (check && !unblockable_check)
+		else if constexpr (isCheck && !isUnblockableCheck)
 		{
-			curr_rook_moves &= (rook_checkmask | bishop_checkmask);
+			currentRookMoves &= (rookCheckmask | bishopCheckmask);
 		}
-		if (curr_rook & rook_pinmask)
-			curr_rook_moves &= rook_pinmask;
-		curr_rook_moves &= ~allies;
-		if(curr_rook_moves)
-			write_moves<ROOK, color>(move_list, curr_rook_moves, bit_index(curr_rook));
-		move_list.move_list_misc.piece_moves[ROOK] |= curr_rook_moves;
+		if (currentRook & rookPinmask)
+			currentRookMoves &= rookPinmask;
+		currentRookMoves &= ~allies;
+		if(currentRookMoves)
+			WriteMoves<ROOK, color>(moveList, currentRookMoves, BitIndex(currentRook));
+		moveList.MoveListMisc.PieceMoves[ROOK] |= currentRookMoves;
 	}
 	while (queens)
 	{
-		const Bitboard curr_queen = pop_bit(queens);
-		const Bitboard curr_queen_rook_moves = get_single_rook_attacks(curr_queen, occupied);
-		const Bitboard curr_queen_bishop_moves = get_single_bishop_attacks(curr_queen, occupied);
-		Bitboard curr_queen_moves = curr_queen_rook_moves | curr_queen_bishop_moves;
+		const Bitboard currentQueen = PopBit(queens);
+		const Bitboard currentQueenRookMoves = GetSingleRookAttacks(currentQueen, occupied);
+		const Bitboard currentQueenBishopMoves = GetSingleBishopAttacks(currentQueen, occupied);
+		Bitboard currentQueenMoves = currentQueenRookMoves | currentQueenBishopMoves;
 
-		if(curr_queen & rook_pinmask)
-			curr_queen_moves &= (rook_pinmask & curr_queen_rook_moves);
-		if (curr_queen & bishop_pinmask)
-			curr_queen_moves &= (bishop_pinmask & curr_queen_bishop_moves);
-		curr_queen_moves &= ~allies;
-		if constexpr (check && unblockable_check)
+		if(currentQueen & rookPinmask)
+			currentQueenMoves &= (rookPinmask & currentQueenRookMoves);
+		if (currentQueen & bishopPinmask)
+			currentQueenMoves &= (bishopPinmask & currentQueenBishopMoves);
+		currentQueenMoves &= ~allies;
+		if constexpr (isCheck && isUnblockableCheck)
 		{
-			curr_queen_moves &= checkers;
+			currentQueenMoves &= checkers;
 		}
-		else if constexpr (check && !unblockable_check)
+		else if constexpr (isCheck && !isUnblockableCheck)
 		{
-			curr_queen_moves &= (rook_checkmask | bishop_checkmask);
+			currentQueenMoves &= (rookCheckmask | bishopCheckmask);
 		}
-		if (curr_queen_moves)
-			write_moves<QUEEN, color>(move_list, curr_queen_moves, bit_index(curr_queen));
-		move_list.move_list_misc.piece_moves[QUEEN] |= curr_queen_moves;
+		if (currentQueenMoves)
+			WriteMoves<QUEEN, color>(moveList, currentQueenMoves, BitIndex(currentQueen));
+		moveList.MoveListMisc.PieceMoves[QUEEN] |= currentQueenMoves;
 	}
 }
 
-template<Color color, bool check, bool unblockable_check>
-forceinline void write_knight_moves(MoveList& move_list, Bitboard movable_knights, const Bitboard allies,
-	const Bitboard checkers, const Bitboard bishop_checkmask, const Bitboard rook_checkmask)
+template<Color color, bool isCheck, bool isUnblockableCheck>
+forceinline void WriteKnightMoves(MoveList& moveList, Bitboard movableKnights, const Bitboard allies,
+	const Bitboard checkers, const Bitboard bishopCheckmask, const Bitboard rookCheckmask)
 {
-	constexpr PieceType moving_piece = KNIGHT;
-	while (movable_knights)
+	constexpr PieceType movingPieceType = KNIGHT;
+	while (movableKnights)
 	{
-		const uint32_t knight_index = pop_bit_and_get_index(movable_knights);
-		Bitboard curr_knight_moves = knight_moves[knight_index];
-		if constexpr (check && unblockable_check)
+		const uint32_t KnightIndex = PopBitAndGetIndex(movableKnights);
+		Bitboard currentKnightMoves = KNIGHT_MOVE_BITMASKS[KnightIndex];
+		if constexpr (isCheck && isUnblockableCheck)
 		{
-			curr_knight_moves &= checkers;
+			currentKnightMoves &= checkers;
 		}
-		else if constexpr (check && !unblockable_check)
+		else if constexpr (isCheck && !isUnblockableCheck)
 		{
-			curr_knight_moves &= (bishop_checkmask | rook_checkmask);
+			currentKnightMoves &= (bishopCheckmask | rookCheckmask);
 		}
-		curr_knight_moves &= ~allies;
+		currentKnightMoves &= ~allies;
 		
-		while (curr_knight_moves)
+		while (currentKnightMoves)
 		{
-			const Bitboard move = pop_bit(curr_knight_moves);
-			const uint32_t move_target = bit_index(move);
+			const Bitboard move = PopBit(currentKnightMoves);
+			const uint32_t moveTarget = BitIndex(move);
 
-			move_list.PushMove({ knight_index, move_target, moving_piece });
+			moveList.PushMove({ KnightIndex, moveTarget, movingPieceType });
 		}
-		move_list.move_list_misc.piece_moves[moving_piece] |= curr_knight_moves;
+		moveList.MoveListMisc.PieceMoves[movingPieceType] |= currentKnightMoves;
 	}
 }
 
-template<Color color, size_t castling, bool hasEP>
-forceinline MoveList& generate_moves(MoveList& move_list, const Position& Position)
+template<Color color, size_t castlingPermissions, bool hasEP>
+forceinline MoveList& GenerateMoves(MoveList& moveList, const Position& position)
 {
-	move_list.Reset();
-	move_list.SetHashOfPosition(Position.hash);
+	moveList.Reset();
+	moveList.SetHashOfPosition(position.Hash);
 
-	constexpr auto opposite_color = get_opposite_color<color>();
-	const auto& curr_pieces = Position.GetSide<color>();
-	const auto& opposite_pieces = Position.GetSide<opposite_color>();
-	const auto& king = curr_pieces.king;
-	const auto& king_index = bit_index(curr_pieces.king);
-	const Bitboard bishop_xray_from_king = bishop_xray_masks[king_index];
-	const Bitboard rook_xray_from_king = rook_xray_masks[king_index];
+	constexpr auto oppositeColor = GetOppositeColor<color>();
+	const auto& currPieces = position.GetSide<color>();
+	const auto& oppositePieces = position.GetSide<oppositeColor>();
+	const auto& king = currPieces.King;
+	const auto& kingIndex = BitIndex(currPieces.King);
+	const Bitboard bishopXrayFromKing = BISHOP_XRAY_BITMASKS[kingIndex];
+	const Bitboard rookXrayFromKing = ROOK_XRAY_BITMASKS[kingIndex];
 	// king can't move to these squares
-	const Bitboard attacked_squares = get_all_attacks<opposite_color>(opposite_pieces, Position.occupied ^ king);
+	const Bitboard attackedSquares = GetAllAttacks<oppositeColor>(oppositePieces, position.OccupiedBitmask ^ king);
 
-	Bitboard bishop_checkers = 0ULL;
-	Bitboard bishop_pinners = 0ULL;
-	Bitboard bishop_pinmask = 0ULL;
-	Bitboard bishop_checkmask = 0ULL;
+	Bitboard bishopCheckers = 0ULL;
+	Bitboard bishopPinners = 0ULL;
+	Bitboard bishopPinmask = 0ULL;
+	Bitboard bishopCheckmask = 0ULL;
 
-	Bitboard rook_checkers = 0ULL;
-	Bitboard rook_pinners = 0ULL;
-	Bitboard rook_pinmask = 0ULL;
-	Bitboard rook_checkmask = 0ULL;
+	Bitboard rookCheckers = 0ULL;
+	Bitboard rookPinners = 0ULL;
+	Bitboard rookPinmask = 0ULL;
+	Bitboard rookCheckmask = 0ULL;
 
-	const Bitboard knight_checkers = knight_moves[king_index] & opposite_pieces.knights;
-	const Bitboard pawn_checkers = get_pawn_attacks<color>(king) & opposite_pieces.pawns;
+	const Bitboard knightCheckers = KNIGHT_MOVE_BITMASKS[kingIndex] & oppositePieces.Knights;
+	const Bitboard pawnCheckers = GetAllPawnAttacks<color>(king) & oppositePieces.Pawns;
 
-	const Bitboard enemy_rook_queen = opposite_pieces.rooks | opposite_pieces.queens;
-	const Bitboard enemy_bishop_queen = opposite_pieces.bishops | opposite_pieces.queens;
+	const Bitboard enemyRookQueen = oppositePieces.Rooks | oppositePieces.Queens;
+	const Bitboard enemyBishopQueen = oppositePieces.Bishops | oppositePieces.Queens;
 
 	// quick check to save computation in most cases
 	// a bishop can't pin a piece if it's not on the same diagonal with king etc.
-	if (bishop_xray_from_king & enemy_bishop_queen)
+	if (bishopXrayFromKing & enemyBishopQueen)
 	{
 		// bitboard consisting of all pieces attacked by the king if it was a bishop
-		const Bitboard bishop_king_attacks = get_single_bishop_attacks(king, Position.occupied);
-		bishop_checkers |= enemy_bishop_queen & bishop_king_attacks;
-		fill_checkmask(king_index, bishop_checkmask, bishop_checkers);
-		const Bitboard attacked_pieces = Position.occupied & bishop_king_attacks;
-		const Bitboard removed_attacked_pieces = Position.occupied ^ attacked_pieces;
-		const Bitboard attacked_pieces_behind = get_single_bishop_attacks(king, removed_attacked_pieces) & removed_attacked_pieces;
-		bishop_pinners |= attacked_pieces_behind & enemy_bishop_queen;
-		fill_pinmask(king_index, bishop_pinmask, bishop_pinners);
+		const Bitboard bishopKingAttacks = GetSingleBishopAttacks(king, position.OccupiedBitmask);
+		bishopCheckers |= enemyBishopQueen & bishopKingAttacks;
+		FillCheckmask(kingIndex, bishopCheckmask, bishopCheckers);
+		const Bitboard attackedPiecesByBishopKing = position.OccupiedBitmask & bishopKingAttacks;
+		const Bitboard occupiedBitmaskWithoutBishopKingVictims = position.OccupiedBitmask ^ attackedPiecesByBishopKing;
+		const Bitboard piecesBehindBishopKingAttackedPieces = GetSingleBishopAttacks(king, occupiedBitmaskWithoutBishopKingVictims) & occupiedBitmaskWithoutBishopKingVictims;
+		bishopPinners |= piecesBehindBishopKingAttackedPieces & enemyBishopQueen;
+		FillPinmask(kingIndex, bishopPinmask, bishopPinners);
 	}
-	if (rook_xray_from_king & enemy_rook_queen)
+	if (rookXrayFromKing & enemyRookQueen)
 	{
-		const Bitboard rook_king_attacks = get_single_rook_attacks(king, Position.occupied);
-		rook_checkers |= enemy_rook_queen & rook_king_attacks;
-		fill_checkmask(king_index, rook_checkmask, rook_checkers);
-		const Bitboard attacked_pieces = Position.occupied & rook_king_attacks;
-		const Bitboard removed_attacked_pieces = Position.occupied ^ attacked_pieces;
-		const Bitboard attacked_pieces_behind = get_single_rook_attacks(king, removed_attacked_pieces) & removed_attacked_pieces;
-		rook_pinners |= attacked_pieces_behind & enemy_rook_queen;
-		fill_pinmask(king_index, rook_pinmask, rook_pinners);
+		const Bitboard rookKingAttacks = GetSingleRookAttacks(king, position.OccupiedBitmask);
+		rookCheckers |= enemyRookQueen & rookKingAttacks;
+		FillCheckmask(kingIndex, rookCheckmask, rookCheckers);
+		const Bitboard attackedPiecesByRookKing = position.OccupiedBitmask & rookKingAttacks;
+		const Bitboard occupiedBitmaskWithoutRookKingVictims = position.OccupiedBitmask ^ attackedPiecesByRookKing;
+		const Bitboard piecesBehindRookKingAttackedPieces = GetSingleRookAttacks(king, occupiedBitmaskWithoutRookKingVictims) & occupiedBitmaskWithoutRookKingVictims;
+		rookPinners |= piecesBehindRookKingAttackedPieces & enemyRookQueen;
+		FillPinmask(kingIndex, rookPinmask, rookPinners);
 	}
 
-	move_list.move_list_misc.checkers = rook_checkers | bishop_checkers | knight_checkers | pawn_checkers;
-	move_list.move_list_misc.pinners = rook_pinners | bishop_pinners;
-	move_list.move_list_misc.checkmask = rook_checkmask | bishop_checkmask;
-	move_list.move_list_misc.pinmask = rook_pinmask | bishop_pinmask;
-	move_list.move_list_misc.attacked_squares = attacked_squares;
+	moveList.MoveListMisc.Checkers = rookCheckers | bishopCheckers | knightCheckers | pawnCheckers;
+	moveList.MoveListMisc.Pinners = rookPinners | bishopPinners;
+	moveList.MoveListMisc.Checkmask = rookCheckmask | bishopCheckmask;
+	moveList.MoveListMisc.Pinmask = rookPinmask | bishopPinmask;
+	moveList.MoveListMisc.AttackedSquares = attackedSquares;
 
-	const uint32_t num_checkers = popcnt(rook_checkers | bishop_checkers | knight_checkers | pawn_checkers);
+	const uint32_t numCheckers = Popcnt(rookCheckers | bishopCheckers | knightCheckers | pawnCheckers);
 
 	// king can always move, unless she can't
-	const Bitboard legal_king_moves = get_king_moves(king_index, attacked_squares) & ~curr_pieces.pieces;
-	write_moves<KING, color>(move_list, legal_king_moves, king_index);
-	if (num_checkers > 1)
+	const Bitboard legalKingMoves = GetKingMoves(kingIndex, attackedSquares) & ~currPieces.Pieces;
+	WriteMoves<KING, color>(moveList, legalKingMoves, kingIndex);
+	if (numCheckers > 1)
 	{
 		// double check. The only legal moves are king moves to run away from check, can't block it 
-		return move_list;
+		return moveList;
 	}
 	// single or no checks
 	// pinned pieces can't move in directions they can't move in
 	// in check by sliders they can only capture the checking piece or block it 
 	// in check by knights or pawns they can only capture the piece 
-	Bitboard pawn_left_captures = get_legal_left_pawn_captures<color>(curr_pieces.pawns, bishop_pinmask, rook_pinmask, opposite_pieces.pieces);
-	Bitboard pawn_right_captures = get_legal_right_pawn_captures<color>(curr_pieces.pawns, bishop_pinmask, rook_pinmask, opposite_pieces.pieces);
-	Bitboard legal_pawn_advances = get_legal_pawn_advances<color>(curr_pieces.pawns, bishop_pinmask, rook_pinmask, Position.occupied);
-	Bitboard legal_pawn_double_advances = legal_pawn_advances & get_push_candidates_bitmask<color>();
-	legal_pawn_double_advances = get_pawn_advances<color>(legal_pawn_double_advances) & ~Position.occupied;
+	Bitboard pawnLeftCaptures = GetLegalPawnCapturesLeft<color>(currPieces.Pawns, bishopPinmask, rookPinmask, oppositePieces.Pieces);
+	Bitboard pawnRightCaptures = GetLegalPawnCapturesRight<color>(currPieces.Pawns, bishopPinmask, rookPinmask, oppositePieces.Pieces);
+	Bitboard legalPawnAdvances = GetLegalPawnAdvances<color>(currPieces.Pawns, bishopPinmask, rookPinmask, position.OccupiedBitmask);
+	Bitboard legalPawnDoubleAdvances = legalPawnAdvances & GetDoubleAdvancesCandidates<color>();
+	legalPawnDoubleAdvances = GetPawnAdvances<color>(legalPawnDoubleAdvances) & ~position.OccupiedBitmask;
 
 	// bishops pinned by a rook can't move 
-	const Bitboard movable_bishops = curr_pieces.bishops & ~rook_pinmask;
+	const Bitboard movableBishops = currPieces.Bishops & ~rookPinmask;
 	// likewise, rooks pinned by 
-	const Bitboard movable_rooks = curr_pieces.rooks & ~bishop_pinmask;
-	const Bitboard movable_knights = curr_pieces.knights & ~(bishop_pinmask | rook_pinmask);
+	const Bitboard movableRooks = currPieces.Rooks & ~bishopPinmask;
+	const Bitboard movableKnights = currPieces.Knights & ~(bishopPinmask | rookPinmask);
 	// pinned queens can move always
 	
 	// no checks
-	if (!(knight_checkers | pawn_checkers | rook_checkers | bishop_checkers))
+	if (!(knightCheckers | pawnCheckers | rookCheckers | bishopCheckers))
 	{
-		write_slider_moves<color, false, false>(move_list, movable_bishops, movable_rooks,
-			curr_pieces.queens, Position.occupied, curr_pieces.pieces, bishop_pinmask,
-			rook_pinmask, 0, 0, 0);
-		write_knight_moves<color, false, false>(move_list, movable_knights, curr_pieces.pieces, 0,
+		WriteSliderMoves<color, false, false>(moveList, movableBishops, movableRooks,
+			currPieces.Queens, position.OccupiedBitmask, currPieces.Pieces, bishopPinmask,
+			rookPinmask, 0, 0, 0);
+		WriteKnightMoves<color, false, false>(moveList, movableKnights, currPieces.Pieces, 0,
 			0, 0);
 	}
 	// blockable checks
-	else if (!(knight_checkers | pawn_checkers) && (rook_checkers | bishop_checkers))
+	else if (!(knightCheckers | pawnCheckers) && (rookCheckers | bishopCheckers))
 	{
-		write_slider_moves<color, true, false>(move_list, movable_bishops, movable_rooks,
-			curr_pieces.queens, Position.occupied, curr_pieces.pieces, bishop_pinmask,
-			rook_pinmask, rook_checkers | bishop_checkers, bishop_checkmask, rook_checkmask);
-		pawn_left_captures &= (bishop_checkmask|rook_checkmask);
-		pawn_right_captures &= (bishop_checkmask | rook_checkmask);
-		legal_pawn_advances &= (bishop_checkmask | rook_checkmask);
-		legal_pawn_double_advances &= (bishop_checkmask | rook_checkmask);
-		write_knight_moves<color, true, false>(move_list, movable_knights, curr_pieces.pieces, rook_checkers | bishop_checkers,
-			bishop_checkmask, rook_checkmask);
+		WriteSliderMoves<color, true, false>(moveList, movableBishops, movableRooks,
+			currPieces.Queens, position.OccupiedBitmask, currPieces.Pieces, bishopPinmask,
+			rookPinmask, rookCheckers | bishopCheckers, bishopCheckmask, rookCheckmask);
+		pawnLeftCaptures &= (bishopCheckmask|rookCheckmask);
+		pawnRightCaptures &= (bishopCheckmask | rookCheckmask);
+		legalPawnAdvances &= (bishopCheckmask | rookCheckmask);
+		legalPawnDoubleAdvances &= (bishopCheckmask | rookCheckmask);
+		WriteKnightMoves<color, true, false>(moveList, movableKnights, currPieces.Pieces, rookCheckers | bishopCheckers,
+			bishopCheckmask, rookCheckmask);
 	}
 	// unblockable checks
 	else
 	{
-		write_slider_moves<color, true, true>(move_list, movable_bishops, movable_rooks,
-			curr_pieces.queens, Position.occupied, curr_pieces.pieces, bishop_pinmask,
-			rook_pinmask, knight_checkers | pawn_checkers, 0, 0);
-		pawn_left_captures &= knight_checkers | pawn_checkers;
-		pawn_right_captures &= knight_checkers | pawn_checkers;
-		legal_pawn_advances = 0;
-		legal_pawn_double_advances = 0;
-		write_knight_moves<color, true, true>(move_list, movable_knights, curr_pieces.pieces, knight_checkers | pawn_checkers,
+		WriteSliderMoves<color, true, true>(moveList, movableBishops, movableRooks,
+			currPieces.Queens, position.OccupiedBitmask, currPieces.Pieces, bishopPinmask,
+			rookPinmask, knightCheckers | pawnCheckers, 0, 0);
+		pawnLeftCaptures &= knightCheckers | pawnCheckers;
+		pawnRightCaptures &= knightCheckers | pawnCheckers;
+		legalPawnAdvances = 0;
+		legalPawnDoubleAdvances = 0;
+		WriteKnightMoves<color, true, true>(moveList, movableKnights, currPieces.Pieces, knightCheckers | pawnCheckers,
 			0, 0);
 	}
 	// all bad moves have been pruned
-	write_pawn_moves<color>(move_list, pawn_left_captures, pawn_right_captures, legal_pawn_advances, legal_pawn_double_advances, curr_pieces.pawns);
+	WritePawnMoves<color>(moveList, pawnLeftCaptures, pawnRightCaptures, legalPawnAdvances, legalPawnDoubleAdvances, currPieces.Pawns);
 
 
 	if constexpr (hasEP)
 	{
-		const uint32_t EP_index = bit_index(Position.EP_square);
-		const Bitboard victim = EP_victims_lookup[EP_index];
+		const uint32_t enPassantSquareIndex = BitIndex(position.EnPassantSquare);
+		const Bitboard victim = EN_PASSANT_VICTIM_BITMASK_LOOKUP[enPassantSquareIndex];
 		// move the EP pawn and remove the target, see if king is attacked by a slider
-		const Bitboard victim_removed = Position.occupied ^ victim;
+		const Bitboard occupiedBitmaskWithEnPassantVictimsRemoved = position.OccupiedBitmask ^ victim;
 		// pawns that are pinned by rooks can't EP
-		Bitboard EP_candidates = EP_candidates_lookup[EP_index] & (curr_pieces.pawns & ~rook_pinmask);
-		while (EP_candidates)
+		Bitboard enPassantCandidates = EN_PASSANT_CANDIDATES_LOOKUP[enPassantSquareIndex] & (currPieces.Pawns & ~rookPinmask);
+		while (enPassantCandidates)
 		{
-			const Bitboard EP_candidate = pop_bit(EP_candidates);
-			const Bitboard occupied_removed = victim_removed ^ (EP_candidate | Position.EP_square);
-			const Bitboard king_bishop_attacks = get_single_bishop_attacks(king, occupied_removed);
-			const Bitboard king_rook_attacks = get_single_rook_attacks(king, occupied_removed);
+			const Bitboard enPassantCandidate = PopBit(enPassantCandidates);
+			const Bitboard occupiedBitmaskWithEnPassantMoveMade = occupiedBitmaskWithEnPassantVictimsRemoved ^ (enPassantCandidate | position.EnPassantSquare);
+			const Bitboard kingBishopAttacks = GetSingleBishopAttacks(king, occupiedBitmaskWithEnPassantMoveMade);
+			const Bitboard kingRookAttacks = GetSingleRookAttacks(king, occupiedBitmaskWithEnPassantMoveMade);
 			if (
-				!(king_bishop_attacks & enemy_bishop_queen)
+				!(kingBishopAttacks & enemyBishopQueen)
 				&& 
-				!(king_rook_attacks & enemy_rook_queen)
+				!(kingRookAttacks & enemyRookQueen)
 				)
 			{
-				constexpr bool castling_allowed = false;
-				constexpr bool is_EP = true;
-				write_moves<PAWN, color, castling_allowed, is_EP>(move_list, Position.EP_square, bit_index(EP_candidate));
+				constexpr bool isCastling = false;
+				constexpr bool isEnPassant = true;
+				WriteMoves<PAWN, color, isCastling, isEnPassant>(moveList, position.EnPassantSquare, BitIndex(enPassantCandidate));
 			}
 		}
 	}
 
-	constexpr auto castling_perms = castling;
 	// kingside castling
-	if constexpr (castling_perms & 0b1)
+	if constexpr (castlingPermissions & 0b1)
 	{
-		const bool can_castle = !((attacked_squares & kingside_castling_castling_king_path<color>()) ||
-			(Position.occupied & (kingside_castling_castling_rook_path<color>() & ~king)));
-		if (can_castle)
+		const bool canCastle = !((attackedSquares & KingsideCastlingKingPath<color>()) ||
+			(position.OccupiedBitmask & (KingsideCastlingRookPath<color>() & ~king)));
+		if (canCastle)
 		{
-			constexpr bool castling_allowed = true;
-			write_moves<KING, color, castling_allowed>(move_list, kingside_castling_rook<color>(), king_index);
+			constexpr bool isCastling = true;
+			WriteMoves<KING, color, isCastling>(moveList, KingsideCastlingRookBitmask<color>(), kingIndex);
 		}
 	}
 	// queenside castling
-	if constexpr (castling_perms & 0b10)
+	if constexpr (castlingPermissions & 0b10)
 	{
-		const bool can_castle = !((attacked_squares & queenside_castling_king_path<color>()) ||
-			(Position.occupied & (queenside_castling_rook_path<color>() & ~king)));
-		if (can_castle)
+		const bool canCastle = !((attackedSquares & QueensideCastlingKingPath<color>()) ||
+			(position.OccupiedBitmask & (QueensideCastlingRookPath<color>() & ~king)));
+		if (canCastle)
 		{
-			constexpr bool castling_allowed = true;
-			write_moves<KING, color, castling_allowed>(move_list, queenside_castling_rook<color>(), king_index);
+			constexpr bool isCastling = true;
+			WriteMoves<KING, color, isCastling>(moveList, QueensideCastlingRookBitmask<color>(), kingIndex);
 		}
 	}
-	return move_list;
+	return moveList;
 }
 
-template<Color side_to_move>
-forceinline MoveList& generate_moves(const Position& position, MoveList& move_list)
+template<Color sideToMove>
+forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList)
 {
-	const bool EP = static_cast<bool>(position.EP_square);
+	const bool isEnPassantAllowed = static_cast<bool>(position.EnPassantSquare);
 	const Castling castling = position.GetCurrentCastling();
 
-		 if (castling == 0b11 && !EP) generate_moves<side_to_move, 0b11, false>(move_list, position);
-	else if (castling == 0b00 && !EP) generate_moves<side_to_move, 0b00, false>(move_list, position);
-	else if (castling == 0b01 && !EP) generate_moves<side_to_move, 0b01, false>(move_list, position);
-	else if (castling == 0b10 && !EP) generate_moves<side_to_move, 0b10, false>(move_list, position);
-	else if (castling == 0b11 &&  EP) generate_moves<side_to_move, 0b11, true >(move_list, position);
-	else if (castling == 0b00 &&  EP) generate_moves<side_to_move, 0b00, true >(move_list, position);
-	else if (castling == 0b01 &&  EP) generate_moves<side_to_move, 0b01, true >(move_list, position);
-	else if (castling == 0b10 &&  EP) generate_moves<side_to_move, 0b10, true >(move_list, position);
+		 if (castling == 0b11 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b11, false>(moveList, position);
+	else if (castling == 0b00 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b00, false>(moveList, position);
+	else if (castling == 0b01 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b01, false>(moveList, position);
+	else if (castling == 0b10 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b10, false>(moveList, position);
+	else if (castling == 0b11 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b11, true >(moveList, position);
+	else if (castling == 0b00 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b00, true >(moveList, position);
+	else if (castling == 0b01 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b01, true >(moveList, position);
+	else if (castling == 0b10 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b10, true >(moveList, position);
 
-	return move_list;
+	return moveList;
 }
 
-forceinline MoveList& generate_moves(const Position& position, MoveList& move_list)
+forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList)
 {
-	const bool EP = static_cast<bool>(position.EP_square);
-	const Color color = position.side_to_move;
+	const bool isEnPassantAllowed = static_cast<bool>(position.EnPassantSquare);
+	const Color color = position.SideToMove;
 	const Castling castling = position.GetCurrentCastling();
 
-		 if (color == WHITE && castling == 0b11 && !EP) generate_moves<WHITE, 0b11, false>(move_list, position);
-	else if (color == BLACK && castling == 0b11 && !EP) generate_moves<BLACK, 0b11, false>(move_list, position);
-	else if (color == WHITE && castling == 0b00 && !EP) generate_moves<WHITE, 0b00, false>(move_list, position);
-	else if (color == BLACK && castling == 0b00 && !EP) generate_moves<BLACK, 0b00, false>(move_list, position);
-	else if (color == WHITE && castling == 0b01 && !EP) generate_moves<WHITE, 0b01, false>(move_list, position);
-	else if (color == BLACK && castling == 0b01 && !EP) generate_moves<BLACK, 0b01, false>(move_list, position);
-	else if (color == WHITE && castling == 0b10 && !EP) generate_moves<WHITE, 0b10, false>(move_list, position);
-	else if (color == BLACK && castling == 0b10 && !EP) generate_moves<BLACK, 0b10, false>(move_list, position);
-	else if (color == WHITE && castling == 0b11 &&  EP) generate_moves<WHITE, 0b11, true >(move_list, position);
-	else if (color == BLACK && castling == 0b11 &&  EP) generate_moves<BLACK, 0b11, true >(move_list, position);
-	else if (color == WHITE && castling == 0b00 &&  EP) generate_moves<WHITE, 0b00, true >(move_list, position);
-	else if (color == BLACK && castling == 0b00 &&  EP) generate_moves<BLACK, 0b00, true >(move_list, position);
-	else if (color == WHITE && castling == 0b01 &&  EP) generate_moves<WHITE, 0b01, true >(move_list, position);
-	else if (color == BLACK && castling == 0b01 &&  EP) generate_moves<BLACK, 0b01, true >(move_list, position);
-	else if (color == WHITE && castling == 0b10 &&  EP) generate_moves<WHITE, 0b10, true >(move_list, position);
-	else if (color == BLACK && castling == 0b10 &&  EP) generate_moves<BLACK, 0b10, true >(move_list, position);
+		 if (color == WHITE && castling == 0b11 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b11, false>(moveList, position);
+	else if (color == BLACK && castling == 0b11 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b11, false>(moveList, position);
+	else if (color == WHITE && castling == 0b00 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b00, false>(moveList, position);
+	else if (color == BLACK && castling == 0b00 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b00, false>(moveList, position);
+	else if (color == WHITE && castling == 0b01 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b01, false>(moveList, position);
+	else if (color == BLACK && castling == 0b01 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b01, false>(moveList, position);
+	else if (color == WHITE && castling == 0b10 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b10, false>(moveList, position);
+	else if (color == BLACK && castling == 0b10 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b10, false>(moveList, position);
+	else if (color == WHITE && castling == 0b11 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b11, true >(moveList, position);
+	else if (color == BLACK && castling == 0b11 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b11, true >(moveList, position);
+	else if (color == WHITE && castling == 0b00 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b00, true >(moveList, position);
+	else if (color == BLACK && castling == 0b00 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b00, true >(moveList, position);
+	else if (color == WHITE && castling == 0b01 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b01, true >(moveList, position);
+	else if (color == BLACK && castling == 0b01 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b01, true >(moveList, position);
+	else if (color == WHITE && castling == 0b10 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b10, true >(moveList, position);
+	else if (color == BLACK && castling == 0b10 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b10, true >(moveList, position);
 
-	return move_list;
+	return moveList;
 }

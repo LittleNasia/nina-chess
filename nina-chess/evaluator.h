@@ -13,21 +13,21 @@
 class Evaluator
 {
 public:
-	forceinline Evaluator(const std::string_view& weights_filename);
+	forceinline Evaluator(const std::string_view& weightsFilename);
 	
-	forceinline constexpr void Reset(PositionStack& position_stack);
+	forceinline constexpr void Reset(PositionStack& positionStack);
 
-	template<Color side_to_move>
-	forceinline constexpr Score Evaluate(const MoveList& move_list, const int64_t search_depth);
+	template<Color sideToMove>
+	forceinline constexpr Score Evaluate(const MoveList& moveList, const int64_t searchDepth);
 
-	template<Color side_to_move>
-	forceinline constexpr void IncrementalUpdate(const Position& new_pos, const MoveList& move_list);
+	template<Color sideToMove>
+	forceinline constexpr void IncrementalUpdate(const Position& newPos, const MoveList& moveList);
 
-	forceinline constexpr void UndoUpdate() { psqt.UndoUpdate(); depth--; }
+	forceinline constexpr void UndoUpdate() { m_PSQT.UndoUpdate(); m_Depth--; }
 private:
-	int depth;
+	int m_Depth;
 
-	PSQT psqt;
+	PSQT m_PSQT;
 };
 
 #include "evaluator.inl"

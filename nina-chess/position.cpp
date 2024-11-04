@@ -3,33 +3,33 @@
 #include <iostream>
 #include <sstream>
 
-template<Color side_to_move>
+template<Color sideToMove>
 forceinline constexpr char GetPieceChar(const Side& side, const Bitboard bit)
 {
-	validate_color<side_to_move>();
-	if (side.pawns & bit)
-		return side_to_move == WHITE ? 'P' : 'p';
-	if (side.knights & bit)
-		return side_to_move == WHITE ? 'N' : 'n';
-	if (side.bishops & bit)
-		return side_to_move == WHITE ? 'B' : 'b';
-	if (side.rooks & bit)
-		return side_to_move == WHITE ? 'R' : 'r';
-	if (side.queens & bit)
-		return side_to_move == WHITE ? 'Q' : 'q';
-	if (side.king & bit)
-		return side_to_move == WHITE ? 'K' : 'k';
+	ValidateColor<sideToMove>();
+	if (side.Pawns & bit)
+		return sideToMove == WHITE ? 'P' : 'p';
+	if (side.Knights & bit)
+		return sideToMove == WHITE ? 'N' : 'n';
+	if (side.Bishops & bit)
+		return sideToMove == WHITE ? 'B' : 'b';
+	if (side.Rooks & bit)
+		return sideToMove == WHITE ? 'R' : 'r';
+	if (side.Queens & bit)
+		return sideToMove == WHITE ? 'Q' : 'q';
+	if (side.King & bit)
+		return sideToMove == WHITE ? 'K' : 'k';
 	return ' ';
 }
 
 forceinline constexpr char GetPieceChar(const Position& pos, const Bitboard bit)
 {
-	if (bit & ~pos.occupied)
+	if (bit & ~pos.OccupiedBitmask)
 		return ' ';
-	else if (bit & pos.white_pieces.pieces)
-		return GetPieceChar<WHITE>(pos.white_pieces, bit);
+	else if (bit & pos.WhitePieces.Pieces)
+		return GetPieceChar<WHITE>(pos.WhitePieces, bit);
 	else
-		return GetPieceChar<BLACK>(pos.black_pieces, bit);
+		return GetPieceChar<BLACK>(pos.BlackPieces, bit);
 }
 
 void position::PrintBoard(const Position& curr_pos)
@@ -40,7 +40,7 @@ void position::PrintBoard(const Position& curr_pos)
 	{
 		const Bitboard curr_bit = 1ULL << square;
 
-		if ((square + 1) % board_cols == 0)
+		if ((square + 1) % BOARD_COLUMNS == 0)
 		{
 			std::cout << "\n";
 			std::cout << rank-- << ' ';
@@ -68,15 +68,15 @@ void position::PrintBoard(const Position& curr_pos)
 		}
 
 		std::cout << "[";
-		std::cout << (curr_pos.occupied & (1ULL << square) ? "X" : " ");
+		std::cout << (curr_pos.OccupiedBitmask & (1ULL << square) ? "X" : " ");
 		std::cout << "]";
 	}
 
 	// misc info
 	std::cout << "\n";
 	std::cout << "castling: BLACK: ";
-	std::cout << bool(curr_pos.castling & 0b1000) << bool(curr_pos.castling & 0b0100) << " WHITE: " << bool(curr_pos.castling & 0b0010) << bool(curr_pos.castling & 0b0001) << "\n";
-	std::cout << "side_to_move " << (curr_pos.side_to_move == WHITE ? "WHITE" : "BLACK");
+	std::cout << bool(curr_pos.CastlingPermissions & 0b1000) << bool(curr_pos.CastlingPermissions & 0b0100) << " WHITE: " << bool(curr_pos.CastlingPermissions & 0b0010) << bool(curr_pos.CastlingPermissions & 0b0001) << "\n";
+	std::cout << "side_to_move " << (curr_pos.SideToMove == WHITE ? "WHITE" : "BLACK");
 }
 
 Position position::ParseFen(const std::string_view fen)
@@ -103,7 +103,7 @@ Position position::ParseFen(const std::string_view fen)
 		}
 		PieceType curr_piece_type = PIECE_TYPE_NONE;
 		Color piece_color = COLOR_NONE;
-		const size_t curr_index = two_d_to_one_d(row, col);
+		const size_t curr_index = TwoDimensionalIndexToOneDimensional(row, col);
 		const size_t curr_piece = 1ULL << curr_index;
 		// put pieces
 		switch (fen[index])
@@ -111,62 +111,62 @@ Position position::ParseFen(const std::string_view fen)
 		case 'p':
 			curr_piece_type = PAWN;
 			piece_color = BLACK;
-			black_pieces.pawns ^= curr_piece;
+			black_pieces.Pawns ^= curr_piece;
 			break;
 		case 'r':
 			curr_piece_type = ROOK;
 			piece_color = BLACK;
-			black_pieces.rooks ^= curr_piece;
+			black_pieces.Rooks ^= curr_piece;
 			break;
 		case 'b':
 			curr_piece_type = BISHOP;
 			piece_color = BLACK;
-			black_pieces.bishops ^= curr_piece;
+			black_pieces.Bishops ^= curr_piece;
 			break;
 		case 'q':
 			curr_piece_type = QUEEN;
 			piece_color = BLACK;
-			black_pieces.queens ^= curr_piece;
+			black_pieces.Queens ^= curr_piece;
 			break;
 		case 'k':
 			curr_piece_type = KING;
 			piece_color = BLACK;
-			black_pieces.king ^= curr_piece;
+			black_pieces.King ^= curr_piece;
 			break;
 		case 'n':
 			curr_piece_type = KNIGHT;
 			piece_color = BLACK;
-			black_pieces.knights ^= curr_piece;
+			black_pieces.Knights ^= curr_piece;
 			break;
 		case 'P':
 			curr_piece_type = PAWN;
 			piece_color = WHITE;
-			white_pieces.pawns ^= curr_piece;
+			white_pieces.Pawns ^= curr_piece;
 			break;
 		case 'R':
 			curr_piece_type = ROOK;
 			piece_color = WHITE;
-			white_pieces.rooks ^= curr_piece;
+			white_pieces.Rooks ^= curr_piece;
 			break;
 		case 'B':
 			curr_piece_type = BISHOP;
 			piece_color = WHITE;
-			white_pieces.bishops ^= curr_piece;
+			white_pieces.Bishops ^= curr_piece;
 			break;
 		case 'Q':
 			curr_piece_type = QUEEN;
 			piece_color = WHITE;
-			white_pieces.queens ^= curr_piece;
+			white_pieces.Queens ^= curr_piece;
 			break;
 		case 'K':
 			curr_piece_type = KING;
 			piece_color = WHITE;
-			white_pieces.king ^= curr_piece;
+			white_pieces.King ^= curr_piece;
 			break;
 		case 'N':
 			curr_piece_type = KNIGHT;
 			piece_color = WHITE;
-			white_pieces.knights ^= curr_piece;
+			white_pieces.Knights ^= curr_piece;
 			break;
 			// if it's not a piece, it's a number (new rows and end of pieces was already handled)
 		default:
@@ -212,16 +212,16 @@ Position position::ParseFen(const std::string_view fen)
 		switch (fen_castling_rights[castling_index])
 		{
 		case 'K':
-			castling_rights |= kingside_castling_perms<WHITE>();
+			castling_rights |= KingsideCastlingPermissionsBitmask<WHITE>();
 			break;
 		case 'Q':
-			castling_rights |= queenside_castling_perms<WHITE>();
+			castling_rights |= QueensideCastlingPermissionsBitmask<WHITE>();
 			break;
 		case 'k':
-			castling_rights |= kingside_castling_perms<BLACK>();
+			castling_rights |= KingsideCastlingPermissionsBitmask<BLACK>();
 			break;
 		case 'q':
-			castling_rights |= queenside_castling_perms<BLACK>();
+			castling_rights |= QueensideCastlingPermissionsBitmask<BLACK>();
 			break;
 		default:
 			std::cout << "fen sucks\n";
@@ -238,7 +238,7 @@ Position position::ParseFen(const std::string_view fen)
 	}
 	else
 	{
-		const size_t EP_index = square_index_from_square_name(fen_en_passant_square.c_str());
+		const size_t EP_index = GetSquareIndexFromChessSquareName(fen_en_passant_square.c_str());
 		EP_square = (1ULL << EP_index);
 		// sometimes en_passant square is just wrongly set in some fens
 		// this stops some fens from completely ruining my sweet little program

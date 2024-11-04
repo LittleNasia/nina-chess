@@ -1,35 +1,35 @@
 #include "transposition_table.h"
 
-TranspositionTable::TranspositionTable(const size_t size_in_mb)
+TranspositionTable::TranspositionTable(const size_t sizeInMb)
 {
-	const size_t size_in_bytes = size_in_mb * 1024 * 1024;
-	const size_t entry_count = size_in_bytes / sizeof(TranspositionTableEntry);
-	entries.resize(entry_count);
+	const size_t sizeInBytes = sizeInMb * 1024 * 1024;
+	const size_t entryCount = sizeInBytes / sizeof(TranspositionTableEntry);
+	m_Entries.resize(entryCount);
 }
 
-void TranspositionTable::Insert(const TranspositionTableEntry& entry, const bool force_overwrite)
+void TranspositionTable::Insert(const TranspositionTableEntry& entry, const bool forceOverwrite)
 {
-	const size_t index = fast_modulo(entry.key, entries.size());
+	const size_t index = FastModulo(entry.Key, m_Entries.size());
 	
-	const auto& curr_entry = entries[index];
-	if ((curr_entry.depth <= entry.depth) || force_overwrite)
+	const auto& currrentEntry = m_Entries[index];
+	if ((currrentEntry.Depth <= entry.Depth) || forceOverwrite)
 	{
-		entries[index] = entry;
+		m_Entries[index] = entry;
 	}
 }
 
 const TranspositionTableEntry& TranspositionTable::Get(const uint64_t key) const
 {
-	const size_t index = fast_modulo(key, entries.size());
+	const size_t index = FastModulo(key, m_Entries.size());
 
-	return entries[index];
+	return m_Entries[index];
 }
 
 void TranspositionTable::Serialize(std::ofstream& output)
 {
-	size_t entry_count = entries.size();
-	output.write((char*)&entry_count, sizeof(entry_count));
-	for (const auto& entry : entries)
+	size_t entryCount = m_Entries.size();
+	output.write((char*)&entryCount, sizeof(entryCount));
+	for (const auto& entry : m_Entries)
 	{
 		output.write((char*)&entry, sizeof(entry));
 	}
@@ -37,10 +37,10 @@ void TranspositionTable::Serialize(std::ofstream& output)
 
 void TranspositionTable::Deserialize(std::ifstream& input)
 {
-	size_t entry_count;
-	input.read((char*)&entry_count, sizeof(entry_count));
-	entries.resize(entry_count);
-	for (auto& entry : entries)
+	size_t entryCount;
+	input.read((char*)&entryCount, sizeof(entryCount));
+	m_Entries.resize(entryCount);
+	for (auto& entry : m_Entries)
 	{
 		input.read((char*)&entry, sizeof(entry));
 	}

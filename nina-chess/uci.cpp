@@ -16,119 +16,119 @@ using namespace uci;
 
 struct UciDefaultSettings
 {
-	inline static constexpr int hash_size = 16;
-	inline static constexpr int min_hash_size = 1;
-	inline static constexpr int max_hash_size = 1 << 30;
-	inline static const std::string weights_filename = "weights";
+	inline static constexpr uint64_t HashSize = 16;
+	inline static constexpr uint64_t MinimalHashSize = 1;
+	inline static constexpr uint64_t MaximalHashSize = 1 << 30;
+	inline static const std::string WeightsFilename = "weights";
 };
 
 struct UciState
 {
 	UciState():
-		hash_size(UciDefaultSettings::hash_size),
-		weights_filename{ UciDefaultSettings::weights_filename },
-		search_running{},
-		search_thread{},
-		position_stack(std::make_unique<PositionStack>()),
-		evaluator(std::make_unique<Evaluator>(weights_filename)),
-		transposition_table(std::make_unique<TranspositionTable>(hash_size)),
-		incremental_updater{ evaluator.get(), position_stack.get(), Position() }
+		HashSize(UciDefaultSettings::HashSize),
+		WeightsFilename{ UciDefaultSettings::WeightsFilename },
+		SearchRunning{},
+		SearchThread{},
+		UciEvaluator(std::make_unique<Evaluator>(WeightsFilename)),
+		UciPositionStack(std::make_unique<PositionStack>()),
+		UciTranspositionTable(std::make_unique<TranspositionTable>(HashSize)),
+		IncrementalUpdater{ UciEvaluator.get(), UciPositionStack.get(), Position() }
 	{
 	}
 
-	TranspositionTable& GetTranspositionTable() { return *transposition_table; }
+	TranspositionTable& GetTranspositionTable() { return *UciTranspositionTable; }
 
-	int hash_size;
-	std::string weights_filename;
+	uint64_t HashSize;
+	std::string WeightsFilename;
 
-	std::atomic_flag search_running = ATOMIC_FLAG_INIT;
-	std::thread search_thread;
+	std::atomic_flag SearchRunning = ATOMIC_FLAG_INIT;
+	std::thread SearchThread;
 
-	std::unique_ptr<PositionStack> position_stack;
-	std::unique_ptr<Evaluator> evaluator;
-	std::unique_ptr<TranspositionTable> transposition_table;
+	std::unique_ptr<Evaluator> UciEvaluator;
+	std::unique_ptr<PositionStack> UciPositionStack;
+	std::unique_ptr<TranspositionTable> UciTranspositionTable;
 
-	UciIncrementalUpdater incremental_updater;
+	UciIncrementalUpdater IncrementalUpdater;
 };
 
-static UciState current_state;
+static UciState currentState;
 
 struct GoState
 {
-	int depth = -1;
-	int wtime = -1;
-	int btime = -1;
-	int winc = -1;
-	int binc = -1;
-	int nodes = -1;
-	int movetime = -1;
+	int Depth = -1;
+	int Wtime = -1;
+	int Btime = -1;
+	int Winc = -1;
+	int Binc = -1;
+	int Nodes = -1;
+	int Movetime = -1;
 };
 
-void dump_uci_state(const std::string_view& file_name)
+void DumpUciState(const std::string_view& filename)
 {
-	std::ofstream file(file_name.data(), std::ios::binary);
+	std::ofstream file(filename.data(), std::ios::binary);
 
-	current_state.transposition_table->Serialize(file);
+	currentState.UciTranspositionTable->Serialize(file);
 }
 
-void load_uci_state(const std::string_view& file_name)
+void LoadUciState(const std::string_view& filename)
 {
-	std::ifstream file(file_name.data(), std::ios::binary);
+	std::ifstream file(filename.data(), std::ios::binary);
 
-	current_state.transposition_table->Deserialize(file);
+	currentState.UciTranspositionTable->Deserialize(file);
 }
 
-void ucinewgame()
+void Ucinewgame()
 {
-	current_state.transposition_table = std::make_unique<TranspositionTable>(current_state.hash_size);
+	currentState.UciTranspositionTable = std::make_unique<TranspositionTable>(currentState.HashSize);
 }
 
-void search_thread_function(const TimePoint& search_start_timepoint, const SearchConstraints& search_constraints)
+void SearchThreadFunction(const TimePoint& search_start_timepoint, const SearchConstraints& search_constraints)
 {
-	current_state.search_running.test_and_set();
-	SharedSearchContext search_context(search_constraints, search_start_timepoint, &current_state.GetTranspositionTable());
-	start_search(current_state.incremental_updater, search_context);
-	current_state.search_running.clear();
+	currentState.SearchRunning.test_and_set();
+	SharedSearchContext search_context(search_constraints, search_start_timepoint, &currentState.GetTranspositionTable());
+	StartSearch(currentState.IncrementalUpdater, search_context);
+	currentState.SearchRunning.clear();
 }
 
-void go(const GoState& state)
+void Go(const GoState& state)
 {
 	const TimePoint search_start_timepoint = std::chrono::high_resolution_clock::now();
-	const Position& current_position = current_state.incremental_updater.GetPositionStack().GetCurrentPosition();
-	if (current_state.search_running.test())
+	const Position& current_position = currentState.IncrementalUpdater.GetPositionStack().GetCurrentPosition();
+	if (currentState.SearchRunning.test())
 	{
 		return;
 	}
 
 	SearchConstraints constraints;
-	constraints.depth = state.depth;
-	constraints.movetime = state.movetime;
+	constraints.Depth = state.Depth;
+	constraints.Movetime = state.Movetime;
 
 	int time_for_move = -1;
-	if (current_position.side_to_move == WHITE && state.wtime != -1)
+	if (current_position.SideToMove == WHITE && state.Wtime != -1)
 	{
-		time_for_move = state.wtime;
-		if (state.winc != -1)
+		time_for_move = state.Wtime;
+		if (state.Winc != -1)
 		{
-			time_for_move += state.winc;
+			time_for_move += state.Winc;
 		}
 	}
-	else if (current_position.side_to_move == BLACK && state.btime != -1)
+	else if (current_position.SideToMove == BLACK && state.Btime != -1)
 	{
-		time_for_move = state.btime;
-		if (state.binc != -1)
+		time_for_move = state.Btime;
+		if (state.Binc != -1)
 		{
-			time_for_move += state.binc;
+			time_for_move += state.Binc;
 		}
 	}
-	constraints.time = time_for_move;
-	constraints.nodes = state.nodes;
+	constraints.Time = time_for_move;
+	constraints.Nodes = state.Nodes;
 
-	current_state.search_thread = std::thread(search_thread_function, search_start_timepoint, constraints);
-	current_state.search_thread.join();
+	currentState.SearchThread = std::thread(SearchThreadFunction, search_start_timepoint, constraints);
+	currentState.SearchThread.join();
 }
 
-GoState parse_go(std::stringstream& input)
+GoState ParseGo(std::stringstream& input)
 {
 	GoState state;
 	std::string token;
@@ -136,31 +136,31 @@ GoState parse_go(std::stringstream& input)
 	{
 		if (token == "depth")
 		{
-			input >> state.depth;
+			input >> state.Depth;
 		}
 		if (token == "wtime")
 		{
-			input >> state.wtime;
+			input >> state.Wtime;
 		}
 		if (token == "btime")
 		{
-			input >> state.btime;
+			input >> state.Btime;
 		}
 		if (token == "winc")
 		{
-			input >> state.winc;
+			input >> state.Winc;
 		}
 		if (token == "binc")
 		{
-			input >> state.binc;
+			input >> state.Binc;
 		}
 		if (token == "nodes")
 		{
-			input >> state.nodes;
+			input >> state.Nodes;
 		}
 		if (token == "movetime")
 		{
-			input >> state.movetime;
+			input >> state.Movetime;
 		}
 	}
 	return state;
@@ -168,46 +168,46 @@ GoState parse_go(std::stringstream& input)
 
 struct UciMove
 {
-	uint32_t move_from_index;
-	uint32_t move_to_index;
-	PieceType promotion_piece = PIECE_TYPE_NONE;
+	uint32_t MoveFromIndex;
+	uint32_t MoveToIndex;
+	PieceType PromotionPieceType = PIECE_TYPE_NONE;
 };
 
-UciMove parse_move(const std::string& move)
+UciMove ParseMove(const std::string& move)
 {
-	uint32_t move_from_index = square_index_from_square_name(move.substr(0, 2).c_str());
-	uint32_t move_to_index = square_index_from_square_name(move.substr(2, 2).c_str());
+	uint32_t moveFromIndex = GetSquareIndexFromChessSquareName(move.substr(0, 2).c_str());
+	uint32_t moveToIndex = GetSquareIndexFromChessSquareName(move.substr(2, 2).c_str());
 	if (move.length() == 5)
 	{
 		switch (move[4])
 		{
 		case 'q':
-			return { move_from_index, move_to_index, QUEEN };
+			return { moveFromIndex, moveToIndex, QUEEN };
 		case 'r':
-			return { move_from_index, move_to_index, ROOK };
+			return { moveFromIndex, moveToIndex, ROOK };
 		case 'b':
-			return { move_from_index, move_to_index, BISHOP };
+			return { moveFromIndex, moveToIndex, BISHOP };
 		case 'n':
-			return { move_from_index, move_to_index, KNIGHT };
+			return { moveFromIndex, moveToIndex, KNIGHT };
 		}
 	}
-	return { move_from_index, move_to_index };
+	return { moveFromIndex, moveToIndex };
 }
 
-void find_and_make_uci_move(const Position& pos, const MoveList& move_list, const UciMove& move)
+void FindAndMakeUciMove(const Position& position, const MoveList& moveList, const UciMove& uciMove)
 {
-	for (uint32_t move_id = 0; move_id < move_list.GetNumMoves(); move_id++)
+	for (uint32_t moveId = 0; moveId < moveList.GetNumMoves(); moveId++)
 	{
-		Move curr_move = move_list[move_id];
-		if (curr_move.from_index() == move.move_from_index && curr_move.to_index() == move.move_to_index)
+		Move currentMove = moveList[moveId];
+		if (currentMove.FromIndex() == uciMove.MoveFromIndex && currentMove.ToIndex() == uciMove.MoveToIndex)
 		{
-			if (move.promotion_piece != PIECE_TYPE_NONE && curr_move.promotion_piece() != move.promotion_piece)
+			if (uciMove.PromotionPieceType != PIECE_TYPE_NONE && currentMove.PromotionPieceType() != uciMove.PromotionPieceType)
 				continue;
 
-			if (pos.side_to_move == WHITE)
-				current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
+			if (position.SideToMove == WHITE)
+				currentState.IncrementalUpdater.FullUpdate<WHITE>(currentMove);
 			else
-				current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
+				currentState.IncrementalUpdater.FullUpdate<BLACK>(currentMove);
 
 			return;
 		}
@@ -215,33 +215,33 @@ void find_and_make_uci_move(const Position& pos, const MoveList& move_list, cons
 	throw std::runtime_error("Move not found");
 }
 
-void find_castling_move_fallback(const Position& pos, const MoveList& move_list, const UciMove& move)
+void FindCastlingMoveFallback(const Position& position, const MoveList& moveList, const UciMove& uciMove)
 {
-	Bitboard move_from_bb = 1ULL << move.move_from_index;
-	Bitboard move_to_bb = 1ULL << move.move_to_index;
+	Bitboard moveFromBitmask = 1ULL << uciMove.MoveFromIndex;
+	Bitboard moveToBitmask = 1ULL << uciMove.MoveToIndex;
 
-	const Side& side_to_move_pieces = pos.side_to_move == WHITE ? pos.white_pieces : pos.black_pieces;
+	const Side& sideToMovePieces = position.SideToMove == WHITE ? position.WhitePieces : position.BlackPieces;
 
-	if (move_from_bb & side_to_move_pieces.king)
+	if (moveFromBitmask & sideToMovePieces.King)
 	{
-		constexpr Bitboard kingside_king_destinations = kingside_castling_king_dest<WHITE>() | kingside_castling_king_dest<BLACK>();
-		constexpr Bitboard queenside_king_destinations = queenside_castling_king_dest<WHITE>() | queenside_castling_king_dest<BLACK>();
+		constexpr Bitboard kingsideKingDestinations = KingsideCastlingKingDestination<WHITE>() | KingsideCastlingKingDestination<BLACK>();
+		constexpr Bitboard queensideKingDestinations = QueensideCastlingKingDestination<WHITE>() | QueensideCastlingKingDestination<BLACK>();
 
-		const bool is_kingside_castling = move_to_bb & (kingside_king_destinations);
-		const bool is_queenside_castling = move_to_bb & (queenside_king_destinations);
-		if (is_kingside_castling || is_queenside_castling)
+		const bool isKingsideCastling = moveToBitmask & (kingsideKingDestinations);
+		const bool isQueensideCastling = moveToBitmask & (queensideKingDestinations);
+		if (isKingsideCastling || isQueensideCastling)
 		{
-			for (uint32_t move_id = 0; move_id < move_list.GetNumMoves(); move_id++)
+			for (uint32_t moveId = 0; moveId < moveList.GetNumMoves(); moveId++)
 			{
-				Move curr_move = move_list[move_id];
-				if ((curr_move.is_kingside_castling() && is_kingside_castling)
+				Move curr_move = moveList[moveId];
+				if ((curr_move.IsKingsideCastling() && isKingsideCastling)
 					||
-					(curr_move.is_queenside_castling() && is_queenside_castling))
+					(curr_move.IsQueensideCastling() && isQueensideCastling))
 				{
-					if (pos.side_to_move == WHITE)
-						current_state.incremental_updater.FullUpdate<WHITE>(curr_move);
+					if (position.SideToMove == WHITE)
+						currentState.IncrementalUpdater.FullUpdate<WHITE>(curr_move);
 					else
-						current_state.incremental_updater.FullUpdate<BLACK>(curr_move);
+						currentState.IncrementalUpdater.FullUpdate<BLACK>(curr_move);
 
 					return;
 				}
@@ -256,97 +256,97 @@ void parse_moves(std::stringstream& input)
 	std::string token;
 	while (input >> token)
 	{
-		UciMove move = parse_move(token);
+		UciMove move = ParseMove(token);
 
-		const auto& last_pos = current_state.incremental_updater.GetPositionStack().GetCurrentPosition();
+		const auto& lastPosition = currentState.IncrementalUpdater.GetPositionStack().GetCurrentPosition();
 
-		MoveList curr_pos_move_list;
-		generate_moves(last_pos, curr_pos_move_list);
+		MoveList currentPositionMoveList;
+		GenerateMoves(lastPosition, currentPositionMoveList);
 
 		try
 		{
-			find_and_make_uci_move(last_pos, curr_pos_move_list, move);
+			FindAndMakeUciMove(lastPosition, currentPositionMoveList, move);
 		}
 		catch(...)
 		{
-			find_castling_move_fallback(last_pos, curr_pos_move_list, move);
+			FindCastlingMoveFallback(lastPosition, currentPositionMoveList, move);
 		}
 	}
 }
 
-void setposition(std::stringstream& input)
+void Setposition(std::stringstream& input)
 {
 	std::string token;
-	bool parsing_fen = false;
-	std::string current_fen;
+	bool parsingFen = false;
+	std::string currentFen;
 	while (input >> token)
 	{
 		if (token == "moves")
 		{
-			parsing_fen = false;
-			if (!current_fen.empty())
+			parsingFen = false;
+			if (!currentFen.empty())
 			{
-				current_state.incremental_updater = 
-					UciIncrementalUpdater(current_state.evaluator.get(), current_state.position_stack.get(), position::ParseFen(current_fen));
+				currentState.IncrementalUpdater = 
+					UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), position::ParseFen(currentFen));
 			}
 
 			parse_moves(input);
 		}
 		else if (token == "startpos")
 		{
-			current_state.incremental_updater =
-				UciIncrementalUpdater(current_state.evaluator.get(), current_state.position_stack.get(), Position());
+			currentState.IncrementalUpdater =
+				UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), Position());
 		}
-		else if (parsing_fen || token == "fen")
+		else if (parsingFen || token == "fen")
 		{
-			parsing_fen = true;
+			parsingFen = true;
 			if (token == "fen")
 				continue;
-			current_fen += token + " ";
+			currentFen += token + " ";
  		}
 	}
 
 	// we did not receive any moves and as such the parsing loop has exited
-	if (parsing_fen)
+	if (parsingFen)
 	{
-		current_state.incremental_updater =
-			UciIncrementalUpdater(current_state.evaluator.get(), current_state.position_stack.get(), position::ParseFen(current_fen));
+		currentState.IncrementalUpdater =
+			UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), position::ParseFen(currentFen));
 	}
 }
 
-void setoption(std::stringstream& input)
+void Setoption(std::stringstream& input)
 {
 	std::string token;
 	input >> token;
 	throw new std::runtime_error("Not implemented");
 }
 
-void isready()
+void Isready()
 {
 	std::cout << "readyok" << std::endl;
 }
 
-void quit()
+void Quit()
 {
 	exit(0);
 }
 
-void uci_info()
+void UciInfo()
 {
 	std::cout << "id name nina-chess" << std::endl;
 	std::cout << "id author LittleNasia" << std::endl;
 
 	std::cout << std::endl;
 
-	std::cout << "option name hash type spin default " << UciDefaultSettings::hash_size <<
-		" min " << UciDefaultSettings::min_hash_size << " max " << UciDefaultSettings::max_hash_size << std::endl;
+	std::cout << "option name hash type spin default " << UciDefaultSettings::HashSize <<
+		" min " << UciDefaultSettings::MinimalHashSize << " max " << UciDefaultSettings::MaximalHashSize << std::endl;
 
 	std::cout << "uciok" << std::endl;
 }
 
 void uci::Loop()
 {
-	ucinewgame();
+	Ucinewgame();
 	
 	while (true)
 	{
@@ -354,55 +354,55 @@ void uci::Loop()
 		std::string input;
 		std::getline(std::cin, input);
 
-		std::stringstream input_stream(input);
+		std::stringstream inputStream(input);
 		
-		input_stream >> token;
+		inputStream >> token;
 		if (token == "quit" || token == "stop")
 		{
-			quit();
+			Quit();
 		}
 		// wait for search to finish in case it is running before executing further commands
-		while (current_state.search_running.test())
+		while (currentState.SearchRunning.test())
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
 
 		if (token == "load")
 		{
-			std::string file_name;
-			input_stream >> file_name;
-			load_uci_state(file_name);
+			std::string filename;
+			inputStream >> filename;
+			LoadUciState(filename);
 		}
 		if (token == "position")
 		{
-			setposition(input_stream);
+			Setposition(inputStream);
 		}
 		if (token == "go")
 		{
-			auto go_state = parse_go(input_stream);
-			go(go_state);
+			auto goState = ParseGo(inputStream);
+			Go(goState);
 		}
 		if (token == "ucinewgame")
 		{
-			ucinewgame();
+			Ucinewgame();
 		}
 		if (token == "uci")
 		{
-			uci_info();
+			UciInfo();
 		}
 		
 		if (token == "setoption")
 		{
-			setoption(input_stream);
+			Setoption(inputStream);
 		}
 		if (token == "print")
 		{
-			position::PrintBoard(current_state.incremental_updater.GetPositionStack().GetCurrentPosition());
+			position::PrintBoard(currentState.IncrementalUpdater.GetPositionStack().GetCurrentPosition());
 			std::cout << std::endl;
 		}
 		if (token == "isready")
 		{
-			isready();
+			Isready();
 		}
 	}
 }

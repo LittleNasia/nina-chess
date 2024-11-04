@@ -4,22 +4,22 @@
 
 #include "weights.h"
 
-template<typename BitboardFeatureIterator, size_t output_size>
-forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, output_size>::Weights::SetWeights(std::ifstream& weights_file)
+template<typename BitboardFeatureIterator, size_t outputSize>
+forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::Weights::SetWeights(std::ifstream& weightsFile)
 {
-	if (!weights_file.is_open())
+	if (!weightsFile.is_open())
 	{
 		throw std::runtime_error("weights file is not open");
 	}
-	constexpr size_t weights_size = BitboardFeatureIterator::NumBitboardFeatures() * bits_in_bitboard;
-	float weights_from_file[weights_size];
-	float bias_from_file = 0;
+	constexpr size_t weightsSize = BitboardFeatureIterator::NumBitboardFeatures() * BITS_IN_BITBOARD;
+	float weightsFromFile[weightsSize];
+	float biasFromFile = 0;
 
 	// for now we're hardcoding the weights so we don't give a little pik about file reading
-	std::memset(weights_from_file, 0, weights_size * sizeof(float));
-	std::memcpy(weights_from_file, hardcoded_psqt_weights, sizeof(hardcoded_psqt_weights));
+	std::memset(weightsFromFile, 0, weightsSize * sizeof(float));
+	std::memcpy(weightsFromFile, HARDCODED_PSQT_WEIGHTS, sizeof(HARDCODED_PSQT_WEIGHTS));
 
-	for (auto& value : weights_from_file)
+	for (auto& value : weightsFromFile)
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -28,99 +28,99 @@ forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, o
 		value += dis(gen);
 	}
 
-	std::memcpy(this->weights, weights_from_file, sizeof(this->weights));
-	std::memcpy(this->bias, &bias_from_file, sizeof(this->bias));
+	std::memcpy(this->Weights, weightsFromFile, sizeof(this->Weights));
+	std::memcpy(this->Bias, &biasFromFile, sizeof(this->Bias));
 }
 
-template<typename BitboardFeatureIterator, size_t output_size>
-forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, output_size>::AccumulateFeatures(const BitboardFeatureIterator& new_features_iterator, const BitboardFeatureIterator& old_features_iterator, const float* previous_accumulator_output)
+template<typename BitboardFeatureIterator, size_t outputSize>
+forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput)
 {
-	std::memcpy(output, previous_accumulator_output, sizeof(output));
+	std::memcpy(m_Output, previousAccumulatorOutput, sizeof(m_Output));
 
 	for (size_t bitboard_index = 0; bitboard_index < BitboardFeatureIterator::NumBitboardFeatures(); bitboard_index++)
 	{
-		const Bitboard new_features = new_features_iterator.Get(bitboard_index);
-		const Bitboard old_features = old_features_iterator.Get(bitboard_index);
+		const Bitboard newFeatures = newFeaturesIterator.Get(bitboard_index);
+		const Bitboard oldFeatures = oldFeaturesIterator.Get(bitboard_index);
 
-		Bitboard added_features = new_features & ~old_features;
-		Bitboard removed_features = ~new_features & old_features;
+		Bitboard addedFeatures = newFeatures & ~oldFeatures;
+		Bitboard removedFeatures = ~newFeatures & oldFeatures;
 
 		// add weights of added features
-		while (added_features)
+		while (addedFeatures)
 		{
-			const uint32_t feature_index = bit_index(pop_bit(added_features));
-			const size_t weights_index = getWeightsIndex(bitboard_index, feature_index);
+			const uint32_t featureIndex = PopBitAndGetIndex(addedFeatures);
+			const size_t weightsIndex = getWeightsIndex(bitboard_index, featureIndex);
 
-			for (size_t output_index = 0; output_index < output_size; output_index++)
+			for (size_t outputIndex = 0; outputIndex < outputSize; outputIndex++)
 			{
-				output[output_index] += weights->weights[weights_index][output_index];
+				m_Output[outputIndex] += m_Weights->Weights[weightsIndex][outputIndex];
 			}
 		}
 
 		// subtract weights of removed features
-		while (removed_features)
+		while (removedFeatures)
 		{
-			const uint32_t feature_index = bit_index(pop_bit(removed_features));
-			const size_t weights_index = getWeightsIndex(bitboard_index, feature_index);
+			const uint32_t featureIndex = PopBitAndGetIndex(removedFeatures);
+			const size_t weightsIndex = getWeightsIndex(bitboard_index, featureIndex);
 
-			for (size_t output_index = 0; output_index < output_size; output_index++)
+			for (size_t outputIndex = 0; outputIndex < outputSize; outputIndex++)
 			{
-				output[output_index] -= weights->weights[weights_index][output_index];
+				m_Output[outputIndex] -= m_Weights->Weights[weightsIndex][outputIndex];
 			}
 		}
 	}
 
-	validateOutput(new_features_iterator);
+	validateOutput(newFeaturesIterator);
 }
 
-template<typename BitboardFeatureIterator, size_t output_size>
-forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, output_size>::Reset(const BitboardFeatureIterator& new_features_iterator)
+template<typename BitboardFeatureIterator, size_t outputSize>
+forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::Reset(const BitboardFeatureIterator& newFeaturesIterator)
 {
-	std::memcpy(output, weights->bias, sizeof(output));
+	std::memcpy(m_Output, m_Weights->Bias, sizeof(m_Output));
 
-	for (size_t bitboard_index = 0; bitboard_index < BitboardFeatureIterator::NumBitboardFeatures(); bitboard_index++)
+	for (size_t bitboardIndex = 0; bitboardIndex < BitboardFeatureIterator::NumBitboardFeatures(); bitboardIndex++)
 	{
-		Bitboard new_features = new_features_iterator.Get(bitboard_index);
+		Bitboard newFeatures = newFeaturesIterator.Get(bitboardIndex);
 
-		while (new_features)
+		while (newFeatures)
 		{
-			const uint32_t feature_index = bit_index(pop_bit(new_features));
-			const size_t weights_index = getWeightsIndex(bitboard_index, feature_index);
+			const uint32_t featureIndex = PopBitAndGetIndex(newFeatures);
+			const size_t weightsIndex = getWeightsIndex(bitboardIndex, featureIndex);
 
-			for (size_t output_index = 0; output_index < output_size; output_index++)
+			for (size_t outputIndex = 0; outputIndex < outputSize; outputIndex++)
 			{
-				output[output_index] += weights->weights[weights_index][output_index];
+				m_Output[outputIndex] += m_Weights->Weights[weightsIndex][outputIndex];
 			}
 		}
 	}
 }
 
-template<typename BitboardFeatureIterator, size_t output_size>
-forceinline constexpr size_t BitboardFeatureAccumulator<BitboardFeatureIterator, output_size>::getWeightsIndex(const size_t bitboard_index, const uint32_t feature_in_bitboard_index)
+template<typename BitboardFeatureIterator, size_t outputSize>
+forceinline constexpr size_t BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::getWeightsIndex(const size_t bitboardIndex, const uint32_t featureInBitboardIndex)
 {
-	const size_t weights_index = bitboard_index * bits_in_bitboard + feature_in_bitboard_index;
-	DEBUG_ASSERT(weights_index < BitboardFeatureIterator::NumBitboardFeatures() * bits_in_bitboard);
-	return weights_index;
+	const size_t weightsIndex = bitboardIndex * BITS_IN_BITBOARD + featureInBitboardIndex;
+	DEBUG_ASSERT(weightsIndex < BitboardFeatureIterator::NumBitboardFeatures() * BITS_IN_BITBOARD);
+	return weightsIndex;
 }
 
-template<typename BitboardFeatureIterator, size_t output_size>
-forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, output_size>::validateOutput(const BitboardFeatureIterator& new_features_iterator)
+template<typename BitboardFeatureIterator, size_t outputSize>
+forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::validateOutput(const BitboardFeatureIterator& newFeaturesIterator)
 {
 	DEBUG_IF(true)
 	{
-		float output_copy[output_size];
-		std::memcpy(output_copy, output, sizeof(output_copy));
-		Reset(new_features_iterator);
-		for (int output_index = 0; output_index < output_size; output_index++)
+		float outputCopy[outputSize];
+		std::memcpy(outputCopy, m_Output, sizeof(outputCopy));
+		Reset(newFeaturesIterator);
+		for (int outputIndex = 0; outputIndex < outputSize; outputIndex++)
 		{
-			const float val = output[output_index];
-			const float val_copy = output_copy[output_index];
-			const float diff = val - val_copy;
+			const float val = m_Output[outputIndex];
+			const float valCopy = outputCopy[outputIndex];
+			const float diff = val - valCopy;
 			if (std::fabs(diff) > 0.001)
 			{
 				throw std::runtime_error("accumulator is boboken :C");
 			}
 		}
-		std::memcpy(output, output_copy, sizeof(output_copy));
+		std::memcpy(m_Output, outputCopy, sizeof(outputCopy));
 	}
 }

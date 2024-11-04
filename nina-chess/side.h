@@ -4,39 +4,38 @@
 struct Side
 {
 	forceinline constexpr Side() :
-		pawns(0ULL), knights(0ULL), bishops(0ULL),
-		rooks(0ULL), queens(0ULL), king(0ULL),
-		pieces(0ULL)
+		Pawns(0ULL), Knights(0ULL), Bishops(0ULL),
+		Rooks(0ULL), Queens(0ULL), King(0ULL),
+		Pieces(0ULL)
 	{
 	}
 
 	forceinline constexpr Side(const Bitboard pawns, const Bitboard knights, const Bitboard bishops,
 		const Bitboard rooks, const Bitboard queens, const Bitboard king) :
-		pawns(pawns), knights(knights), bishops(bishops),
-		rooks(rooks), queens(queens), king(king),
-		pieces(pawns | knights | bishops | rooks | queens | king)
+		Pawns(pawns), Knights(knights), Bishops(bishops),
+		Rooks(rooks), Queens(queens), King(king),
+		Pieces(pawns | knights | bishops | rooks | queens | king)
 	{
 	}
 
-	Bitboard pawns = 0;
-	Bitboard knights = 0;
-	Bitboard bishops = 0;
-	Bitboard rooks = 0;
-	Bitboard queens = 0;
-	Bitboard king = 0;
-
-	forceinline constexpr Bitboard& GetPieceBitboard(const PieceType piece_type) { return (&pawns)[piece_type]; }
-	forceinline constexpr Bitboard GetPieceBitboard(const PieceType piece_type) const { return (&pawns)[piece_type]; }
+	forceinline constexpr Bitboard& GetPieceBitboard(const PieceType pieceType)		  { return (&Pawns)[pieceType]; }
+	forceinline constexpr Bitboard  GetPieceBitboard(const PieceType pieceType) const { return (&Pawns)[pieceType]; }
 
 	forceinline constexpr void RemovePieces(const Bitboard piece)
 	{
-		pawns &= ~piece;
-		knights &= ~piece;
-		bishops &= ~piece;
-		rooks &= ~piece;
-		queens &= ~piece;
-		pieces &= ~piece;
+		Pawns &= ~piece;
+		Knights &= ~piece;
+		Bishops &= ~piece;
+		Rooks &= ~piece;
+		Queens &= ~piece;
+		Pieces &= ~piece;
 	}
 
-	Bitboard pieces = 0;
+	Bitboard Pawns = 0;
+	Bitboard Knights = 0;
+	Bitboard Bishops = 0;
+	Bitboard Rooks = 0;
+	Bitboard Queens = 0;
+	Bitboard King = 0;
+	Bitboard Pieces = 0;
 };

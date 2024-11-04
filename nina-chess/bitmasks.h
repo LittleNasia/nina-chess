@@ -4,18 +4,18 @@
 #include "chess.h"
 
 
-inline constexpr Bitboard empty_bitboard = 0ULL;
-inline constexpr Bitboard full_bitboard = ~empty_bitboard;
-inline constexpr Bitboard light_squares = 0xAA55AA55AA55AA55;
-inline constexpr Bitboard dark_squares = ~light_squares;
+inline constexpr Bitboard EMPTY_BITBOARD = 0ULL;
+inline constexpr Bitboard FULL_BITBOARD = ~EMPTY_BITBOARD;
+inline constexpr Bitboard LIGHT_SQUARES = 0xAA55AA55AA55AA55;
+inline constexpr Bitboard DARK_SQUARES = ~LIGHT_SQUARES;
 
-inline constexpr Bitboard pawns_that_can_attack_left = 0x7f7f7f7f7f7f7f7f;
-inline constexpr Bitboard pawns_that_can_attack_right = 0xfefefefefefefefe;
+inline constexpr Bitboard PAWNS_THAT_CAN_ATTACK_LEFT = 0x7f7f7f7f7f7f7f7f;
+inline constexpr Bitboard PAWNS_THAT_CAN_ATTACK_RIGHT = 0xfefefefefefefefe;
 
 template<Color color>
-forceinline constexpr Bitboard king_startpos()
+forceinline constexpr Bitboard KingStartposBitmask()
 {
-	validate_color<color>();
+	ValidateColor<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0x8;
@@ -27,9 +27,9 @@ forceinline constexpr Bitboard king_startpos()
 }
 
 template<Color color>
-forceinline constexpr Bitboard promotion_rank()
+forceinline constexpr Bitboard PromotionRankBitmask()
 {
-	validate_color<color>();
+	ValidateColor<color>();
 	if constexpr (color == WHITE)
 	{
 		return 0xff00000000000000;
@@ -41,7 +41,7 @@ forceinline constexpr Bitboard promotion_rank()
 }
 
 // gets the pawns that can capture EP on a given square
-inline constexpr Bitboard EP_candidates_lookup[64] =
+inline constexpr Bitboard EN_PASSANT_CANDIDATES_LOOKUP[64] =
 {
 	0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,
@@ -54,7 +54,7 @@ inline constexpr Bitboard EP_candidates_lookup[64] =
 };
 
 // gets the pawns that will be captured by EP on a given square
-inline constexpr Bitboard EP_victims_lookup[64] =
+inline constexpr Bitboard EN_PASSANT_VICTIM_BITMASK_LOOKUP[64] =
 {
 	0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,
@@ -70,7 +70,7 @@ inline constexpr Bitboard EP_victims_lookup[64] =
 // for example, given pieces in the same row, one in column 1, another one in column 4
 // [1][4] will return bitmask of all squares between these two
 // in this case, it will be bits on index 2 and 3 set
-inline constexpr Bitboard bitmask_between_coords[board_cols][board_cols] =
+inline constexpr Bitboard BITMASK_BETWEEN_COLUMNS_IN_ONE_ROW[BOARD_COLUMNS][BOARD_COLUMNS] =
 {
 	{0, 0, 2, 6, 14, 30, 62, 126, },
 	{0, 0, 0, 4, 12, 28, 60, 124, },
@@ -82,7 +82,7 @@ inline constexpr Bitboard bitmask_between_coords[board_cols][board_cols] =
 	{126, 124, 120, 112, 96, 64, 0, 0, },
 };
 
-inline constexpr Bitboard row_bitmasks[board_rows] =
+inline constexpr Bitboard ROW_BITMASKS[BOARD_ROWS] =
 {
 	255ULL,
 	65280ULL,
@@ -95,7 +95,7 @@ inline constexpr Bitboard row_bitmasks[board_rows] =
 };
 
 
-inline constexpr Bitboard col_bitmasks[board_cols] =
+inline constexpr Bitboard COLUMN_BITMASKS[BOARD_COLUMNS] =
 {
 	72340172838076673ULL,
 	144680345676153346ULL,
@@ -107,7 +107,7 @@ inline constexpr Bitboard col_bitmasks[board_cols] =
 	9259542123273814144ULL,
 };
 
-inline constexpr Bitboard rook_xray_masks[num_board_squares] = 
+inline constexpr Bitboard ROOK_XRAY_BITMASKS[NUM_BOARD_SQUARES] = 
 {
 0x1010101010101fe, 0x2020202020202fd, 0x4040404040404fb, 0x8080808080808f7, 0x10101010101010ef, 0x20202020202020df, 0x40404040404040bf, 0x808080808080807f,
 0x10101010101fe01, 0x20202020202fd02, 0x40404040404fb04, 0x80808080808f708, 0x101010101010ef10, 0x202020202020df20, 0x404040404040bf40, 0x8080808080807f80,
@@ -119,7 +119,7 @@ inline constexpr Bitboard rook_xray_masks[num_board_squares] =
 0xfe01010101010101, 0xfd02020202020202, 0xfb04040404040404, 0xf708080808080808, 0xef10101010101010, 0xdf20202020202020, 0xbf40404040404040, 0x7f80808080808080,
 };
 
-inline constexpr Bitboard rook_pext_xray_masks[num_board_squares] = 
+inline constexpr Bitboard ROOK_PEXT_XRAY_BITMASKS[NUM_BOARD_SQUARES] = 
 {
 0x101010101017e, 0x202020202027c, 0x404040404047a, 0x8080808080876, 0x1010101010106e, 0x2020202020205e, 0x4040404040403e, 0x8080808080807e, 0x1010101017e00,
 0x2020202027c00, 0x4040404047a00, 0x8080808087600, 0x10101010106e00, 0x20202020205e00, 0x40404040403e00, 0x80808080807e00, 0x10101017e0100,
@@ -130,7 +130,7 @@ inline constexpr Bitboard rook_pext_xray_masks[num_board_squares] =
 0x7c020202020200, 0x7a040404040400, 0x76080808080800, 0x6e101010101000, 0x5e202020202000, 0x3e404040404000, 0x7e808080808000, 0x7e01010101010100,
 0x7c02020202020200, 0x7a04040404040400, 0x7608080808080800, 0x6e10101010101000, 0x5e20202020202000, 0x3e40404040404000, 0x7e80808080808000, };
 
-inline constexpr Bitboard bishop_xray_masks[num_board_squares] = 
+inline constexpr Bitboard BISHOP_XRAY_BITMASKS[NUM_BOARD_SQUARES] = 
 {
 0x8040201008040200, 0x80402010080500, 0x804020110a00, 0x8041221400, 0x182442800, 0x10204885000, 0x102040810a000, 0x102040810204000,
 0x4020100804020002, 0x8040201008050005, 0x804020110a000a, 0x804122140014, 0x18244280028, 0x1020488500050, 0x102040810a000a0, 0x204081020400040,
@@ -142,7 +142,7 @@ inline constexpr Bitboard bishop_xray_masks[num_board_squares] =
 0x2040810204080, 0x5081020408000, 0xa112040800000, 0x14224180000000, 0x28448201000000, 0x50880402010000, 0xa0100804020100, 0x40201008040201,
 };
 
-inline constexpr Bitboard bishop_pext_xray_masks[num_board_squares] = 
+inline constexpr Bitboard BISHOP_PEXT_XRAY_BITMASKS[NUM_BOARD_SQUARES] = 
 {
 0x40201008040200, 0x402010080400, 0x4020100a00, 0x40221400, 0x2442800, 0x204085000, 0x20408102000, 0x2040810204000, 0x20100804020000,
 0x40201008040000, 0x4020100a0000, 0x4022140000, 0x244280000, 0x20408500000, 0x2040810200000, 0x4081020400000, 0x10080402000200,
@@ -153,7 +153,7 @@ inline constexpr Bitboard bishop_pext_xray_masks[num_board_squares] =
 0x40810204000, 0xa1020400000, 0x142240000000, 0x284402000000, 0x500804020000, 0x201008040200, 0x402010080400, 0x2040810204000,
 0x4081020400000, 0xa102040000000, 0x14224000000000, 0x28440200000000, 0x50080402000000, 0x20100804020000, 0x40201008040200, };
 
-inline constexpr uint32_t rook_pext_table_offsets[num_board_squares] = 
+inline constexpr uint32_t ROOK_PEXT_TABLE_OFFSETS[NUM_BOARD_SQUARES] = 
 {
 0, 4096, 6144, 8192, 10240, 12288, 14336, 16384,
 20480, 22528, 23552, 24576, 25600, 26624, 27648, 28672,
@@ -165,7 +165,7 @@ inline constexpr uint32_t rook_pext_table_offsets[num_board_squares] =
 81920, 86016, 88064, 90112, 92160, 94208, 96256, 98304,
 };
 
-inline constexpr uint32_t bishop_pext_table_offsets[num_board_squares] = 
+inline constexpr uint32_t BISHOP_PEXT_TABLE_OFFSETS[NUM_BOARD_SQUARES] = 
 {
 0, 64, 96, 128, 160, 192, 224, 256,
 320, 352, 384, 416, 448, 480, 512, 544,
@@ -177,7 +177,7 @@ inline constexpr uint32_t bishop_pext_table_offsets[num_board_squares] =
 4928, 4992, 5024, 5056, 5088, 5120, 5152, 5184,
 };
 
-inline constexpr Bitboard knight_moves[num_board_squares] =
+inline constexpr Bitboard KNIGHT_MOVE_BITMASKS[NUM_BOARD_SQUARES] =
 {
 	132096ULL,
 	329728ULL,
@@ -245,7 +245,7 @@ inline constexpr Bitboard knight_moves[num_board_squares] =
 	9077567998918656ULL,
 };
 
-inline constexpr Bitboard king_moves[num_board_squares] =
+inline constexpr Bitboard KING_MOVE_BITMASKS[NUM_BOARD_SQUARES] =
 {
 	770,
 	1797,
@@ -313,7 +313,7 @@ inline constexpr Bitboard king_moves[num_board_squares] =
 	4665729213955833856,
 };
 
-inline constexpr Bitboard bishop_pext_table[] = 
+inline constexpr Bitboard BISHOP_PEXT_TABLE[] = 
 {
 0x8040201008040200, 0x200, 0x40200, 0x200, 0x8040200, 0x200, 0x40200, 0x200, 0x1008040200, 0x200, 0x40200, 0x200, 0x8040200, 0x200, 0x40200, 0x200, 0x201008040200,
 0x200, 0x40200, 0x200, 0x8040200, 0x200, 0x40200, 0x200, 0x1008040200, 0x200, 0x40200, 0x200, 0x8040200, 0x200, 0x40200, 0x200, 0x40201008040200,
@@ -644,7 +644,7 @@ inline constexpr Bitboard bishop_pext_table[] =
 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000,
 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, 0x40000000000000, };
 
-inline constexpr Bitboard rook_pext_table[] = 
+inline constexpr Bitboard ROOK_PEXT_TABLE[] = 
 {
 0x1010101010101fe, 0x101010101010102, 0x101010101010106, 0x101010101010102, 0x10101010101010e, 0x101010101010102, 0x101010101010106, 0x101010101010102, 0x10101010101011e, 0x101010101010102, 0x101010101010106, 0x101010101010102, 0x10101010101010e, 0x101010101010102, 0x101010101010106, 0x101010101010102, 0x10101010101013e,
 0x101010101010102, 0x101010101010106, 0x101010101010102, 0x10101010101010e, 0x101010101010102, 0x101010101010106, 0x101010101010102, 0x10101010101011e, 0x101010101010102, 0x101010101010106, 0x101010101010102, 0x10101010101010e, 0x101010101010102, 0x101010101010106, 0x101010101010102, 0x10101010101017e,
@@ -7047,7 +7047,7 @@ inline constexpr Bitboard rook_pext_table[] =
 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000,
 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, 0x4080000000000000, };
 
-inline constexpr uint64_t pin_between_table[num_board_squares][num_board_squares] = 
+inline constexpr uint64_t PIN_BETWEEN_TABLE[NUM_BOARD_SQUARES][NUM_BOARD_SQUARES] = 
 {
 {0ULL, 2ULL, 6ULL, 14ULL, 30ULL, 62ULL, 126ULL, 254ULL, 256ULL, 512ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 65792ULL, 0ULL, 262656ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 16843008ULL, 0ULL, 0ULL, 134480384ULL, 0ULL, 0ULL, 0ULL, 0ULL, 4311810304ULL, 0ULL, 0ULL, 0ULL, 68853957120ULL, 0ULL, 0ULL, 0ULL, 1103823438080ULL, 0ULL, 0ULL, 0ULL, 0ULL, 35253226045952ULL, 0ULL, 0ULL, 282578800148736ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 18049651735527936ULL, 0ULL, 72340172838076672ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 9241421688590303744ULL, },
 {1ULL, 0ULL, 4ULL, 12ULL, 28ULL, 60ULL, 124ULL, 252ULL, 256ULL, 512ULL, 1024ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 131584ULL, 0ULL, 525312ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 33686016ULL, 0ULL, 0ULL, 268960768ULL, 0ULL, 0ULL, 0ULL, 0ULL, 8623620608ULL, 0ULL, 0ULL, 0ULL, 137707914240ULL, 0ULL, 0ULL, 0ULL, 2207646876160ULL, 0ULL, 0ULL, 0ULL, 0ULL, 70506452091904ULL, 0ULL, 0ULL, 565157600297472ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 36099303471055872ULL, 0ULL, 144680345676153344ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, },

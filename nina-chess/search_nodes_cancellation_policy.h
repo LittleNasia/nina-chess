@@ -6,24 +6,24 @@
 class SearchNodesCancellationPolicy
 {
 public:
-	SearchNodesCancellationPolicy(const SearchConstraints& search_constraints) :
-		node_limit(getNodeLimit(search_constraints))
+	SearchNodesCancellationPolicy(const SearchConstraints& searchConstraints) :
+		m_NodeLimit(getNodeLimit(searchConstraints))
 	{}
 
-	forceinline constexpr bool ShouldAbort(uint64_t nodes) const { return nodes >= node_limit; }
-	forceinline constexpr uint64_t GetNodeLimit() const { return node_limit; }
+	forceinline constexpr bool ShouldAbort(uint64_t nodes) const { return nodes >= m_NodeLimit; }
+	forceinline constexpr uint64_t GetNodeLimit() const { return m_NodeLimit; }
 
 private:
 	forceinline constexpr uint64_t getNodeLimit(const SearchConstraints& search_constraints);
 	
-	uint64_t node_limit;
+	uint64_t m_NodeLimit;
 };
 
-inline constexpr uint64_t SearchNodesCancellationPolicy::getNodeLimit(const SearchConstraints& search_constraints)
+inline constexpr uint64_t SearchNodesCancellationPolicy::getNodeLimit(const SearchConstraints& searchConstraints)
 {
-	uint64_t nodeLimit = search_constraints.nodes == -1
+	uint64_t nodeLimit = searchConstraints.Nodes == -1
 		? std::numeric_limits<uint64_t>::max()
-		: search_constraints.nodes;
+		: searchConstraints.Nodes;
 
 	return nodeLimit;
 }

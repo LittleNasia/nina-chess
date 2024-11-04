@@ -12,24 +12,24 @@ enum PieceType : uint32_t
 	PIECE_TYPE_NONE
 };
 
-template<PieceType piece_type>
-consteval void validate_piece_type()
+template<PieceType pieceType>
+consteval void ValidatePieceType()
 {
-	static_assert(piece_type < PIECE_TYPE_NONE);
+	static_assert(pieceType < PIECE_TYPE_NONE);
 }
 
-forceinline constexpr void validate_piece_type(const PieceType piece_type)
+forceinline constexpr void ValidatePieceType(const PieceType pieceType)
 {
-	DEBUG_ASSERT(piece_type < PIECE_TYPE_NONE);
+	DEBUG_ASSERT(pieceType < PIECE_TYPE_NONE);
 }
 
-forceinline constexpr PieceType operator++(PieceType& piece_type, int)
+forceinline constexpr PieceType operator++(PieceType& pieceType, int)
 {
-	validate_piece_type(piece_type);
-	return piece_type = static_cast<PieceType>(piece_type + 1);
+	ValidatePieceType(pieceType);
+	return pieceType = static_cast<PieceType>(pieceType + 1);
 }
 
-inline constexpr PieceType promotion_pieces[4] =
+inline constexpr PieceType PROMOTION_PIECE_TYPES[4] =
 {
 	KNIGHT,
 	BISHOP,

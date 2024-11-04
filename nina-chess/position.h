@@ -13,20 +13,20 @@ struct Position
 	forceinline Position();
 
 	forceinline Position(
-		const Side& white_pieces,
-		const Side& black_pieces,
-		const Bitboard EP_square,
+		const Side& whitePieces,
+		const Side& blackPieces,
+		const Bitboard enPassantSquare,
 		const Castling castling,
-		const Color side_to_move,
-		const uint32_t fifty_move_rule);
+		const Color sideToMove,
+		const uint32_t fiftyMoveRule);
 
 	forceinline Position(
-		const Side& white_pieces,
-		const Side& black_pieces,
-		const Bitboard EP_square,
+		const Side& whitePieces,
+		const Side& blackPieces,
+		const Bitboard enPassantSquare,
 		const Castling castling,
-		const Color side_to_move,
-		const uint32_t fifty_move_rule,
+		const Color sideToMove,
+		const uint32_t fiftyMoveRule,
 		const uint64_t hash);
 
 	template<Color color>
@@ -45,28 +45,28 @@ struct Position
 
 	forceinline constexpr void UpdateOccupiedBitboard();
 
-	Side white_pieces;
-	Side black_pieces;
+	Side WhitePieces;
+	Side BlackPieces;
 
-	Bitboard occupied;
-	Bitboard EP_square;
-	Castling castling;
-	Color side_to_move;
-	uint64_t hash;
-	uint32_t fifty_move_rule;
+	Bitboard OccupiedBitmask;
+	Bitboard EnPassantSquare;
+	Castling CastlingPermissions;
+	Color SideToMove;
+	uint64_t Hash;
+	uint32_t FiftyMoveRule;
 };
 
 namespace position
 {
-	template<Color side_to_move, bool castling, bool EP>
-	forceinline Position& MakeMove(const Position& pos, Position& new_pos, const Move& m);
+	template<Color sideToMove, bool isCastling, bool isEnPassant>
+	forceinline Position& MakeMove(const Position& pos, Position& newPos, const Move& move);
 
-	template<Color side_to_move>
-	forceinline Position& MakeMove(const Position& pos, Position& new_pos, const Move& m);
+	template<Color sideToMove>
+	forceinline Position& MakeMove(const Position& pos, Position& newPos, const Move& move);
 
-	forceinline Position& MakeMove(const Position& pos, Position& new_pos, const Move& m);
+	forceinline Position& MakeMove(const Position& pos, Position& newPos, const Move& move);
 
-	void PrintBoard(const Position& curr_pos);
+	void PrintBoard(const Position& currPos);
 
 	Position ParseFen(const std::string_view fen);
 }

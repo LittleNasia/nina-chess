@@ -1,0 +1,11 @@
+ClassNames
+StructNames
+MethodNames
+FunctionNames
+StructMembers
+privateMethodNames
+m_member_variables
+localVariables
+functionArguments
+templateArguments
+CONSTANT_VARIABLES

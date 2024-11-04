@@ -6,9 +6,9 @@
 #include "side.h"
 
 template <Color color>
-forceinline constexpr Bitboard get_pawn_advances(const Bitboard pawns)
+forceinline constexpr Bitboard GetPawnAdvances(const Bitboard pawns)
 {
-	validate_color<color>();
+	ValidateColor<color>();
     if constexpr (color == WHITE)
     {
         return pawns << 8;
@@ -20,9 +20,9 @@ forceinline constexpr Bitboard get_pawn_advances(const Bitboard pawns)
 }
 
 template <Color color>
-forceinline constexpr Bitboard get_double_advance_target(const Bitboard pawns)
+forceinline constexpr Bitboard GetDoubleAdvances(const Bitboard pawns)
 {
-    validate_color<color>();
+    ValidateColor<color>();
     if constexpr (color == WHITE)
     {
         return pawns << 16;
@@ -34,24 +34,24 @@ forceinline constexpr Bitboard get_double_advance_target(const Bitboard pawns)
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_push_candidates_bitmask()
+forceinline constexpr Bitboard GetDoubleAdvancesCandidates()
 {
-    validate_color<color>();
+    ValidateColor<color>();
     if constexpr (color == WHITE)
     {
-        return row_bitmasks[2];
+        return ROW_BITMASKS[2];
     }
     else
     {
-        return row_bitmasks[5];
+        return ROW_BITMASKS[5];
     }
 }
 
 template <Color color>
-forceinline constexpr Bitboard get_pawn_left_attacks(Bitboard pawns)
+forceinline constexpr Bitboard GetPawnsLeftAttacks(Bitboard pawns)
 {
-    validate_color<color>();
-    pawns &= pawns_that_can_attack_left;
+    ValidateColor<color>();
+    pawns &= PAWNS_THAT_CAN_ATTACK_LEFT;
     if constexpr (color == WHITE)
     {
         return pawns << 9;
@@ -62,25 +62,11 @@ forceinline constexpr Bitboard get_pawn_left_attacks(Bitboard pawns)
     }
 }
 
-template<Color color>
-forceinline constexpr Bitboard get_pawn_left_attackers(const Bitboard attackers)
-{
-    validate_color<color>();
-    if constexpr (color == WHITE)
-    {
-        return attackers >> 9;
-    }
-    else
-    {
-        return attackers << 7;
-    }
-}
-
 template <Color color>
-forceinline constexpr Bitboard get_pawn_right_attacks(Bitboard pawns)
+forceinline constexpr Bitboard GetPawnsRightAttacks(Bitboard pawns)
 {
-    validate_color<color>();
-    pawns &= pawns_that_can_attack_right;
+    ValidateColor<color>();
+    pawns &= PAWNS_THAT_CAN_ATTACK_RIGHT;
     if constexpr (color == WHITE)
     {
         return pawns << 7;
@@ -92,102 +78,92 @@ forceinline constexpr Bitboard get_pawn_right_attacks(Bitboard pawns)
 }
 
 template<Color color>
-forceinline constexpr Bitboard get_pawn_right_attackers(const Bitboard attackers)
+forceinline constexpr Bitboard GetAllPawnAttacks(Bitboard pieces)
 {
-    validate_color<color>();
-    if constexpr (color == WHITE)
-    {
-        return attackers >> 7;
-    }
-    else
-    {
-        return attackers << 9;
-    }
+    ValidateColor<color>();
+    return GetPawnsLeftAttacks<color>(pieces) | GetPawnsRightAttacks<color>(pieces);
 }
 
-template<Color color>
-forceinline constexpr Bitboard get_pawn_attacks(Bitboard pieces)
-{
-    validate_color<color>();
-    return get_pawn_left_attacks<color>(pieces) | get_pawn_right_attacks<color>(pieces);
-}
-
-forceinline Bitboard get_knight_attacks(Bitboard pieces)
+forceinline Bitboard GetAllKnightAttacks(Bitboard knights)
 {
     Bitboard attacks = 0;
-    while (pieces)
+    while (knights)
     {
-        Bitboard piece = pop_bit(pieces);
-        attacks |= knight_moves[bit_index(piece)];
+        Bitboard knightBitmask = PopBit(knights);
+        attacks |= KNIGHT_MOVE_BITMASKS[BitIndex(knightBitmask)];
     }
     return attacks;
 }
 
-forceinline Bitboard get_king_attacks(const Bitboard pieces)
+forceinline Bitboard GetKingAttacks(const Bitboard kingBitmask)
 {
-    return king_moves[bit_index(pieces)];
+    return KING_MOVE_BITMASKS[BitIndex(kingBitmask)];
 }
 
-forceinline Bitboard get_single_bishop_attacks(const Bitboard piece, const Bitboard occupied)
+forceinline Bitboard GetSingleBishopAttacks(const Bitboard bishopBitmask, const Bitboard occupiedBitmask)
 {
-    const uint32_t index = bit_index(piece);
-    const uint32_t offset = bishop_pext_table_offsets[index];
-    const Bitboard xray_attacks = bishop_pext_xray_masks[index];
-    const size_t pext_value = pext(occupied, xray_attacks);
-    return bishop_pext_table[offset + pext_value];
+    DEBUG_ASSERT(Popcnt(bishopBitmask) == 1);
+
+    const uint32_t index = BitIndex(bishopBitmask);
+    const uint32_t offset = BISHOP_PEXT_TABLE_OFFSETS[index];
+    const Bitboard xrayAttacks = BISHOP_PEXT_XRAY_BITMASKS[index];
+    const size_t pextValue = Pext(occupiedBitmask, xrayAttacks);
+    return BISHOP_PEXT_TABLE[offset + pextValue];
 }
 
-forceinline Bitboard get_single_rook_attacks(const Bitboard piece, const Bitboard occupied)
+forceinline Bitboard GetSingleRookAttacks(const Bitboard rookBitmask, const Bitboard occupiedBitmask)
 {
-    const uint32_t index = bit_index(piece);
-    const uint32_t offset = rook_pext_table_offsets[index];
-    const Bitboard xray_attacks = rook_pext_xray_masks[index];
-    const size_t pext_value = pext(occupied, xray_attacks);
-    return rook_pext_table[offset + pext_value];
+    DEBUG_ASSERT(Popcnt(rookBitmask) == 1);
+
+    const uint32_t index = BitIndex(rookBitmask);
+    const uint32_t offset = ROOK_PEXT_TABLE_OFFSETS[index];
+    const Bitboard xrayAttacks = ROOK_PEXT_XRAY_BITMASKS[index];
+    const size_t pextValue = Pext(occupiedBitmask, xrayAttacks);
+    return ROOK_PEXT_TABLE[offset + pextValue];
 }
 
-forceinline Bitboard get_all_bishop_attacks(Bitboard pieces, const Bitboard occupied)
+forceinline Bitboard GetAllBishopAttacks(Bitboard bishopsBitmask, const Bitboard occupiedBitmask)
 {
     Bitboard attacks = 0ULL;
-    while (pieces)
+    while (bishopsBitmask)
     {
-        Bitboard piece = pop_bit(pieces);
-        attacks |= get_single_bishop_attacks(piece, occupied);
+        Bitboard pieceBitmask = PopBit(bishopsBitmask);
+        attacks |= GetSingleBishopAttacks(pieceBitmask, occupiedBitmask);
     }
     return attacks;
 }
 
-forceinline Bitboard get_all_rook_attacks(Bitboard pieces, const Bitboard occupied)
+forceinline Bitboard GetAllRookAttacks(Bitboard rooksBitmask, const Bitboard occupiedBitmask)
 {
     Bitboard attacks = 0ULL;
-    while (pieces)
+    while (rooksBitmask)
     {
-        Bitboard piece = pop_bit(pieces);
-        attacks |= get_single_rook_attacks(piece, occupied);
+        Bitboard pieceBitmask = PopBit(rooksBitmask);
+        attacks |= GetSingleRookAttacks(pieceBitmask, occupiedBitmask);
     }
     return attacks;
 }
 
-forceinline Bitboard get_queen_attacks(Bitboard pieces, const Bitboard occupied)
+forceinline Bitboard GetAllQueenAttacks(Bitboard queensBitmask, const Bitboard occupiedBitmask)
 {
     Bitboard attacks = 0ULL;
-    while (pieces)
+    while (queensBitmask)
     {
-        Bitboard piece = pop_bit(pieces);
-        attacks |= get_single_bishop_attacks(piece, occupied);
-        attacks |= get_single_rook_attacks(piece, occupied);
+        Bitboard pieceBitmask = PopBit(queensBitmask);
+        attacks |= GetSingleBishopAttacks(pieceBitmask, occupiedBitmask);
+        attacks |= GetSingleRookAttacks(pieceBitmask, occupiedBitmask);
     }
     return attacks;
 }
 
 template<Color color>
-forceinline Bitboard get_all_attacks(const Side& pieces, const Bitboard occupied)
+forceinline Bitboard GetAllAttacks(const Side& pieces, const Bitboard occupiedBitmask)
 {
-    const auto pawn_attacks = get_pawn_attacks<color>(pieces.pawns);
-    const auto knight_attacks = get_knight_attacks(pieces.knights);
-    const auto bishop_attacks = get_all_bishop_attacks(pieces.bishops, occupied);
-    const auto rook_attacks = get_all_rook_attacks(pieces.rooks, occupied);
-    const auto queen_attacks = get_queen_attacks(pieces.queens, occupied);
-    const auto king_attacks = get_king_attacks(pieces.king);
-    return pawn_attacks | knight_attacks | bishop_attacks | rook_attacks | queen_attacks | king_attacks;
+    const auto pawnAttacks = GetAllPawnAttacks<color>(pieces.Pawns);
+    const auto knightAttacks = GetAllKnightAttacks(pieces.Knights);
+    const auto bishopAttacks = GetAllBishopAttacks(pieces.Bishops, occupiedBitmask);
+    const auto rookAttacks = GetAllRookAttacks(pieces.Rooks, occupiedBitmask);
+    const auto queenAttacks = GetAllQueenAttacks(pieces.Queens, occupiedBitmask);
+    const auto kingAttacks = GetKingAttacks(pieces.King);
+    return pawnAttacks | knightAttacks | bishopAttacks | rookAttacks | queenAttacks | kingAttacks;
 }

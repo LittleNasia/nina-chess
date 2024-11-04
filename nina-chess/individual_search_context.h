@@ -6,15 +6,15 @@
 class IndividualSearchContext
 {
 public:
-	IndividualSearchContext(SharedSearchContext& shared_search_context) :
-		shared_search_context(shared_search_context)
+	IndividualSearchContext(SharedSearchContext& sharedSearchContext) :
+		m_SharedSearchContext(sharedSearchContext)
 	{
 	}
 
-	size_t nodes{ 0ULL };
+	size_t Nodes{ 0ULL };
 
-	forceinline constexpr operator SharedSearchContext& () { return shared_search_context; }
+	forceinline constexpr operator SharedSearchContext& () { return m_SharedSearchContext; }
 
 private:
-	SharedSearchContext& shared_search_context;
+	SharedSearchContext& m_SharedSearchContext;
 };

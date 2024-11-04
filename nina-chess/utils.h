@@ -7,12 +7,12 @@
 using Bitboard = std::uint64_t;
 
 #ifdef _DEBUG
-inline constexpr bool is_debug = true;
+inline constexpr bool IS_DEBUG = true;
 #else
-inline constexpr bool is_debug = false;
+inline constexpr bool IS_DEBUG = false;
 #endif
 
-#define DEBUG_IF(x) if constexpr(is_debug) if (x)
+#define DEBUG_IF(x) if constexpr(IS_DEBUG) if (x)
 #define DEBUG_ASSERT(x) DEBUG_IF(!(x)) throw std::runtime_error("Assertion failed: " #x)
 
 // TODO determine which functions should be forceinlined and which shouldnt
@@ -21,7 +21,7 @@ inline constexpr bool is_debug = false;
 // there are functions that probably still shouldn't be inlined but forceinline as a default seems fine now
 #define forceinline inline
 
-forceinline constexpr uint32_t fast_modulo(const size_t input, const size_t ceil)
+forceinline constexpr uint32_t FastModulo(const size_t input, const size_t ceil)
 {
 	return ((input >> 32) * (ceil)) >> 32;
 }

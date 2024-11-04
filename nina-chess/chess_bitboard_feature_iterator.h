@@ -7,9 +7,9 @@
 class ChessBitboardFeatureIterator
 {
 public:
-	forceinline constexpr ChessBitboardFeatureIterator(const BoardFeatures& board_features, const MoveListMisc& move_list_misc) : 
-		board_features(board_features),
-		move_list_misc(move_list_misc) 
+	forceinline constexpr ChessBitboardFeatureIterator(const BoardFeatures& boardFeatures, const MoveListMiscellaneous& moveListMiscellaneous) : 
+		m_BoardFeatures(boardFeatures),
+		m_MoveListMiscellaneous(moveListMiscellaneous)
 	{}
 
 	static consteval size_t NumBitboardFeatures()
@@ -35,8 +35,8 @@ public:
 		case 4:
 		case 5:
 		{
-			const auto piece_type = static_cast<PieceType>(index);
-			return board_features.white_pieces->GetPieceBitboard(piece_type);
+			const auto pieceType = static_cast<PieceType>(index);
+			return m_BoardFeatures.WhitePieces->GetPieceBitboard(pieceType);
 		}
 		case 6:
 		case 7:
@@ -45,36 +45,38 @@ public:
 		case 10:
 		case 11:
 		{
-			const auto piece_type = static_cast<PieceType>(index - 6);
-			return board_features.black_pieces->GetPieceBitboard(piece_type);
+			const auto pieceType = static_cast<PieceType>(index - 6);
+			return m_BoardFeatures.BlackPieces->GetPieceBitboard(pieceType);
 		}
 		case 12:
-			return board_features.EP_square;
+			return m_BoardFeatures.EnPassantSquare;
 		case 13:
-			return board_features.castling;
+			return m_BoardFeatures.Castling;
 		case 14:
 		case 15:
 		case 16:
 		case 17:
 		case 18:
 		case 19:
-			return move_list_misc.piece_moves[index - 14];
+			return m_MoveListMiscellaneous.PieceMoves[index - 14];
 		case 20:
-			return move_list_misc.pinmask;
+			return m_MoveListMiscellaneous.Pinmask;
 		case 21:
-			return move_list_misc.checkmask;
+			return m_MoveListMiscellaneous.Checkmask;
 		case 22:
-			return move_list_misc.pinners;
+			return m_MoveListMiscellaneous.Pinners;
 		case 23:
-			return move_list_misc.checkers;
+			return m_MoveListMiscellaneous.Checkers;
 		case 24:
-			return move_list_misc.attacked_squares;
+			return m_MoveListMiscellaneous.AttackedSquares;
+#ifdef _DEBUG
 		default:
 			return 0ULL;
+#endif
 		}
 	}
 
 private:
-	const BoardFeatures& board_features;
-	const MoveListMisc& move_list_misc;
+	const BoardFeatures& m_BoardFeatures;
+	const MoveListMiscellaneous& m_MoveListMiscellaneous;
 };

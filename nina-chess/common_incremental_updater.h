@@ -8,18 +8,18 @@
 class CommonIncrementalUpdater
 {
 protected:
-	CommonIncrementalUpdater(Evaluator* evaluator, PositionStack* position_stack) :
-		evaluator(evaluator),
-		position_stack(position_stack)
+	CommonIncrementalUpdater(Evaluator* evaluator, PositionStack* positionStack) :
+		m_Evaluator(evaluator),
+		m_PositionStack(positionStack)
 	{}
 
 public:
-	forceinline constexpr Evaluator& GetEvaluator() const { return *evaluator; }
-	forceinline constexpr PositionStack& GetPositionStack() const { return *position_stack; }
-	template<Color side_to_move>
+	forceinline constexpr Evaluator& GetEvaluator() const { return *m_Evaluator; }
+	forceinline constexpr PositionStack& GetPositionStack() const { return *m_PositionStack; }
+	template<Color sideToMove>
 	forceinline constexpr void MakeMoveUpdate(const Move& move);
 	forceinline constexpr void UndoMoveUpdate();
-	template<Color side_to_move>
+	template<Color sideToMove>
 	forceinline constexpr void MoveGenerationUpdateWithoutGuard();
 
 	// Move generation update is tricky, because it might not happen on every node (as we might return prematurely)
@@ -28,55 +28,55 @@ public:
 	struct MoveGenerationUpdateGuard
 	{
 		forceinline constexpr MoveGenerationUpdateGuard(Evaluator* evaluator) :
-			evaluator(evaluator)
+			m_Evaluator(evaluator)
 		{}
 
 		forceinline constexpr ~MoveGenerationUpdateGuard()
 		{
-			evaluator->UndoUpdate();
+			m_Evaluator->UndoUpdate();
 		}
 
 	private:
-		Evaluator* evaluator;
+		Evaluator* m_Evaluator;
 	};
 
-	template<Color side_to_move>
-	[[nodiscard]] forceinline constexpr MoveGenerationUpdateGuard MoveGenerationUpdate();
+	template<Color sideToMove>
+	[[nodiscard]] [[maybe_unused]] forceinline constexpr MoveGenerationUpdateGuard MoveGenerationUpdate();
 
 private:
-	Evaluator* evaluator;
-	PositionStack* position_stack;
+	Evaluator* m_Evaluator;
+	PositionStack* m_PositionStack;
 };
 
 
-template<Color side_to_move>
+template<Color sideToMove>
 inline constexpr void CommonIncrementalUpdater::MakeMoveUpdate(const Move& move)
 {
-	const Position& prev_pos = position_stack->GetCurrentPosition();
-	Position& new_pos = position_stack->GetNextPosition();
-	position::MakeMove<side_to_move>(prev_pos, new_pos, move);
+	const Position& previousPosition = m_PositionStack->GetCurrentPosition();
+	Position& newPosition = m_PositionStack->GetNextPosition();
+	position::MakeMove<sideToMove>(previousPosition, newPosition, move);
 
-	position_stack->IncrementDepth();
+	m_PositionStack->IncrementDepth();
 }
 
-template<Color side_to_move>
+template<Color sideToMove>
 inline constexpr void CommonIncrementalUpdater::MoveGenerationUpdateWithoutGuard()
 {
-	const auto& curr_pos = position_stack->GetCurrentPosition();
-	const auto& move_list = position_stack->GetMoveList<side_to_move>();
+	const auto& currentPosition = m_PositionStack->GetCurrentPosition();
+	const auto& moveList = m_PositionStack->GetMoveList<sideToMove>();
 
-	evaluator->IncrementalUpdate<side_to_move>(curr_pos, move_list);
+	m_Evaluator->IncrementalUpdate<sideToMove>(currentPosition, moveList);
 }
 
-template<Color side_to_move>
+template<Color sideToMove>
 inline constexpr CommonIncrementalUpdater::MoveGenerationUpdateGuard CommonIncrementalUpdater::MoveGenerationUpdate()
 {
-	MoveGenerationUpdateWithoutGuard<side_to_move>();
+	MoveGenerationUpdateWithoutGuard<sideToMove>();
 
-	return MoveGenerationUpdateGuard(evaluator);
+	return MoveGenerationUpdateGuard(m_Evaluator);
 }
 
 inline constexpr void CommonIncrementalUpdater::UndoMoveUpdate()
 {
-	position_stack->DecrementDepth();
+	m_PositionStack->DecrementDepth();
 }

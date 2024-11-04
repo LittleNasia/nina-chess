@@ -30,7 +30,7 @@ Bitboard generate_sliding_attacks(const int square, Bitboard occupied, const poi
                 break;
             }
 
-            const int curr_index = curr_row * board_rows + curr_col;
+            const int curr_index = curr_row * BOARD_ROWS + curr_col;
             result |= (1ULL << curr_index);
 
             //we stop on first attacked piece
@@ -48,12 +48,12 @@ Bitboard generate_sliding_attacks(const int square, Bitboard occupied, const poi
 void initialize_pext_tables(const point* move_offsets, Bitboard* attacks_table, const Bitboard* xray_masks, Bitboard* square_offsets)
 {
     size_t table_offset = 0;
-    for (int square = 0; square < num_board_squares; square++)
+    for (int square = 0; square < NUM_BOARD_SQUARES; square++)
     {
         square_offsets[square] = table_offset;
 
-        const uint64_t edges = ((row_bitmasks[0] | row_bitmasks[board_rows - 1]) & ~row_bitmasks[square_row[square]])
-            | ((col_bitmasks[0] | col_bitmasks[board_cols - 1]) & ~col_bitmasks[square_col[square]]);
+        const uint64_t edges = ((row_bitmasks[0] | row_bitmasks[BOARD_ROWS - 1]) & ~row_bitmasks[square_row[square]])
+            | ((col_bitmasks[0] | col_bitmasks[BOARD_COLUMNS - 1]) & ~col_bitmasks[square_col[square]]);
 
         const Bitboard xray_attacks = xray_masks[square] & ~edges;
 
@@ -75,13 +75,13 @@ void initialize_pext_tables(const point* move_offsets, Bitboard* attacks_table, 
 void initialize_pin_between_tables(Bitboard* pin_between_table)
 {
     size_t table_offset = 0;
-    for (int square_from = 0; square_from < num_board_squares; square_from++)
+    for (int square_from = 0; square_from < NUM_BOARD_SQUARES; square_from++)
     {
-        for (int square_to = 0; square_to < num_board_squares; square_to++)
+        for (int square_to = 0; square_to < NUM_BOARD_SQUARES; square_to++)
         {
             if (square_from == square_to)
             {
-                pin_between_table[square_from * num_board_squares + square_to] = 0ULL;
+                pin_between_table[square_from * NUM_BOARD_SQUARES + square_to] = 0ULL;
                 continue;
             }
             Bitboard result = 0ULL;
@@ -94,10 +94,10 @@ void initialize_pin_between_tables(Bitboard* pin_between_table)
                 int direction = square_col[square_to] > square_col[square_from] ? 1 : -1;
                 for (int curr_col = col + direction; curr_col != square_col[square_to]; curr_col += direction)
                 {
-                    const int curr_index = row * board_rows + curr_col;
+                    const int curr_index = row * BOARD_ROWS + curr_col;
                     result |= (1ULL << curr_index);
                 }
-                const int curr_index = row * board_rows + square_col[square_to];
+                const int curr_index = row * BOARD_ROWS + square_col[square_to];
                 result |= (1ULL << curr_index);
             }
             // squares are in the same column
@@ -106,10 +106,10 @@ void initialize_pin_between_tables(Bitboard* pin_between_table)
                 int direction = square_row[square_to] > square_row[square_from] ? 1 : -1;
                 for (int curr_row = row + direction; curr_row != square_row[square_to]; curr_row += direction)
                 {
-                    const int curr_index = curr_row * board_rows + col;
+                    const int curr_index = curr_row * BOARD_ROWS + col;
                     result |= (1ULL << curr_index);
                 }
-                const int curr_index = square_row[square_to] * board_rows + col;
+                const int curr_index = square_row[square_to] * BOARD_ROWS + col;
                 result |= (1ULL << curr_index);
             }
             // squares are on the same diagonal
@@ -121,15 +121,15 @@ void initialize_pin_between_tables(Bitboard* pin_between_table)
                 int curr_col = col + col_direction;
                 while (curr_row != square_row[square_to])
                 {
-                    const int curr_index = curr_row * board_rows + curr_col;
+                    const int curr_index = curr_row * BOARD_ROWS + curr_col;
                     result |= (1ULL << curr_index);
                     curr_row += row_direction;
                     curr_col += col_direction;
                 }
-                const int curr_index = square_row[square_to] * board_rows + square_col[square_to];
+                const int curr_index = square_row[square_to] * BOARD_ROWS + square_col[square_to];
                 result |= (1ULL << curr_index);
             }
-            pin_between_table[square_from * num_board_squares + square_to] = result;
+            pin_between_table[square_from * NUM_BOARD_SQUARES + square_to] = result;
         }
     }
 }

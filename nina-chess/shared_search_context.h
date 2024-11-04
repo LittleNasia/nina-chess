@@ -7,33 +7,33 @@
 class SharedSearchContext
 {
 public:
-	SharedSearchContext(const SearchConstraints search_constraints, const TimePoint& search_start_timepoint,
+	SharedSearchContext(const SearchConstraints searchConstraints, const TimePoint& searchStartTimepoint,
 		TranspositionTable* transposition_table) :
-		transposition_table(transposition_table),
-		cancellation_policy(search_start_timepoint, search_constraints),
-		search_depth( calculateSearchDepth(search_constraints) )
+		m_TranspositionTable(transposition_table),
+		m_CancellationPolicy(searchStartTimepoint, searchConstraints),
+		m_SearchDepth( calculateSearchDepth(searchConstraints) )
 	{
 	}
 
-	forceinline constexpr SearchCancellationPolicy& GetCancellationPolicy() { return cancellation_policy; }
-	forceinline constexpr TranspositionTable& GetTranspositionTable() { return *transposition_table; }
-	forceinline constexpr const TranspositionTable& GetTranspositionTable() const { return *transposition_table; }
-	forceinline constexpr int64_t GetSearchDepth() const { return search_depth; }
+	forceinline constexpr SearchCancellationPolicy& GetCancellationPolicy() { return m_CancellationPolicy; }
+	forceinline constexpr TranspositionTable& GetTranspositionTable() { return *m_TranspositionTable; }
+	forceinline constexpr const TranspositionTable& GetTranspositionTable() const { return *m_TranspositionTable; }
+	forceinline constexpr int64_t GetSearchDepth() const { return m_SearchDepth; }
 
 private:
-	forceinline constexpr int64_t calculateSearchDepth(const SearchConstraints& search_constraints);
+	forceinline constexpr int64_t calculateSearchDepth(const SearchConstraints& searchConstraints);
 
-	TranspositionTable* transposition_table;
-	SearchCancellationPolicy cancellation_policy;
-	int64_t search_depth;
+	TranspositionTable* m_TranspositionTable;
+	SearchCancellationPolicy m_CancellationPolicy;
+	int64_t m_SearchDepth;
 };
 
 
-inline constexpr int64_t SharedSearchContext::calculateSearchDepth(const SearchConstraints& search_constraints)
+inline constexpr int64_t SharedSearchContext::calculateSearchDepth(const SearchConstraints& searchConstraints)
 {
-	int64_t searchDepth = search_constraints.depth == -1
+	int64_t searchDepth = searchConstraints.Depth == -1
 		? std::numeric_limits<int64_t>::max()
-		: search_constraints.depth;
+		: searchConstraints.Depth;
 
 	return searchDepth;
 }

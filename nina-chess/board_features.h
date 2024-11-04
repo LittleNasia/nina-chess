@@ -6,8 +6,8 @@
 
 struct BoardFeatures
 {
-	const Side* white_pieces;
-	const Side* black_pieces;
-	Bitboard EP_square;
-	Castling castling;
+	const Side* WhitePieces;
+	const Side* BlackPieces;
+	Bitboard EnPassantSquare;
+	Castling Castling;
 };

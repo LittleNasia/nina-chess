@@ -7,27 +7,27 @@
 class UciIncrementalUpdater : private CommonIncrementalUpdater
 {
 public:
-	UciIncrementalUpdater(Evaluator* evaluator, PositionStack* position_stack, const Position& pos) :
-		CommonIncrementalUpdater(evaluator, position_stack)
+	UciIncrementalUpdater(Evaluator* evaluator, PositionStack* positionStack, const Position& currentPos) :
+		CommonIncrementalUpdater(evaluator, positionStack)
 	{
-		position_stack->Reset(pos);
-		evaluator->Reset(*position_stack);
+		positionStack->Reset(currentPos);
+		evaluator->Reset(*positionStack);
 	}
 
 	forceinline constexpr PositionStack& GetPositionStack() { return CommonIncrementalUpdater::GetPositionStack(); }
-	template<Color side_to_move>
+	template<Color sideToMove>
 	forceinline constexpr void FullUpdate(const Move& move);
-	forceinline SearchIncrementalUpdater CreateSearchIncrementalUpdater(int64_t depth_to_search_to);
+	forceinline SearchIncrementalUpdater CreateSearchIncrementalUpdater(int64_t depthToSearchTo);
 };
 
-template<Color side_to_move>
+template<Color sideToMove>
 inline constexpr void UciIncrementalUpdater::FullUpdate(const Move& move)
 {
-	MakeMoveUpdate<side_to_move>(move);
-	MoveGenerationUpdateWithoutGuard<get_opposite_color<side_to_move>()>();
+	MakeMoveUpdate<sideToMove>(move);
+	MoveGenerationUpdateWithoutGuard<GetOppositeColor<sideToMove>()>();
 }
 
-inline SearchIncrementalUpdater UciIncrementalUpdater::CreateSearchIncrementalUpdater(int64_t depth_to_search_to)
+inline SearchIncrementalUpdater UciIncrementalUpdater::CreateSearchIncrementalUpdater(int64_t depthToSearchTo)
 {
-	return SearchIncrementalUpdater(*this, depth_to_search_to);
+	return SearchIncrementalUpdater(*this, depthToSearchTo);
 }

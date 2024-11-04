@@ -2,19 +2,19 @@
 
 forceinline void PositionStack::Reset(const Position& pos)
 {
-	position_stack[0] = pos;
-	generate_moves(pos, move_list_stack[0]);
-	depth = 0;
+	m_PositionStack[0] = pos;
+	GenerateMoves(pos, m_MoveListStack[0]);
+	m_Depth = 0;
 }
 
 inline constexpr bool PositionStack::IsThreefoldRepetition() const
 {
-	const Position& current_position = GetCurrentPosition();
-	const int64_t ply_to_search_to = 0;
+	const Position& currentPosition = GetCurrentPosition();
+	const int64_t plyToSearchTo = 0;
 
-	for (int64_t ply = depth - 2; ply >= ply_to_search_to; ply -= 2)
+	for (int64_t ply = m_Depth - 2; ply >= plyToSearchTo; ply -= 2)
 	{
-		if (current_position.hash == GetHashAtPly(ply))
+		if (currentPosition.Hash == GetHashAtPly(ply))
 		{
 			return true;
 		}
@@ -29,57 +29,57 @@ forceinline void PositionStack::Reset()
 
 forceinline constexpr void PositionStack::SetCurrentPosition(const Position& position)
 {
-	position_stack[depth] = position;
+	m_PositionStack[m_Depth] = position;
 }
 
-forceinline constexpr Position& PositionStack::GetPositionAt(const int64_t depth_of_position)
+forceinline constexpr Position& PositionStack::GetPositionAt(const int64_t depthOfPosition)
 {
-	return position_stack[depth_of_position];
+	return m_PositionStack[depthOfPosition];
 }
 
 forceinline constexpr const Position& PositionStack::GetCurrentPosition() const
 {
-	return position_stack[depth];
+	return m_PositionStack[m_Depth];
 }
 
 forceinline constexpr Position& PositionStack::GetNextPosition()
 {
-	return position_stack[depth + 1];
+	return m_PositionStack[m_Depth + 1];
 }
 
-forceinline constexpr MoveList& PositionStack::GetMoveListAt(const int64_t depth_of_position)
+forceinline constexpr MoveList& PositionStack::GetMoveListAt(const int64_t depthOfPosition)
 {
-	if (move_list_stack[depth_of_position].GetHashOfPosition() != position_stack[depth_of_position].hash)
-		generate_moves(position_stack[depth_of_position], move_list_stack[depth_of_position]);
-	return move_list_stack[depth_of_position];
+	if (m_MoveListStack[depthOfPosition].GetHashOfPosition() != m_PositionStack[depthOfPosition].Hash)
+		GenerateMoves(m_PositionStack[depthOfPosition], m_MoveListStack[depthOfPosition]);
+	return m_MoveListStack[depthOfPosition];
 }
 
 forceinline constexpr MoveList& PositionStack::GetMoveList()
 {
-	const Position& curr_pos = GetCurrentPosition();
-	if (curr_pos.side_to_move == WHITE)
+	const Position& currentPosition = GetCurrentPosition();
+	if (currentPosition.SideToMove == WHITE)
 		return GetMoveList<WHITE>();
 	else
 		return GetMoveList<BLACK>();
 }
 
-template<Color side_to_move>
+template<Color sideToMove>
 forceinline constexpr MoveList& PositionStack::GetMoveList()
 {
-	const Position& curr_pos = GetCurrentPosition();
-	MoveList& curr_move_list = move_list_stack[depth];
-	if (curr_move_list.GetHashOfPosition() != curr_pos.hash)
+	const Position& currentPosition = GetCurrentPosition();
+	MoveList& currentMoveList = m_MoveListStack[m_Depth];
+	if (currentMoveList.GetHashOfPosition() != currentPosition.Hash)
 	{
-		generate_moves<side_to_move>(curr_pos, curr_move_list);
+		GenerateMoves<sideToMove>(currentPosition, currentMoveList);
 	}
-	return curr_move_list;
+	return currentMoveList;
 }
 
-template<Color side_to_move>
+template<Color sideToMove>
 inline constexpr MoveList& PositionStack::GetMoveListSkippingHashCheck()
 {
-	const Position& curr_pos = GetCurrentPosition();
-	MoveList& curr_move_list = move_list_stack[depth];
-	generate_moves<side_to_move>(curr_pos, curr_move_list);
-	return curr_move_list;
+	const Position& currentPosition = GetCurrentPosition();
+	MoveList& currentMoveList = m_MoveListStack[m_Depth];
+	GenerateMoves<sideToMove>(currentPosition, currentMoveList);
+	return currentMoveList;
 }

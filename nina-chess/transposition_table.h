@@ -16,23 +16,23 @@ enum class TTFlag
 
 struct TranspositionTableEntry
 {
-	uint64_t key = 0;
-	Score score = Score::DRAW;
-	int64_t depth = 0;
-	Move best_move;
-	TTFlag flag = TTFlag::EXACT;
+	uint64_t Key = 0;
+	Score Score = Score::DRAW;
+	int64_t Depth = 0;
+	Move BestMove;
+	TTFlag Flag = TTFlag::EXACT;
 };
 
 class TranspositionTable : public Serializable
 {
 public:
-	TranspositionTable(const size_t size_in_mb);
+	TranspositionTable(const size_t sizeInMb);
 
-	void Insert(const TranspositionTableEntry& entry, const bool force_overwrite);
+	void Insert(const TranspositionTableEntry& entry, const bool forceOverwrite);
 	const TranspositionTableEntry& Get(const uint64_t key) const;
 
 	void Serialize(std::ofstream& output);
 	void Deserialize(std::ifstream& input);
 private:
-	std::vector<TranspositionTableEntry> entries;
+	std::vector<TranspositionTableEntry> m_Entries;
 };

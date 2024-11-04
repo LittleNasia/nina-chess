@@ -4,28 +4,28 @@
 #include "move_gen.h"
 #include "uci_incremental_updater.h"
 
-forceinline Score get_score_from_tt(const Position& position,
-	const AlphaBeta& alpha_beta, const TranspositionTable& transposition_table, const int64_t remaining_depth)
+forceinline Score GetScoreFromTranspositionTable(const Position& position,
+	const AlphaBeta& alphaBeta, const TranspositionTable& transpositionTable, const int64_t remainingDepth)
 {
-	const TranspositionTableEntry& tt_entry = transposition_table.Get(position.hash);
+	const TranspositionTableEntry& transpositionTableEntry = transpositionTable.Get(position.Hash);
 
-	if (tt_entry.key == position.hash)
+	if (transpositionTableEntry.Key == position.Hash)
 	{
-		if (tt_entry.depth >= remaining_depth)
+		if (transpositionTableEntry.Depth >= remainingDepth)
 		{
-			if (tt_entry.flag == TTFlag::EXACT)
+			if (transpositionTableEntry.Flag == TTFlag::EXACT)
 			{
-				return tt_entry.score;
+				return transpositionTableEntry.Score;
 			}
-			else if (tt_entry.flag == TTFlag::ALPHA &&
-					 tt_entry.score <= alpha_beta.alpha)
+			else if (transpositionTableEntry.Flag == TTFlag::ALPHA &&
+					 transpositionTableEntry.Score <= alphaBeta.Alpha)
 			{
-				return alpha_beta.alpha;
+				return alphaBeta.Alpha;
 			}
-			else if (tt_entry.flag == TTFlag::BETA &&
-					 tt_entry.score >= alpha_beta.beta)
+			else if (transpositionTableEntry.Flag == TTFlag::BETA &&
+					 transpositionTableEntry.Score >= alphaBeta.Beta)
 			{
-				return alpha_beta.beta;
+				return alphaBeta.Beta;
 			}
 		}
 	}
@@ -33,186 +33,185 @@ forceinline Score get_score_from_tt(const Position& position,
 	return Score::UNKNOWN;
 }
 
-template<Color side_to_move, bool is_root_node = false>
-inline Score search(AlphaBeta alpha_beta, SearchIncrementalUpdater& incremental_updater, IndividualSearchContext& search_context)
+template<Color sideToMove, bool isRootNode = false>
+inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUpdater, IndividualSearchContext& searchContext)
 {
-	auto& nodes = search_context.nodes;
-	auto& cancellation_policy = static_cast<SharedSearchContext&>(search_context).GetCancellationPolicy();
-	auto& transposition_table = static_cast<SharedSearchContext&>(search_context).GetTranspositionTable();
-	auto& position_stack = incremental_updater.GetPositionStack();
-	auto& evaluator = incremental_updater.GetEvaluator();
+	auto& nodes = searchContext.Nodes;
+	auto& cancellationPolicy = static_cast<SharedSearchContext&>(searchContext).GetCancellationPolicy();
+	auto& transpositionTable = static_cast<SharedSearchContext&>(searchContext).GetTranspositionTable();
+	auto& positionStack = incrementalUpdater.GetPositionStack();
+	auto& evaluator = incrementalUpdater.GetEvaluator();
 
-	constexpr Color opposite_side = get_opposite_color<side_to_move>();
-	const Position& position = position_stack.GetCurrentPosition();
+	constexpr Color oppositeSide = GetOppositeColor<sideToMove>();
+	const Position& position = positionStack.GetCurrentPosition();
 
 	// check for search aborted
-	if ((search_context.nodes & 0xFFF) == 0xFFF)
-		if (cancellation_policy.CheckForAbort(nodes))
+	if ((searchContext.Nodes & 0xFFF) == 0xFFF)
+		if (cancellationPolicy.CheckForAbort(nodes))
 			return Score::UNKNOWN;
 	
 	Score score;
-	if (!is_root_node)
+	if (!isRootNode)
 	{
 		// is position drawn
-		if (position.IsDrawn() || position_stack.IsThreefoldRepetition())
+		if (position.IsDrawn() || positionStack.IsThreefoldRepetition())
 		{
 			nodes++;
 
-			const size_t random_seed = nodes;
-			return GetDrawValueWithSmallVariance(random_seed);
+			const size_t randomSeed = nodes;
+			return GetDrawValueWithSmallVariance(randomSeed);
 		}
 	}
 
 	// is score in TT
-	if ((score = get_score_from_tt(position, alpha_beta, transposition_table, incremental_updater.GetRemainingDepth())) != Score::UNKNOWN)
+	if ((score = GetScoreFromTranspositionTable(position, alphaBeta, transpositionTable, incrementalUpdater.GetRemainingDepth())) != Score::UNKNOWN)
 	{
 		nodes++;
 		ValidateScore(score);
 		return score;
 	}
-	
 
 	// is leaf node for another reason
-	[[maybe_unused]] const auto& guard = incremental_updater.MoveGenerationUpdate<side_to_move>();
-	const MoveList& move_list = position_stack.GetMoveList<side_to_move>();
-	if (incremental_updater.GetRemainingDepth() == 0 || move_list.GetNumMoves() == 0)
+	[[maybe_unused]] const auto& guard = incrementalUpdater.MoveGenerationUpdate<sideToMove>();
+	const MoveList& moveList = positionStack.GetMoveList<sideToMove>();
+	if (incrementalUpdater.GetRemainingDepth() == 0 || moveList.GetNumMoves() == 0)
 	{
-		score = evaluator.Evaluate<side_to_move>(move_list, incremental_updater.GetSearchDepth());
+		score = evaluator.Evaluate<sideToMove>(moveList, incrementalUpdater.GetSearchDepth());
 		ValidateScore(score);
 
-		const TranspositionTableEntry entry = { position.hash, score, incremental_updater.GetRemainingDepth(), Move(), TTFlag::EXACT };
-		transposition_table.Insert(entry, is_root_node);
+		const TranspositionTableEntry entry = { position.Hash, score, incrementalUpdater.GetRemainingDepth(), Move(), TTFlag::EXACT };
+		transpositionTable.Insert(entry, isRootNode);
 
 		nodes++;
 		return score;
 	}
 
 	// no
-	TTFlag tt_flag = TTFlag::ALPHA;
-	Move best_move;
-	Score best_value = Score::NEGATIVE_INF;
+	TTFlag transpositionTableEntryFlag = TTFlag::ALPHA;
+	Move bestMove;
+	Score bestValue = Score::NEGATIVE_INF;
 
-	for (uint32_t move_index = 0; move_index < move_list.GetNumMoves(); move_index++)
+	for (uint32_t moveIndex = 0; moveIndex < moveList.GetNumMoves(); moveIndex++)
 	{
-		const Move& curr_move = move_list[move_index];
+		const Move& currentMove = moveList[moveIndex];
 
-		incremental_updater.MakeMoveUpdate<side_to_move>(curr_move);
-		score = -search<opposite_side>(alpha_beta.Invert(), incremental_updater, search_context);
-		incremental_updater.UndoMoveUpdate();
+		incrementalUpdater.MakeMoveUpdate<sideToMove>(currentMove);
+		score = -Search<oppositeSide>(alphaBeta.Invert(), incrementalUpdater, searchContext);
+		incrementalUpdater.UndoMoveUpdate();
 
-		if (cancellation_policy.IsAborted())
+		if (cancellationPolicy.IsAborted())
 		{
 			return Score::UNKNOWN;
 		}
 
 		ValidateScore(score);
 
-		if (score > best_value)
+		if (score > bestValue)
 		{
-			best_value = score;
-			best_move = curr_move;
+			bestValue = score;
+			bestMove = currentMove;
 		}
 
-		if (score > alpha_beta.alpha)
+		if (score > alphaBeta.Alpha)
 		{
-			if (score >= alpha_beta.beta)
+			if (score >= alphaBeta.Beta)
 			{
-				const TranspositionTableEntry entry = { position.hash, score, incremental_updater.GetRemainingDepth(), best_move, TTFlag::BETA };
-				transposition_table.Insert(entry, is_root_node);
+				const TranspositionTableEntry entry = { position.Hash, score, incrementalUpdater.GetRemainingDepth(), bestMove, TTFlag::BETA };
+				transpositionTable.Insert(entry, isRootNode);
 
-				return alpha_beta.beta;
+				return alphaBeta.Beta;
 			}
 		
-			tt_flag = TTFlag::EXACT;
-			alpha_beta.alpha = score;
+			transpositionTableEntryFlag = TTFlag::EXACT;
+			alphaBeta.Alpha = score;
 		}
 	}
 
-	const TranspositionTableEntry entry = { position.hash, score, incremental_updater.GetRemainingDepth(), best_move, tt_flag };
-	transposition_table.Insert(entry, is_root_node);
+	const TranspositionTableEntry entry = { position.Hash, score, incrementalUpdater.GetRemainingDepth(), bestMove, transpositionTableEntryFlag };
+	transpositionTable.Insert(entry, isRootNode);
 
-	return alpha_beta.alpha;
+	return alphaBeta.Alpha;
 }
 
 template<Color color>
-std::vector<SearchResult> iterative_deepening(UciIncrementalUpdater& incremental_updater, SharedSearchContext& search_context)
+std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
 {
-	std::vector<SearchResult> search_results;
+	std::vector<SearchResult> searchResults;
 
-	for (int64_t depth = 1; depth <= search_context.GetSearchDepth(); depth++)
+	for (int64_t depth = 1; depth <= searchContext.GetSearchDepth(); depth++)
 	{
-		const Position& root_pos = incremental_updater.GetPositionStack().GetCurrentPosition();
+		const Position& rootPos = incrementalUpdater.GetPositionStack().GetCurrentPosition();
 
-		AlphaBeta alpha_beta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
-		SearchIncrementalUpdater search_incremental_updater = incremental_updater.CreateSearchIncrementalUpdater(depth);
-		IndividualSearchContext individual_search_context = IndividualSearchContext(search_context);
+		AlphaBeta alphaBeta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
+		SearchIncrementalUpdater searchIncrementalUpdater = incrementalUpdater.CreateSearchIncrementalUpdater(depth);
+		IndividualSearchContext individualSearchContext = IndividualSearchContext(searchContext);
 
-		auto start_timepoint = std::chrono::high_resolution_clock::now();
-		const auto score = search<color, true>(alpha_beta, search_incremental_updater, individual_search_context);
-		auto end_timepoint = std::chrono::high_resolution_clock::now();
-		size_t duration = (size_t)std::chrono::duration_cast<std::chrono::milliseconds>(end_timepoint - start_timepoint).count();
+		auto startTimepoint = std::chrono::high_resolution_clock::now();
+		const auto score = Search<color, true>(alphaBeta, searchIncrementalUpdater, individualSearchContext);
+		auto endTimepoint = std::chrono::high_resolution_clock::now();
+		size_t duration = (size_t)std::chrono::duration_cast<std::chrono::milliseconds>(endTimepoint - startTimepoint).count();
 
-		if (search_context.GetCancellationPolicy().IsAborted())
+		if (searchContext.GetCancellationPolicy().IsAborted())
 		{
 			break;
 		}
 
 		SearchResult result;
-		result.nodes = individual_search_context.nodes;
-		result.score = score;
-		result.depth = depth;
+		result.Nodes = individualSearchContext.Nodes;
+		result.Score = score;
+		result.Depth = depth;
 
-		Position curr_position = root_pos;
-		for (int pv_depth = 0; pv_depth < depth; pv_depth++)
+		Position currentPosition = rootPos;
+		for (int pvDepth = 0; pvDepth < depth; pvDepth++)
 		{
-			MoveList curr_position_moves = generate_moves(curr_position, incremental_updater.GetPositionStack().GetMoveList());
-			const auto& curr_tt_entry = search_context.GetTranspositionTable().Get(curr_position.hash);
+			MoveList currentPositionMoves = GenerateMoves(currentPosition, incrementalUpdater.GetPositionStack().GetMoveList());
+			const auto& currentTranspositionTableEntry = searchContext.GetTranspositionTable().Get(currentPosition.Hash);
 
-			if (curr_tt_entry.best_move.from() == 0 && curr_tt_entry.best_move.to() == 0)
+			if (currentTranspositionTableEntry.BestMove.FromBitmask() == 0 && currentTranspositionTableEntry.BestMove.ToBitmask() == 0)
 				break;
-			for (uint32_t move_index = 0; move_index < curr_position_moves.GetNumMoves(); move_index++)
+			for (uint32_t moveIndex = 0; moveIndex < currentPositionMoves.GetNumMoves(); moveIndex++)
 			{
-				if (curr_position_moves[move_index] == curr_tt_entry.best_move)
+				if (currentPositionMoves[moveIndex] == currentTranspositionTableEntry.BestMove)
 				{
-					result.pv[pv_depth] = curr_tt_entry.best_move;
-					result.pv_length++;
-					Position new_position;
-					position::MakeMove(curr_position, new_position, result.pv[pv_depth]);
-					curr_position = new_position;
+					result.Pv[pvDepth] = currentTranspositionTableEntry.BestMove;
+					result.PvLength++;
+					Position newPosition;
+					position::MakeMove(currentPosition, newPosition, result.Pv[pvDepth]);
+					currentPosition = newPosition;
 					break;
 				}
 			}
 		}
 
-		DEBUG_ASSERT(result.pv_length != 0);
-		ValidateScore(result.score);
+		DEBUG_ASSERT(result.PvLength != 0);
+		ValidateScore(result.Score);
 
 		result.PrintUciInfo(duration);
 
-		search_results.push_back(result);
+		searchResults.push_back(result);
 	}
 
-	return search_results;
+	return searchResults;
 }
 
-std::vector<SearchResult> start_search(UciIncrementalUpdater& incremental_updater, SharedSearchContext& search_context)
+std::vector<SearchResult> StartSearch(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
 {
 	std::vector<SearchResult> results;
 
-	std::cout << "info time limit " << search_context.GetCancellationPolicy().GetTimeLimit() << std::endl;
+	std::cout << "info time limit " << searchContext.GetCancellationPolicy().GetTimeLimit() << std::endl;
 
-	const Position& root_position = incremental_updater.GetPositionStack().GetCurrentPosition();
+	const Position& rootPosition = incrementalUpdater.GetPositionStack().GetCurrentPosition();
 
-	if (root_position.side_to_move == Color::WHITE)
+	if (rootPosition.SideToMove == Color::WHITE)
 	{
-		results = iterative_deepening<Color::WHITE>(incremental_updater, search_context);
+		results = IterativeDeepening<Color::WHITE>(incrementalUpdater, searchContext);
 	}
 	else
 	{
-		results = iterative_deepening<Color::BLACK>(incremental_updater, search_context);
+		results = IterativeDeepening<Color::BLACK>(incrementalUpdater, searchContext);
 	}
 
-	std::cout << "bestmove " << results.back().pv[0].ToUciMove() << std::endl;
+	std::cout << "bestmove " << results.back().Pv[0].ToUciMove() << std::endl;
 
 	return results;
 }

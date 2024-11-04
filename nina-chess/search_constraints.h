@@ -3,8 +3,8 @@
 
 struct SearchConstraints
 {
-	int depth = -1;
-	int64_t time = -1;
-	int movetime = -1;
-	int nodes = -1;
+	int Depth = -1;
+	int64_t Time = -1;
+	int Movetime = -1;
+	int Nodes = -1;
 };

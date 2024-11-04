@@ -13,18 +13,18 @@ struct PositionStack
 {
 public:
 	forceinline PositionStack() :
-		move_list_stack{},
-		position_stack{},
-		depth{ 0 }
+		m_MoveListStack{},
+		m_PositionStack{},
+		m_Depth{ 0 }
 	{}
 
 	forceinline void Reset();
-	forceinline void Reset(const Position& pos);
+	forceinline void Reset(const Position& position);
 
-	forceinline constexpr int64_t GetDepth() const { return depth; }
+	forceinline constexpr int64_t GetDepth() const { return m_Depth; }
 
-	forceinline constexpr void IncrementDepth() { ++depth; }
-	forceinline constexpr void DecrementDepth() { --depth; }
+	forceinline constexpr void IncrementDepth() { ++m_Depth; }
+	forceinline constexpr void DecrementDepth() { --m_Depth; }
 
 	forceinline constexpr bool IsThreefoldRepetition() const;
 
@@ -33,20 +33,20 @@ public:
 	forceinline constexpr const Position& GetCurrentPosition() const;
 	forceinline constexpr		Position& GetNextPosition();
 
-	template<Color side_to_move>
+	template<Color sideToMove>
 	forceinline constexpr MoveList& GetMoveListSkippingHashCheck();
 	forceinline constexpr MoveList& GetMoveListAt(const int64_t depth);
-	template<Color side_to_move>
+	template<Color sideToMove>
 	forceinline constexpr MoveList& GetMoveList();
 	forceinline constexpr MoveList& GetMoveList();
 
 private:
-	forceinline constexpr uint64_t GetHashAtPly(const int64_t ply) const { return position_stack[ply].hash; }
+	forceinline constexpr uint64_t GetHashAtPly(const int64_t ply) const { return m_PositionStack[ply].Hash; }
 
-	MoveList move_list_stack[max_ply];
-	Position position_stack[max_ply];
+	MoveList m_MoveListStack[MAX_PLY];
+	Position m_PositionStack[MAX_PLY];
 
-	int64_t depth;
+	int64_t m_Depth;
 };
 
 #include "position_stack.inl"

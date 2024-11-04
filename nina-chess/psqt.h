@@ -9,33 +9,33 @@
 class PSQT
 {
 public:
-	inline static constexpr size_t accumulator_output_size = 1;
-	using AccumulatorType = BitboardFeatureAccumulator<ChessBitboardFeatureIterator, accumulator_output_size>;
+	inline static constexpr size_t ACCUMULATOR_OUTPUT_SIZE = 1;
+	using AccumulatorType = BitboardFeatureAccumulator<ChessBitboardFeatureIterator, ACCUMULATOR_OUTPUT_SIZE>;
 
-	forceinline PSQT(std::ifstream&& weights_file);
-	forceinline PSQT(std::ifstream& weights_file);
+	forceinline PSQT(std::ifstream&& weightsFile);
+	forceinline PSQT(std::ifstream& weightsFile);
 
-	forceinline constexpr void Reset(const Position& pos, const MoveList& move_list);
+	forceinline constexpr void Reset(const Position& position, const MoveList& moveList);
 
-	forceinline constexpr void IncrementalUpdate(const Position& pos, const MoveList& move_list);
+	forceinline constexpr void IncrementalUpdate(const Position& position, const MoveList& moveList);
 
-	forceinline constexpr void UndoUpdate() { depth--; }
+	forceinline constexpr void UndoUpdate() { m_Depth--; }
 
-	forceinline float Evaluate() { return tanhf(accumulators[depth].GetOutput()[0] / 16.f); }
+	forceinline float Evaluate() { return std::tanhf(m_Accumulators[m_Depth].GetOutput()[0] / 16.f); }
 
 private:
-	forceinline constexpr void update(const Position& pos, const MoveList& move_list);
+	forceinline constexpr void update(const Position& position, const MoveList& moveList);
 
 	struct AccumulatorContext
 	{
-		AccumulatorType::Weights accumulator_weights;
+		AccumulatorType::Weights AccumulatorWeights;
 	};
 
-	alignas(cache_line_size) const MoveListMisc* moves_misc[max_ply];
-	alignas(cache_line_size) BoardFeatures board_features[max_ply];
-	alignas(cache_line_size) AccumulatorContext accumulator_context;
-	alignas(cache_line_size) AccumulatorType accumulators[max_ply];
-	int depth;
+	alignas(CACHE_LINE_SIZE) const MoveListMiscellaneous* m_MovesMiscellaneous[MAX_PLY];
+	alignas(CACHE_LINE_SIZE) BoardFeatures m_BoardFeatures[MAX_PLY];
+	alignas(CACHE_LINE_SIZE) AccumulatorContext m_AccumulatorContext;
+	alignas(CACHE_LINE_SIZE) AccumulatorType m_Accumulators[MAX_PLY];
+	int m_Depth;
 };
 
 #include "psqt.inl"

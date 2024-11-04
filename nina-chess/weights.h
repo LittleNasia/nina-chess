@@ -2,7 +2,7 @@
 #include "utils.h"
 
 
-inline constexpr float hardcoded_psqt_weights[25][64] =
+inline constexpr float HARDCODED_PSQT_WEIGHTS[25][64] =
 {
 	// white pawns
 	// 64 values, one for each square

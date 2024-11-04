@@ -13,9 +13,9 @@
 
 struct AlphaBeta
 {
-	Score alpha;
-	const Score beta;
-	forceinline constexpr AlphaBeta Invert() const { return { -beta, -alpha }; }
+	Score Alpha;
+	const Score Beta;
+	forceinline constexpr AlphaBeta Invert() const { return { -Beta, -Alpha }; }
 };
 
-std::vector<SearchResult> start_search(UciIncrementalUpdater& uci_incremental_updater, SharedSearchContext& search_context);
+std::vector<SearchResult> StartSearch(UciIncrementalUpdater& uciIncrementalUpdater, SharedSearchContext& searchContext);

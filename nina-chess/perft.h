@@ -13,15 +13,15 @@
 
 struct PerftTestEntry
 {
-	std::string fen{};
-	int depth{};
-	size_t expected_nodes{};
+	std::string Fen{};
+	int Depth{};
+	size_t ExpectedNodes{};
 };
 
-inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& file_path)
+inline std::vector<PerftTestEntry> ParsePerftTestSuite(const std::string& filePath)
 {
-	std::ifstream perft_test_suite(file_path);
-	if (!perft_test_suite.is_open())
+	std::ifstream perftTestSuite(filePath);
+	if (!perftTestSuite.is_open())
 	{
 		const std::string error_message = "could not find the test suite";
 		std::cerr << error_message << "\n";
@@ -30,15 +30,15 @@ inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& fil
 
 	// step 1: get the lines in the file
 	std::vector<std::string> lines;
-	std::string current_line;
-	while (std::getline(perft_test_suite, current_line))
+	std::string currentLine;
+	while (std::getline(perftTestSuite, currentLine))
 	{
-		lines.push_back(current_line);
+		lines.push_back(currentLine);
 	}
 
 	// step 2: split each line by ';', first entry is the FEN, all the other ones are the depths and expected nodes
 	// the format is: <FEN> ;Dn <expected_nodes>; Dm <expected_nodes>; ...
-	std::vector<PerftTestEntry> test_entries;
+	std::vector<PerftTestEntry> testEntries;
 	for (const auto& line : lines)
 	{
 		std::istringstream iss(line);
@@ -52,125 +52,125 @@ inline std::vector<PerftTestEntry> parse_perft_test_suite(const std::string& fil
 		}
 
 		// step 3: extract the FEN and the depth from the tokens
-		for (uint32_t token_id = 1; token_id < tokens.size(); token_id++)
+		for (uint32_t tokenId = 1; tokenId < tokens.size(); tokenId++)
 		{
-			if (tokens[token_id].empty())
+			if (tokens[tokenId].empty())
 			{
 				continue;
 			}
 
 			PerftTestEntry entry;
-			entry.fen = tokens[0];
+			entry.Fen = tokens[0];
 			
 			// ignore the "D" from the depths in the tokens
-			std::string depth_str = tokens[token_id].substr(tokens[token_id].find_first_of('D') + 1);
-			std::istringstream depth_stream(depth_str);
-			depth_stream >> entry.depth;
-			depth_stream >> entry.expected_nodes;
+			std::string depthStr = tokens[tokenId].substr(tokens[tokenId].find_first_of('D') + 1);
+			std::istringstream depthStream(depthStr);
+			depthStream >> entry.Depth;
+			depthStream >> entry.ExpectedNodes;
 
-			test_entries.push_back(entry);
+			testEntries.push_back(entry);
 		}
 	}
 
-	return test_entries;
+	return testEntries;
 }
 
 
 struct PerftInfo
 {
-	size_t nodes;
-	int remaining_depth;
+	size_t Nodes;
+	int RemainingDepth;
 };
 
-template<Color side_to_move>
-inline void perft(PositionStack& position_stack, PerftInfo& perft_info)
+template<Color sideToMove>
+inline void Perft(PositionStack& PositionStack, PerftInfo& PerftInfo)
 {
-	constexpr Color opposite_side = get_opposite_color<side_to_move>();
-	const Position& pos = position_stack.GetCurrentPosition();
+	constexpr Color oppositeSide = GetOppositeColor<sideToMove>();
+	const Position& position = PositionStack.GetCurrentPosition();
 
-	if (perft_info.remaining_depth <= 0)
+	if (PerftInfo.RemainingDepth <= 0)
 	{
-		perft_info.nodes++;
+		PerftInfo.Nodes++;
 		return;
 	}
 	
-	Position& new_pos = position_stack.GetNextPosition();
-	const auto& move_list = position_stack.GetMoveListSkippingHashCheck<side_to_move>();
-	for (uint32_t move_id = 0; move_id < move_list.GetNumMoves(); move_id++)
+	Position& newPosition = PositionStack.GetNextPosition();
+	const auto& moveList = PositionStack.GetMoveListSkippingHashCheck<sideToMove>();
+	for (uint32_t moveId = 0; moveId < moveList.GetNumMoves(); moveId++)
 	{
-		position::MakeMove<side_to_move>(pos, new_pos, move_list[move_id]);
+		position::MakeMove<sideToMove>(position, newPosition, moveList[moveId]);
 
-		position_stack.IncrementDepth();
-		perft_info.remaining_depth--;
-		perft<opposite_side>(position_stack, perft_info);
-		position_stack.DecrementDepth();
-		perft_info.remaining_depth++;
+		PositionStack.IncrementDepth();
+		PerftInfo.RemainingDepth--;
+		Perft<oppositeSide>(PositionStack, PerftInfo);
+		PositionStack.DecrementDepth();
+		PerftInfo.RemainingDepth++;
 	}
 }
 
-inline size_t test_perft(const bool hideOutput = false, const size_t node_limit = std::numeric_limits<size_t>::max())
+inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = std::numeric_limits<size_t>::max())
 {
-	PositionStack* position_stack_memory = new PositionStack;
-	PositionStack& position_stack = *position_stack_memory;
+	PositionStack* positionStackMemory = new PositionStack;
+	PositionStack& positionStack = *positionStackMemory;
 
-	const auto& test_positions = parse_perft_test_suite("./test/perftsuite.epd");
+	const auto& testPositions = ParsePerftTestSuite("./test/perftsuite.epd");
 
-	size_t total_nodes = 0;
-	double total_duration = 0;
+	size_t totalNodes = 0;
+	double totalDuration = 0;
 
-	std::string previous_fen;
-	for (const auto& test_position : test_positions)
+	std::string previousFen;
+	for (const auto& testPosition : testPositions)
 	{
-		if (test_position.expected_nodes > node_limit)
+		if (testPosition.ExpectedNodes > nodeLimit)
 		{
 			continue;
 		}
-		if (!hideOutput && test_position.fen != previous_fen)
+		if (!hideOutput && testPosition.Fen != previousFen)
 		{
-			std::cout << "position: " << test_position.fen << "\n";
-			previous_fen = test_position.fen;
+			std::cout << "position: " << testPosition.Fen << "\n";
+			previousFen = testPosition.Fen;
 		}
 
 		if (!hideOutput)
-			std::cout << "testing on depth " << test_position.depth << ", expected " << test_position.expected_nodes;
+			std::cout << "testing on depth " << testPosition.Depth << ", expected " << testPosition.ExpectedNodes;
 		
-		PerftInfo perft_info;
-		perft_info.nodes = 0;
-		perft_info.remaining_depth = test_position.depth;
-		position_stack.SetCurrentPosition(position::ParseFen(test_position.fen));
+		PerftInfo perftInfo;
+		perftInfo.Nodes = 0;
+		perftInfo.RemainingDepth = testPosition.Depth;
+		positionStack.SetCurrentPosition(position::ParseFen(testPosition.Fen));
 
 		const auto start = std::chrono::high_resolution_clock::now();
-		if (position_stack.GetCurrentPosition().side_to_move == WHITE)
+		if (positionStack.GetCurrentPosition().SideToMove == WHITE)
 		{
-			perft<WHITE>(position_stack, perft_info);
+			Perft<WHITE>(positionStack, perftInfo);
 		}
 		else
 		{
-			perft<BLACK>(position_stack, perft_info);
+			Perft<BLACK>(positionStack, perftInfo);
 		}
 		const auto stop = std::chrono::high_resolution_clock::now();
 		const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-		total_duration += double(duration.count()) / 1000000;
-		total_nodes += perft_info.nodes;
+		totalDuration += double(duration.count()) / 1000000;
+		totalNodes += perftInfo.Nodes;
 
 		if (!hideOutput)
-			std::cout << ", received " << perft_info.nodes << "\n";
+			std::cout << ", received " << perftInfo.Nodes << "\n";
 
-		if (test_position.expected_nodes != perft_info.nodes)
+		if (testPosition.ExpectedNodes != perftInfo.Nodes)
 		{
 			std::cout << "found error in position\n";
-			std::cout << test_position.fen << "\n";
-			position::PrintBoard(position_stack.GetCurrentPosition());
+			std::cout << testPosition.Fen << "\n";
+			position::PrintBoard(positionStack.GetCurrentPosition());
 			return false;
 		}
 	}
 
-	size_t nps = static_cast<size_t>(static_cast<double>(total_nodes) / total_duration);
+	size_t nps = static_cast<size_t>(static_cast<double>(totalNodes) / totalDuration);
 
 	if(!hideOutput)
 		std::cout << "nps: " << nps << "\n";
 
-	delete position_stack_memory;
+	delete positionStackMemory;
 	return nps;
 }

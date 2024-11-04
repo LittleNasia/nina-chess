@@ -1,63 +1,63 @@
 #include "psqt.h"
 
-inline PSQT::PSQT(std::ifstream&& weights_file):
-	PSQT(weights_file)
+inline PSQT::PSQT(std::ifstream&& weightsFile):
+	PSQT(weightsFile)
 {
 }
 
-PSQT::PSQT(std::ifstream& weights_file) :
-	moves_misc{},
-	board_features{},
-	accumulator_context{},
-	accumulators{},
-	depth{ 0 }
+PSQT::PSQT(std::ifstream& weightsFile) :
+	m_MovesMiscellaneous{},
+	m_BoardFeatures{},
+	m_AccumulatorContext{},
+	m_Accumulators{},
+	m_Depth{ 0 }
 {
-	accumulator_context.accumulator_weights.SetWeights(weights_file);
+	m_AccumulatorContext.AccumulatorWeights.SetWeights(weightsFile);
 
-	for (auto& accumulator : accumulators)
+	for (auto& accumulator : m_Accumulators)
 	{
-		accumulator.SetWeights(accumulator_context.accumulator_weights);
+		accumulator.SetWeights(m_AccumulatorContext.AccumulatorWeights);
 	}
 }
 
-inline constexpr void PSQT::Reset(const Position& pos, const MoveList& move_list)
+inline constexpr void PSQT::Reset(const Position& position, const MoveList& moveList)
 {
-	depth = 0;
-	update(pos, move_list);
+	m_Depth = 0;
+	update(position, moveList);
 
-	const auto& current_features = board_features[depth];
-	const auto& current_move_list_misc = *moves_misc[depth];
-	const auto& features_iterator = ChessBitboardFeatureIterator(current_features, current_move_list_misc);
+	const auto& currentFeatures = m_BoardFeatures[m_Depth];
+	const auto& currentMoveListMiscellaneous = *m_MovesMiscellaneous[m_Depth];
+	const auto& featuresIterator = ChessBitboardFeatureIterator(currentFeatures, currentMoveListMiscellaneous);
 
-	accumulators[depth].Reset(features_iterator);
+	m_Accumulators[m_Depth].Reset(featuresIterator);
 }
 
-inline constexpr void PSQT::IncrementalUpdate(const Position& pos, const MoveList& move_list)
+inline constexpr void PSQT::IncrementalUpdate(const Position& position, const MoveList& moveList)
 {
-	depth++;
-	update(pos, move_list);
+	m_Depth++;
+	update(position, moveList);
 
-	const auto& old_board_features = board_features[depth - 1];
-	const auto& new_board_features = board_features[depth];
+	const auto& oldBoardFeatures = m_BoardFeatures[m_Depth - 1];
+	const auto& newBoardFeatures = m_BoardFeatures[m_Depth];
 
-	const auto& old_move_list_misc = *moves_misc[depth - 1];
-	const auto& new_move_list_misc = *moves_misc[depth];
+	const auto& oldMoveListMiscellaneous = *m_MovesMiscellaneous[m_Depth - 1];
+	const auto& newMoveListMiscellaneous = *m_MovesMiscellaneous[m_Depth];
 
-	const auto old_features_iterator = ChessBitboardFeatureIterator(old_board_features, old_move_list_misc);
-	const auto new_features_iterator = ChessBitboardFeatureIterator(new_board_features, new_move_list_misc);
+	const auto oldFeaturesIterator = ChessBitboardFeatureIterator(oldBoardFeatures, oldMoveListMiscellaneous);
+	const auto newFeaturesIterator = ChessBitboardFeatureIterator(newBoardFeatures, newMoveListMiscellaneous);
 
-	const auto& old_accumulator = accumulators[depth - 1];
+	const auto& oldAccumulator = m_Accumulators[m_Depth - 1];
 
-	accumulators[depth].AccumulateFeatures(new_features_iterator, old_features_iterator, old_accumulator.GetOutput());
+	m_Accumulators[m_Depth].AccumulateFeatures(newFeaturesIterator, oldFeaturesIterator, oldAccumulator.GetOutput());
 }
 
-inline constexpr void PSQT::update(const Position& pos, const MoveList& move_list)
+inline constexpr void PSQT::update(const Position& position, const MoveList& moveList)
 {
-	auto& curr_board_features = board_features[depth];
-	curr_board_features.white_pieces = &pos.white_pieces;
-	curr_board_features.black_pieces = &pos.black_pieces;
-	curr_board_features.EP_square = pos.EP_square;
-	curr_board_features.castling = pos.castling;
+	auto& currentBoardFeatures = m_BoardFeatures[m_Depth];
+	currentBoardFeatures.WhitePieces = &position.WhitePieces;
+	currentBoardFeatures.BlackPieces = &position.BlackPieces;
+	currentBoardFeatures.EnPassantSquare = position.EnPassantSquare;
+	currentBoardFeatures.Castling = position.CastlingPermissions;
 
-	moves_misc[depth] = &move_list.move_list_misc;
+	m_MovesMiscellaneous[m_Depth] = &moveList.MoveListMisc;
 }
