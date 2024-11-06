@@ -46,7 +46,7 @@ def cleanEnvironment():
         if file.endswith(".exe") or file.endswith(".pdb"):
             os.remove(f"{cwd}/test/{file}")
 
-def runBenchmark():
+def runBenchmark(numRuns = NUM_BENCHMARK_RUNS):
     cleanEnvironment()
     prepareExecutables()
 
@@ -69,6 +69,7 @@ if not "[NO-TEST]" in commitName:
     runTests()
 if not "[NO-BENCH]" in commitName:
     runBenchmark()
-
+if "[PRECISE-BENCH]" in commitName:
+    runBenchmark(100)
 
     
