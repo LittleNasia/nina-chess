@@ -298,7 +298,8 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 				newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, move.PromotionPieceType(), move.ToBitmask());
 			}
 		}
-		newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
+		if (pos.WhitePieces.Rooks != newPos.WhitePieces.Rooks || pos.BlackPieces.Rooks != newPos.BlackPieces.Rooks)
+			newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
 		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(newPos.EnPassantSquare)];
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
 	}
