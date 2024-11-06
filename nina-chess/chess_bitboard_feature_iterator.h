@@ -51,7 +51,7 @@ public:
 		case 12:
 			return m_BoardFeatures.EnPassantSquare;
 		case 13:
-			return m_BoardFeatures.Castling;
+			return m_BoardFeatures.Castling.CastlingPermissionsBitmask;
 		case 14:
 		case 15:
 		case 16:

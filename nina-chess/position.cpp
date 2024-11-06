@@ -75,7 +75,13 @@ void position::PrintBoard(const Position& curr_pos)
 	// misc info
 	std::cout << "\n";
 	std::cout << "castling: BLACK: ";
-	std::cout << bool(curr_pos.CastlingPermissions & 0b1000) << bool(curr_pos.CastlingPermissions & 0b0100) << " WHITE: " << bool(curr_pos.CastlingPermissions & 0b0010) << bool(curr_pos.CastlingPermissions & 0b0001) << "\n";
+	std::cout <<
+		bool(curr_pos.CastlingPermissions.CastlingPermissionsBitmask & 0b1000) <<
+		bool(curr_pos.CastlingPermissions.CastlingPermissionsBitmask & 0b0100) <<
+		" WHITE: " <<
+		bool(curr_pos.CastlingPermissions.CastlingPermissionsBitmask & 0b0010) <<
+		bool(curr_pos.CastlingPermissions.CastlingPermissionsBitmask & 0b0001) <<
+		"\n";
 	std::cout << "side_to_move " << (curr_pos.SideToMove == WHITE ? "WHITE" : "BLACK");
 }
 
@@ -212,16 +218,16 @@ Position position::ParseFen(const std::string_view fen)
 		switch (fen_castling_rights[castling_index])
 		{
 		case 'K':
-			castling_rights |= KingsideCastlingPermissionsBitmask<WHITE>();
+			castling_rights.CastlingPermissionsBitmask |= KingsideCastlingPermissionsBitmask<WHITE>();
 			break;
 		case 'Q':
-			castling_rights |= QueensideCastlingPermissionsBitmask<WHITE>();
+			castling_rights.CastlingPermissionsBitmask |= QueensideCastlingPermissionsBitmask<WHITE>();
 			break;
 		case 'k':
-			castling_rights |= KingsideCastlingPermissionsBitmask<BLACK>();
+			castling_rights.CastlingPermissionsBitmask |= KingsideCastlingPermissionsBitmask<BLACK>();
 			break;
 		case 'q':
-			castling_rights |= QueensideCastlingPermissionsBitmask<BLACK>();
+			castling_rights.CastlingPermissionsBitmask |= QueensideCastlingPermissionsBitmask<BLACK>();
 			break;
 		default:
 			std::cout << "fen sucks\n";

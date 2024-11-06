@@ -406,16 +406,16 @@ template<Color sideToMove>
 forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList)
 {
 	const bool isEnPassantAllowed = static_cast<bool>(position.EnPassantSquare);
-	const Castling castling = position.GetCurrentCastling();
+	const uint32_t castlingBitmask = position.GetCurrentCastling<sideToMove>().CastlingPermissionsBitmask;
 
-		 if (castling == 0b11 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b11, false>(moveList, position);
-	else if (castling == 0b00 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b00, false>(moveList, position);
-	else if (castling == 0b01 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b01, false>(moveList, position);
-	else if (castling == 0b10 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b10, false>(moveList, position);
-	else if (castling == 0b11 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b11, true >(moveList, position);
-	else if (castling == 0b00 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b00, true >(moveList, position);
-	else if (castling == 0b01 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b01, true >(moveList, position);
-	else if (castling == 0b10 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b10, true >(moveList, position);
+		 if (castlingBitmask == 0b11 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b11, false>(moveList, position);
+	else if (castlingBitmask == 0b00 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b00, false>(moveList, position);
+	else if (castlingBitmask == 0b01 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b01, false>(moveList, position);
+	else if (castlingBitmask == 0b10 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b10, false>(moveList, position);
+	else if (castlingBitmask == 0b11 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b11, true >(moveList, position);
+	else if (castlingBitmask == 0b00 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b00, true >(moveList, position);
+	else if (castlingBitmask == 0b01 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b01, true >(moveList, position);
+	else if (castlingBitmask == 0b10 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b10, true >(moveList, position);
 
 	return moveList;
 }
@@ -424,24 +424,24 @@ forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList
 {
 	const bool isEnPassantAllowed = static_cast<bool>(position.EnPassantSquare);
 	const Color color = position.SideToMove;
-	const Castling castling = position.GetCurrentCastling();
+	const uint32_t castlingBitmask = position.GetCurrentCastling().CastlingPermissionsBitmask;
 
-		 if (color == WHITE && castling == 0b11 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b11, false>(moveList, position);
-	else if (color == BLACK && castling == 0b11 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b11, false>(moveList, position);
-	else if (color == WHITE && castling == 0b00 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b00, false>(moveList, position);
-	else if (color == BLACK && castling == 0b00 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b00, false>(moveList, position);
-	else if (color == WHITE && castling == 0b01 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b01, false>(moveList, position);
-	else if (color == BLACK && castling == 0b01 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b01, false>(moveList, position);
-	else if (color == WHITE && castling == 0b10 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b10, false>(moveList, position);
-	else if (color == BLACK && castling == 0b10 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b10, false>(moveList, position);
-	else if (color == WHITE && castling == 0b11 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b11, true >(moveList, position);
-	else if (color == BLACK && castling == 0b11 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b11, true >(moveList, position);
-	else if (color == WHITE && castling == 0b00 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b00, true >(moveList, position);
-	else if (color == BLACK && castling == 0b00 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b00, true >(moveList, position);
-	else if (color == WHITE && castling == 0b01 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b01, true >(moveList, position);
-	else if (color == BLACK && castling == 0b01 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b01, true >(moveList, position);
-	else if (color == WHITE && castling == 0b10 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b10, true >(moveList, position);
-	else if (color == BLACK && castling == 0b10 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b10, true >(moveList, position);
+		 if (color == WHITE && castlingBitmask == 0b11 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b11, false>(moveList, position);
+	else if (color == BLACK && castlingBitmask == 0b11 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b11, false>(moveList, position);
+	else if (color == WHITE && castlingBitmask == 0b00 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b00, false>(moveList, position);
+	else if (color == BLACK && castlingBitmask == 0b00 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b00, false>(moveList, position);
+	else if (color == WHITE && castlingBitmask == 0b01 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b01, false>(moveList, position);
+	else if (color == BLACK && castlingBitmask == 0b01 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b01, false>(moveList, position);
+	else if (color == WHITE && castlingBitmask == 0b10 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b10, false>(moveList, position);
+	else if (color == BLACK && castlingBitmask == 0b10 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b10, false>(moveList, position);
+	else if (color == WHITE && castlingBitmask == 0b11 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b11, true >(moveList, position);
+	else if (color == BLACK && castlingBitmask == 0b11 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b11, true >(moveList, position);
+	else if (color == WHITE && castlingBitmask == 0b00 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b00, true >(moveList, position);
+	else if (color == BLACK && castlingBitmask == 0b00 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b00, true >(moveList, position);
+	else if (color == WHITE && castlingBitmask == 0b01 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b01, true >(moveList, position);
+	else if (color == BLACK && castlingBitmask == 0b01 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b01, true >(moveList, position);
+	else if (color == WHITE && castlingBitmask == 0b10 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b10, true >(moveList, position);
+	else if (color == BLACK && castlingBitmask == 0b10 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b10, true >(moveList, position);
 
 	return moveList;
 }

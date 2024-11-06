@@ -36,6 +36,8 @@ struct Position
 	constexpr Side& GetSide();
 
 	forceinline constexpr Castling GetCurrentCastling() const;
+	template<Color color>
+	forceinline constexpr Castling GetCurrentCastling() const;
 
 	forceinline uint64_t CalculateHash() const;
 
