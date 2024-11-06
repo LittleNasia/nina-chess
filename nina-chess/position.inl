@@ -237,31 +237,42 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 		newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, PAWN, enPassantVictimBitmask);
 		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(newPos.EnPassantSquare)];
 	}
+	// normal move, maybe capture
 	else
 	{
+		// remove old castling perms because nobody wants them
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
-		// normal move, maybe capture
-
-		// remove castling perms because nobody wants them
+		
 		if (move.MovingPieceType() == KING)
 		{
 			newPos.CastlingPermissions.RemoveCastling<sideToMove>();
 		}
 
+		// remove captured pieces
 		if (move.ToBitmask() & enemyPieces.Pieces)
 		{
 			newPos.FiftyMoveRule = 0;
 
 			if (move.ToBitmask() & enemyPieces.Pawns)
+			{
 				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, PAWN, move.ToBitmask());
+			}
 			else if (move.ToBitmask() & enemyPieces.Knights)
+			{
 				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, KNIGHT, move.ToBitmask());
+			}
 			else if (move.ToBitmask() & enemyPieces.Bishops)
+			{
 				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, BISHOP, move.ToBitmask());
+			}
 			else if (move.ToBitmask() & enemyPieces.Rooks)
+			{
 				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, ROOK, move.ToBitmask());
+			}
 			else if (move.ToBitmask() & enemyPieces.Queens)
+			{
 				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, QUEEN, move.ToBitmask());
+			}
 			enemyPieces.RemovePieces(move.ToBitmask());
 		}
 
@@ -269,6 +280,7 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 		pieceBitmask ^= move.FromBitmask() | move.ToBitmask();
 		newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, move.MovingPieceType(), move.FromBitmask() | move.ToBitmask());
 
+		// do enPassant and promotions
 		if (move.MovingPieceType() == PAWN)
 		{
 			newPos.FiftyMoveRule = 0;
