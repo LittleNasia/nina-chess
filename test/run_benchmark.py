@@ -67,9 +67,9 @@ def runTests():
 commitName = sys.argv[1]
 if not "[NO-TEST]" in commitName:
     runTests()
-if not "[NO-BENCH]" in commitName:
+if not "[NO-BENCH]" in commitName and not "[PRECISE-BENCH]" in commitName:
     runBenchmark()
-if "[PRECISE-BENCH]" in commitName:
-    runBenchmark(100)
+if not "[NO-BENCH]" in commitName and "[PRECISE-BENCH]" in commitName:
+    runBenchmark(200)
 
     
