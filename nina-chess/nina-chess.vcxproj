@@ -207,7 +207,7 @@
     <ClCompile>
       <WarningLevel>EnableAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);ADD_DEBUG_CODE=$(RunAssertions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
@@ -226,7 +226,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);ADD_DEBUG_CODE=$(RunAssertions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -260,7 +260,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_PERFTNODES=$(TestPerftNodeLimit);NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_TEST</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_PERFTNODES=$(TestPerftNodeLimit);NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_TEST;ADD_DEBUG_CODE=$(RunAssertions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -291,7 +291,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_PERFTNODES=$(BenchPerftNodeLimit);NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_BENCH</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_PERFTNODES=$(BenchPerftNodeLimit);NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_BENCH;ADD_DEBUG_CODE=$(RunAssertions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -322,7 +322,6 @@
     <ClCompile Include="bench_main.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="nina-chess.cpp" />
-    <ClCompile Include="search.cpp" />
     <ClCompile Include="test_main.cpp" />
     <ClCompile Include="transposition_table.cpp" />
     <ClCompile Include="uci.cpp" />
@@ -381,6 +380,7 @@
     <None Include="position.inl" />
     <None Include="psqt.inl" />
     <None Include="position_stack.inl" />
+    <None Include="search.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

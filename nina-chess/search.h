@@ -18,4 +18,7 @@ struct AlphaBeta
 	forceinline constexpr AlphaBeta Invert() const { return { -Beta, -Alpha }; }
 };
 
+template<bool showOutput>	
 std::vector<SearchResult> StartSearch(UciIncrementalUpdater& uciIncrementalUpdater, SharedSearchContext& searchContext);
+
+#include "search.inl"

@@ -5,6 +5,7 @@
     <LinkerAdditionalOptions></LinkerAdditionalOptions>
     <TestPerftNodeLimit>18446744073709551615</TestPerftNodeLimit>
     <BenchPerftNodeLimit>1000000</BenchPerftNodeLimit>
+	<RunAssertions>false</RunAssertions>
 </PropertyGroup>
 
 </Project>

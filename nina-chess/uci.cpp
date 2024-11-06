@@ -87,7 +87,7 @@ void SearchThreadFunction(const TimePoint& search_start_timepoint, const SearchC
 {
 	currentState.SearchRunning.test_and_set();
 	SharedSearchContext search_context(search_constraints, search_start_timepoint, &currentState.GetTranspositionTable());
-	StartSearch(currentState.IncrementalUpdater, search_context);
+	StartSearch<true>(currentState.IncrementalUpdater, search_context);
 	currentState.SearchRunning.clear();
 }
 

@@ -9,7 +9,7 @@ using Bitboard = std::uint64_t;
 #ifdef _DEBUG
 inline constexpr bool IS_DEBUG = true;
 #else
-inline constexpr bool IS_DEBUG = false;
+inline constexpr bool IS_DEBUG = ADD_DEBUG_CODE;
 #endif
 
 #define DEBUG_IF(x) if constexpr(IS_DEBUG) if (x)

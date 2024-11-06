@@ -1,5 +1,3 @@
-#include "search.h"
-
 #include "individual_search_context.h"
 #include "move_gen.h"
 #include "uci_incremental_updater.h"
@@ -133,7 +131,7 @@ inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUp
 	return alphaBeta.Alpha;
 }
 
-template<Color color>
+template<Color color, bool showOutput>
 std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
 {
 	std::vector<SearchResult> searchResults;
@@ -186,7 +184,8 @@ std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& incrementalU
 		DEBUG_ASSERT(result.PvLength != 0);
 		ValidateScore(result.Score);
 
-		result.PrintUciInfo(duration);
+		if constexpr (showOutput)
+			result.PrintUciInfo(duration);
 
 		searchResults.push_back(result);
 	}
@@ -194,24 +193,27 @@ std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& incrementalU
 	return searchResults;
 }
 
+template<bool showOutput>
 std::vector<SearchResult> StartSearch(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
 {
 	std::vector<SearchResult> results;
 
-	std::cout << "info time limit " << searchContext.GetCancellationPolicy().GetTimeLimit() << std::endl;
+	if constexpr (showOutput)
+		std::cout << "info time limit " << searchContext.GetCancellationPolicy().GetTimeLimit() << std::endl;
 
 	const Position& rootPosition = incrementalUpdater.GetPositionStack().GetCurrentPosition();
 
 	if (rootPosition.SideToMove == Color::WHITE)
 	{
-		results = IterativeDeepening<Color::WHITE>(incrementalUpdater, searchContext);
+		results = IterativeDeepening<Color::WHITE, showOutput>(incrementalUpdater, searchContext);
 	}
 	else
 	{
-		results = IterativeDeepening<Color::BLACK>(incrementalUpdater, searchContext);
+		results = IterativeDeepening<Color::BLACK, showOutput>(incrementalUpdater, searchContext);
 	}
 
-	std::cout << "bestmove " << results.back().Pv[0].ToUciMove() << std::endl;
+	if constexpr (showOutput)
+		std::cout << "bestmove " << results.back().Pv[0].ToUciMove() << std::endl;
 
 	return results;
 }

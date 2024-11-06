@@ -66,9 +66,6 @@
     <ClCompile Include="position.cpp">
       <Filter>Header Files\Chess</Filter>
     </ClCompile>
-    <ClCompile Include="search.cpp">
-      <Filter>Header Files\Search</Filter>
-    </ClCompile>
     <ClCompile Include="transposition_table.cpp">
       <Filter>Header Files\Search</Filter>
     </ClCompile>
@@ -226,6 +223,9 @@
     </None>
     <None Include="psqt.inl">
       <Filter>Header Files\Eval</Filter>
+    </None>
+    <None Include="search.inl">
+      <Filter>Header Files\Search</Filter>
     </None>
   </ItemGroup>
 </Project>

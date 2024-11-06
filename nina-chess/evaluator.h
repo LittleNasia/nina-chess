@@ -13,6 +13,7 @@
 class Evaluator
 {
 public:
+	forceinline Evaluator();
 	forceinline Evaluator(const std::string_view& weightsFilename);
 	
 	forceinline constexpr void Reset(PositionStack& positionStack);

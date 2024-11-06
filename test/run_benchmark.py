@@ -36,7 +36,7 @@ def prepareExecutables():
         os.mkdir(PREV_VERSION_CLONE_DEST)
     subprocess.run("git clone . " + PREV_VERSION_CLONE_DEST)
     subprocess.run(f"msbuild nina-chess.sln /p:OutDir=\"{cwd}/test/\" /p:Configuration=Bench /p:Platform=x64 /p:TargetName={NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION}")
-    subprocess.run(f"msbuild ./test/clone/nina-chess.sln /p:OutDir=\"{cwd}/test/\" /p:Configuration=Bench /p:Platform=x64 /p:TargetName={OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION}")
+    subprocess.run(f"msbuild ./test/clone/nina-chess.sln /p:OutDir=\"{cwd}/test/\" /p:Configuration=Bench /p:Platform=x64 /p:TargetName={OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION} /t:Rebuild")
 
 def cleanEnvironment():
     if os.path.exists(PREV_VERSION_CLONE_DEST):
@@ -62,7 +62,9 @@ def runBenchmark(numRuns = NUM_BENCHMARK_RUNS):
 
 def runTests():
     subprocess.run(f'"{cwd}/x64/Test/nina-chess.exe"', check=True)
-
+    # run in debug with assertions
+    subprocess.run(f"msbuild nina-chess.sln /p:RunAssertions=true /p:TestPerftNodeLimit=1000000 /p:Configuration=Test /p:Platform=x64")
+    subprocess.run(f'"{cwd}/x64/Test/nina-chess.exe"', check=True)
 
 commitName = sys.argv[1]
 if not "[NO-TEST]" in commitName:

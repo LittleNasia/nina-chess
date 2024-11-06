@@ -7,9 +7,15 @@
 #include <limits>
 #include <sstream>
 
+#include "evaluator.h"
 #include "move_gen.h"
 #include "position.h"
 #include "position_stack.h"
+#include "search.h"
+#include "search_constraints.h"
+#include "shared_search_context.h"
+#include "transposition_table.h"
+#include "uci_incremental_updater.h"
 
 struct PerftTestEntry
 {
@@ -173,4 +179,66 @@ inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = 
 
 	delete positionStackMemory;
 	return nps;
+}
+
+inline size_t TestSearch(const bool hideOutput = false)
+{
+	try
+	{
+		PositionStack* positionStackMemory = new PositionStack;
+		PositionStack& positionStack = *positionStackMemory;
+		Evaluator* evaluatorMemory = new Evaluator();
+		Evaluator& evaluator = *evaluatorMemory;
+
+		constexpr size_t tt_size = 16;
+		TranspositionTable* transpositionTable = new TranspositionTable(tt_size);
+
+		SearchConstraints searchConstraints;
+
+		const auto& testPositions = ParsePerftTestSuite("./test/perftsuite.epd");
+
+		double totalDuration = 0;
+		size_t totalNodes = 0;
+
+		for (const auto& testPosition : testPositions)
+		{
+			if (!hideOutput)
+			{
+				std::cout << "Running search on position: " << testPosition.Fen << " " << " depth " << testPosition.Depth + 2 << "\n";
+			}
+
+			searchConstraints.Depth = testPosition.Depth;
+			positionStack.SetCurrentPosition(position::ParseFen(testPosition.Fen));
+			const Position& currentPosition = positionStack.GetCurrentPosition();
+
+			UciIncrementalUpdater incrementalUpdater(&evaluator, &positionStack, currentPosition);
+			SharedSearchContext searchContext(searchConstraints, std::chrono::high_resolution_clock().now(), transpositionTable);
+
+			const auto start = std::chrono::high_resolution_clock::now();
+
+			const auto& searchResults = StartSearch<false>(incrementalUpdater, searchContext);
+
+			const auto stop = std::chrono::high_resolution_clock::now();
+			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+			totalNodes += searchResults.back().Nodes;
+			totalDuration += double(duration.count()) / 1000000;
+		}
+
+		size_t nps = static_cast<size_t>(static_cast<double>(totalNodes) / totalDuration);
+
+		if (!hideOutput)
+			std::cout << "nps: " << nps << "\n";
+
+		delete positionStackMemory;
+		delete evaluatorMemory;
+		delete transpositionTable;
+		return nps;
+	}
+	catch (const std::exception& ex)
+	{
+		std::cout << "Search failed: " << ex.what() << "\n";
+		return 0;
+	}
+	
 }

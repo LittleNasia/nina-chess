@@ -7,6 +7,8 @@ int main()
 {
 	if (!TestPerft(false, _PERFTNODES))
 		return 1;
+	if (!TestSearch(false))
+		return 1;
 }
 
 #endif

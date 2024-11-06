@@ -15,6 +15,11 @@ forceinline Score GetMatedScore(const int64_t mateIn)
 	return Score(int32_t(Score::LOSS) + mateIn);
 }
 
+forceinline Evaluator::Evaluator():
+	Evaluator("weights")
+{
+}
+
 forceinline Evaluator::Evaluator(const std::string_view& weightsFilename) :
 	m_Depth{ 0 },
 	m_PSQT{ std::ifstream{ weightsFilename.data() } }
