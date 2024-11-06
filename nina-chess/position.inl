@@ -41,15 +41,19 @@ forceinline Position::Position(const Side& whitePieces, const Side& blackPieces,
 	ValidateColor(sideToMove);
 }
 
-template<Color sideToMove>
+template<Color sideToMove, size_t numPieces>
 forceinline constexpr uint64_t UpdateHash(uint64_t hash, const PieceType movingPieceType, Bitboard move)
 {
 	ValidateColor<sideToMove>();
-	const Bitboard firstSquare = PopBit(move);
-	const Bitboard secondSquare = PopBit(move);
-	hash ^= ZOBRIST_PIECE_KEYS[BitIndex(firstSquare)][static_cast<uint32_t>(sideToMove) * static_cast<uint32_t>(PIECE_TYPE_NONE) + static_cast<uint32_t>(movingPieceType)];
-	if (secondSquare)
-		hash ^= ZOBRIST_PIECE_KEYS[BitIndex(secondSquare)][static_cast<uint32_t>(sideToMove) * static_cast<uint32_t>(PIECE_TYPE_NONE) + static_cast<uint32_t>(movingPieceType)];
+
+	const uint32_t firstSquareIndex = PopBitAndGetIndex(move);
+	hash ^= ZOBRIST_PIECE_KEYS[firstSquareIndex][static_cast<uint32_t>(sideToMove) * static_cast<uint32_t>(PIECE_TYPE_NONE) + static_cast<uint32_t>(movingPieceType)];
+	if constexpr (numPieces > 1)
+	{
+		const uint32_t secondSquareIndex = PopBitAndGetIndex(move);
+		hash ^= ZOBRIST_PIECE_KEYS[secondSquareIndex][static_cast<uint32_t>(sideToMove) * static_cast<uint32_t>(PIECE_TYPE_NONE) + static_cast<uint32_t>(movingPieceType)];
+	}
+	
 	return hash;
 }
 
@@ -210,8 +214,8 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 			const Bitboard kingMoveBitmask = (move.FromBitmask() | QueensideCastlingKingDestination<sideToMove>());
 			ownPieces.Rooks ^= rookMoveBitmask;
 			ownPieces.King ^= kingMoveBitmask;
-			newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, ROOK, rookMoveBitmask);
-			newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, KING, kingMoveBitmask);
+			newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, ROOK, rookMoveBitmask);
+			newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, KING, kingMoveBitmask);
 		}
 		else if (move.ToBitmask() == KingsideCastlingRookBitmask<sideToMove>())
 		{
@@ -219,8 +223,8 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 			const Bitboard kingMoveBitmask = (move.FromBitmask() | KingsideCastlingKingDestination<sideToMove>());
 			ownPieces.Rooks ^= rookMoveBitmask;
 			ownPieces.King ^= kingMoveBitmask;
-			newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, ROOK, rookMoveBitmask);
-			newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, KING, kingMoveBitmask);
+			newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, ROOK, rookMoveBitmask);
+			newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, KING, kingMoveBitmask);
 		}
 		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
@@ -233,8 +237,8 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 		const auto enPassantVictimBitmask = EN_PASSANT_VICTIM_BITMASK_LOOKUP[enPassantSquareIndex];
 		enemyPieces.Pawns ^= enPassantVictimBitmask;
 		ownPieces.Pawns ^= (move.FromBitmask() | pos.EnPassantSquare);
-		newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, PAWN, (move.FromBitmask() | pos.EnPassantSquare));
-		newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, PAWN, enPassantVictimBitmask);
+		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, PAWN, (move.FromBitmask() | pos.EnPassantSquare));
+		newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, PAWN, enPassantVictimBitmask);
 		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(newPos.EnPassantSquare)];
 	}
 	// normal move, maybe capture
@@ -255,30 +259,30 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 
 			if (move.ToBitmask() & enemyPieces.Pawns)
 			{
-				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, PAWN, move.ToBitmask());
+				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, PAWN, move.ToBitmask());
 			}
 			else if (move.ToBitmask() & enemyPieces.Knights)
 			{
-				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, KNIGHT, move.ToBitmask());
+				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, KNIGHT, move.ToBitmask());
 			}
 			else if (move.ToBitmask() & enemyPieces.Bishops)
 			{
-				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, BISHOP, move.ToBitmask());
+				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, BISHOP, move.ToBitmask());
 			}
 			else if (move.ToBitmask() & enemyPieces.Rooks)
 			{
-				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, ROOK, move.ToBitmask());
+				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, ROOK, move.ToBitmask());
 			}
 			else if (move.ToBitmask() & enemyPieces.Queens)
 			{
-				newPos.Hash = UpdateHash<oppositeColor>(newPos.Hash, QUEEN, move.ToBitmask());
+				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, QUEEN, move.ToBitmask());
 			}
 			enemyPieces.RemovePieces(move.ToBitmask());
 		}
 
 		Bitboard& pieceBitmask = ownPieces.GetPieceBitboard(move.MovingPieceType());
 		pieceBitmask ^= move.FromBitmask() | move.ToBitmask();
-		newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, move.MovingPieceType(), move.FromBitmask() | move.ToBitmask());
+		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, move.MovingPieceType(), move.FromBitmask() | move.ToBitmask());
 
 		// do enPassant and promotions
 		if (move.MovingPieceType() == PAWN)
@@ -307,7 +311,7 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 			if (move.PromotionPieceType() != PIECE_TYPE_NONE)
 			{
 				ownPieces.GetPieceBitboard(move.PromotionPieceType()) |= move.ToBitmask();
-				newPos.Hash = UpdateHash<sideToMove>(newPos.Hash, move.PromotionPieceType(), move.ToBitmask());
+				newPos.Hash = UpdateHash<sideToMove, 1>(newPos.Hash, move.PromotionPieceType(), move.ToBitmask());
 			}
 		}
 		if (pos.WhitePieces.Rooks != newPos.WhitePieces.Rooks || pos.BlackPieces.Rooks != newPos.BlackPieces.Rooks)
