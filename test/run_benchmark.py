@@ -52,8 +52,9 @@ def runBenchmark(numRuns = NUM_BENCHMARK_RUNS):
 
     try:
         bench_results = bench_executables.benchmarkFiles(NUM_BENCHMARK_RUNS, OLD_EXECUTABLE_PATH, NEW_EXECUTABLE_PATH)
-        if bench_results[NEW_EXECUTABLE_PATH] == bench_executables.EXECUTABLE_REJECTED:
-            raise Exception("Changes rejected because of significant move generation speed degradation")
+        for metric in bench_results[NEW_EXECUTABLE_PATH]:
+            if bench_results[NEW_EXECUTABLE_PATH][metric] == bench_executables.EXECUTABLE_REJECTED:
+                raise Exception(f"Changes rejected because of significant {metric} speed degradation")
     except:
         cleanEnvironment()
         raise

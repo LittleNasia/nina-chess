@@ -12,6 +12,40 @@ EXECUTABLE_REJECTED = 0
 EXECUTABLE_NOT_REJECTED_NOR_ACCEPTED = 1
 EXECUTABLE_ACCEPTED = 2
 
+FIRST_IS_BETTER = 1
+SECOND_IS_BETTER = -1
+NO_MEANINGFUL_DIFFERENCE = 0
+
+def isExecutableRatingFinished(executableStatus):
+    for metric in executableStatus:
+        if executableStatus[metric] == EXECUTABLE_NOT_REJECTED_NOR_ACCEPTED:
+            return False
+    return True
+
+def compareSpeeds(firstName, secondName, speedsFirst, speedsSecond, alpha):
+    meanFirst = np.mean(speedsFirst)
+    meanSecond = np.mean(speedsSecond)
+    stdFirst = np.std(speedsFirst, ddof=1)
+    stdSecond = np.std(speedsSecond, ddof=1)
+
+    t_stat, p_value = stats.ttest_ind(speedsFirst, speedsSecond, equal_var=False)
+
+    print(f"\t{firstName}: Mean = {meanFirst:.2f}, Std = {stdFirst:.2f}, N = {len(speedsFirst)}")
+    print(f"\t{secondName}: Mean = {meanSecond:.2f}, Std = {stdSecond:.2f}, N = {len(speedsSecond)}")
+    print(f"\tT-statistic = {t_stat:.2f}, P-value = {p_value:.2f}")
+
+    if p_value < alpha:
+        if meanFirst > meanSecond:
+            return FIRST_IS_BETTER;
+        else:
+            return SECOND_IS_BETTER;
+    return NO_MEANINGFUL_DIFFERENCE
+
+
+
+benchmarkedMetrics = ["perft", "search"]
+
+
 def benchmarkFiles(runs, defaultFile, *filenames):
     speeds = {}
     statuses = {}
@@ -24,8 +58,11 @@ def benchmarkFiles(runs, defaultFile, *filenames):
         files.append(file)
         
     for file in files:
-        speeds[file] = []
-        statuses[file] = EXECUTABLE_NOT_REJECTED_NOR_ACCEPTED
+        speeds[file] = {}
+        statuses[file] = {}
+        for metric in benchmarkedMetrics:
+            speeds[file][metric] = []
+            statuses[file][metric] = EXECUTABLE_NOT_REJECTED_NOR_ACCEPTED
 
     run = 0
     while len(files) > 1:
@@ -36,41 +73,40 @@ def benchmarkFiles(runs, defaultFile, *filenames):
         for file in files:
             cmd = f"\"{file}\""
             print("\tRunning", cmd)
-            speed = int(subprocess.run(cmd, stdout=subprocess.PIPE).stdout.splitlines()[0])
-            speeds[file].append(speed)
-            print("\t\tachieved speed", speed)
+            benchProcess = subprocess.run(cmd, stdout=subprocess.PIPE)
+            benchOutput = benchProcess.stdout.splitlines()
+            for metricIndex in range(len(benchmarkedMetrics)):
+                metric = benchmarkedMetrics[metricIndex]
+                metricResult = int(benchOutput[metricIndex])
+                speeds[file][metric].append(metricResult);
+            
+                print(f"\t\tachieved speed in metric {metric}", speeds[file][metric])
 
 
-        defaultFileScores = speeds[defaultFile]
         for file in files:
             if file == defaultFile:
                 continue
-
-            if run < 5:
-                continue
-
+            if run < MIN_RUNS:
+                break
             if len(file) <= 1:
                 break
 
-            currFileScores = speeds[file]
 
-            meanCurrent = np.mean(currFileScores)
-            meanDefault = np.mean(defaultFileScores)
-            std1 = np.std(currFileScores, ddof=1)
-            std2 = np.std(defaultFileScores, ddof=1)
+            for metricIndex in range(len(benchmarkedMetrics)):
+                metric = benchmarkedMetrics[metricIndex]
 
-            t_stat, p_value = stats.ttest_ind(currFileScores, defaultFileScores, equal_var=False)
+                defaultScores = speeds[defaultFile][metric]
+                comparedScores = speeds[file][metric]
 
-            print(f"\t{file}: Mean = {meanCurrent:.2f}, Std = {std1:.2f}, N = {len(currFileScores)}")
-            print(f"\t{defaultFile}: Mean = {meanDefault:.2f}, Std = {std2:.2f}, N = {len(defaultFileScores)}")
-            print(f"\tT-statistic = {t_stat:.2f}, P-value = {p_value:.2f}")
+                compareResult = compareSpeeds(defaultScores, comparedScores)
 
-            alpha = 0.02
-            if p_value < alpha:
-                if meanCurrent > meanDefault:
-                    statuses[file] = EXECUTABLE_ACCEPTED
-                else:
-                    statuses[file] = EXECUTABLE_REJECTED
+                if(compareResult == FIRST_IS_BETTER):
+                    statuses[file][metric] = EXECUTABLE_REJECTED
+                elif(compareResult == SECOND_IS_BETTER):
+                    statuses[file][metric] = EXECUTABLE_ACCEPTED
+
+            isBenchmarkForExecutableFinished = isExecutableRatingFinished(statuses[file])
+            if(isBenchmarkForExecutableFinished):
                 files.remove(file)
             
 

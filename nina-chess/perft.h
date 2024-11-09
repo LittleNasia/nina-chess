@@ -20,7 +20,7 @@
 struct PerftTestEntry
 {
 	std::string Fen{};
-	int Depth{};
+	size_t Depth{};
 	size_t ExpectedNodes{};
 };
 
@@ -85,7 +85,7 @@ inline std::vector<PerftTestEntry> ParsePerftTestSuite(const std::string& filePa
 struct PerftInfo
 {
 	size_t Nodes;
-	int RemainingDepth;
+	size_t RemainingDepth;
 };
 
 template<Color sideToMove>
@@ -181,7 +181,7 @@ inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = 
 	return nps;
 }
 
-inline size_t TestSearch(const bool hideOutput = false)
+inline size_t TestSearch(const bool hideOutput = false, const size_t depthLimit = std::numeric_limits<size_t>::max())
 {
 	try
 	{
@@ -202,12 +202,17 @@ inline size_t TestSearch(const bool hideOutput = false)
 
 		for (const auto& testPosition : testPositions)
 		{
-			if (!hideOutput)
+			if (testPosition.Depth > depthLimit)
 			{
-				std::cout << "Running search on position: " << testPosition.Fen << " " << " depth " << testPosition.Depth + 2 << "\n";
+				continue;
 			}
 
-			searchConstraints.Depth = testPosition.Depth;
+			if (!hideOutput)
+			{
+				std::cout << "Running search on position: " << testPosition.Fen << " " << " depth " << testPosition.Depth << "\n";
+			}
+
+			searchConstraints.Depth = int(testPosition.Depth);
 			positionStack.SetCurrentPosition(position::ParseFen(testPosition.Fen));
 			const Position& currentPosition = positionStack.GetCurrentPosition();
 
