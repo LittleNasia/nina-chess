@@ -74,5 +74,3 @@ if not "[NO-BENCH]" in commitName and not "[PRECISE-BENCH]" in commitName:
     runBenchmark()
 if not "[NO-BENCH]" in commitName and "[PRECISE-BENCH]" in commitName:
     runBenchmark(200)
-
-    

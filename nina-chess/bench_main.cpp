@@ -16,8 +16,8 @@ int main()
 	}
 
 	size_t nps{ 0 };
-	constexpr uint32_t numBenchRuns = 30;
-	for(uint32_t runIndex = 0; runIndex < numBenchRuns; runIndex++)
+	constexpr uint32_t numPerftBenchRuns = 30;
+	for(uint32_t runIndex = 0; runIndex < numPerftBenchRuns; runIndex++)
 	{
 		size_t currRunNps = TestPerft(hidePerftOutput, benchNodeLimit);
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -25,7 +25,7 @@ int main()
 		nps += currRunNps;
 	}
 
-	std::cout << nps / numBenchRuns << std::endl;
+	std::cout << nps / numPerftBenchRuns << std::endl;
 
 	constexpr bool hideSearchTestOutput = true;
 	constexpr size_t benchDepthLimit = 5;
@@ -35,7 +35,8 @@ int main()
 	}
 
 	nps = 0;
-	for (uint32_t runIndex = 0; runIndex < numBenchRuns; runIndex++)
+	constexpr uint32_t numSearchBenchRuns = 15;
+	for (uint32_t runIndex = 0; runIndex < numSearchBenchRuns; runIndex++)
 	{
 		size_t currRunNps = TestSearch(hideSearchTestOutput, benchDepthLimit);
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -43,6 +44,6 @@ int main()
 		nps += currRunNps;
 	}
 
-	std::cout << nps / numBenchRuns << std::endl;
+	std::cout << nps / numSearchBenchRuns << std::endl;
 }
 #endif
