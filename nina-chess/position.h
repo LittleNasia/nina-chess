@@ -63,7 +63,7 @@ struct Position
 
 namespace position
 {
-	template<Color sideToMove, MoveType moveType>
+	template<Color sideToMove, bool isCastling, bool isEnPassant>
 	forceinline Position& MakeMove(const Position& pos, Position& newPos, const Move& move);
 
 	template<Color sideToMove>
