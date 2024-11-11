@@ -100,7 +100,7 @@ def benchmarkFiles(runs, defaultFile, *filenames):
                 defaultScores = speeds[defaultFile][metric]
                 comparedScores = speeds[file][metric]
 
-                compareResult = compareSpeeds(defaultScores, comparedScores, ALPHA)
+                compareResult = compareSpeeds(defaultFile, file, defaultScores, comparedScores, ALPHA)
 
                 if(compareResult == FIRST_IS_BETTER):
                     statuses[file][metric] = EXECUTABLE_REJECTED

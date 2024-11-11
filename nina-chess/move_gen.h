@@ -267,8 +267,8 @@ forceinline void WriteKnightMoves(MoveList& moveList, Bitboard movableKnights, c
 	}
 }
 
-template<Color color, size_t castlingPermissions, bool hasEP>
-forceinline MoveList& GenerateMoves(MoveList& moveList, const Position& position)
+template<Color color>
+forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList)
 {
 	moveList.Reset();
 	moveList.SetHashOfPosition(position.Hash);
@@ -282,6 +282,8 @@ forceinline MoveList& GenerateMoves(MoveList& moveList, const Position& position
 	const Bitboard rookXrayFromKing = ROOK_XRAY_BITMASKS[kingIndex];
 	// king can't move to these squares
 	const Bitboard attackedSquares = GetAllAttacks<oppositeColor>(oppositePieces, position.OccupiedBitmask ^ king);
+	const bool hasEP = static_cast<bool>(position.EnPassantSquare);
+	const uint32_t castlingPermissions = position.GetCurrentCastling<color>().CastlingPermissionsBitmask;
 
 	Bitboard bishopCheckers = 0ULL;
 	Bitboard bishopPinners = 0ULL;
@@ -397,7 +399,7 @@ forceinline MoveList& GenerateMoves(MoveList& moveList, const Position& position
 	WritePawnMoves<color>(moveList, pawnLeftCaptures, pawnRightCaptures, legalPawnAdvances, legalPawnDoubleAdvances, currPieces.Pawns);
 
 
-	if constexpr (hasEP)
+	if (hasEP)
 	{
 		const uint32_t enPassantSquareIndex = BitIndex(position.EnPassantSquare);
 		const Bitboard victim = EN_PASSANT_VICTIM_BITMASK_LOOKUP[enPassantSquareIndex];
@@ -425,7 +427,7 @@ forceinline MoveList& GenerateMoves(MoveList& moveList, const Position& position
 	}
 
 	// kingside castling
-	if constexpr (castlingPermissions & 0b1)
+	if (castlingPermissions & 0b1)
 	{
 		const bool canCastle = !((attackedSquares & KingsideCastlingKingPath<color>()) ||
 			(position.OccupiedBitmask & (KingsideCastlingRookPath<color>() & ~king)));
@@ -437,7 +439,7 @@ forceinline MoveList& GenerateMoves(MoveList& moveList, const Position& position
 		}
 	}
 	// queenside castling
-	if constexpr (castlingPermissions & 0b10)
+	if (castlingPermissions & 0b10)
 	{
 		const bool canCastle = !((attackedSquares & QueensideCastlingKingPath<color>()) ||
 			(position.OccupiedBitmask & (QueensideCastlingRookPath<color>() & ~king)));
@@ -451,46 +453,12 @@ forceinline MoveList& GenerateMoves(MoveList& moveList, const Position& position
 	return moveList;
 }
 
-template<Color sideToMove>
 forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList)
 {
-	const bool isEnPassantAllowed = static_cast<bool>(position.EnPassantSquare);
-	const uint32_t castlingBitmask = position.GetCurrentCastling<sideToMove>().CastlingPermissionsBitmask;
-
-		 if (castlingBitmask == 0b11 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b11, false>(moveList, position);
-	else if (castlingBitmask == 0b00 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b00, false>(moveList, position);
-	else if (castlingBitmask == 0b01 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b01, false>(moveList, position);
-	else if (castlingBitmask == 0b10 && !isEnPassantAllowed) GenerateMoves<sideToMove, 0b10, false>(moveList, position);
-	else if (castlingBitmask == 0b11 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b11, true >(moveList, position);
-	else if (castlingBitmask == 0b00 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b00, true >(moveList, position);
-	else if (castlingBitmask == 0b01 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b01, true >(moveList, position);
-	else if (castlingBitmask == 0b10 &&  isEnPassantAllowed) GenerateMoves<sideToMove, 0b10, true >(moveList, position);
-
-	return moveList;
-}
-
-forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList)
-{
-	const bool isEnPassantAllowed = static_cast<bool>(position.EnPassantSquare);
 	const Color color = position.SideToMove;
-	const uint32_t castlingBitmask = position.GetCurrentCastling().CastlingPermissionsBitmask;
 
-		 if (color == WHITE && castlingBitmask == 0b11 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b11, false>(moveList, position);
-	else if (color == BLACK && castlingBitmask == 0b11 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b11, false>(moveList, position);
-	else if (color == WHITE && castlingBitmask == 0b00 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b00, false>(moveList, position);
-	else if (color == BLACK && castlingBitmask == 0b00 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b00, false>(moveList, position);
-	else if (color == WHITE && castlingBitmask == 0b01 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b01, false>(moveList, position);
-	else if (color == BLACK && castlingBitmask == 0b01 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b01, false>(moveList, position);
-	else if (color == WHITE && castlingBitmask == 0b10 && !isEnPassantAllowed) GenerateMoves<WHITE, 0b10, false>(moveList, position);
-	else if (color == BLACK && castlingBitmask == 0b10 && !isEnPassantAllowed) GenerateMoves<BLACK, 0b10, false>(moveList, position);
-	else if (color == WHITE && castlingBitmask == 0b11 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b11, true >(moveList, position);
-	else if (color == BLACK && castlingBitmask == 0b11 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b11, true >(moveList, position);
-	else if (color == WHITE && castlingBitmask == 0b00 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b00, true >(moveList, position);
-	else if (color == BLACK && castlingBitmask == 0b00 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b00, true >(moveList, position);
-	else if (color == WHITE && castlingBitmask == 0b01 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b01, true >(moveList, position);
-	else if (color == BLACK && castlingBitmask == 0b01 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b01, true >(moveList, position);
-	else if (color == WHITE && castlingBitmask == 0b10 &&  isEnPassantAllowed) GenerateMoves<WHITE, 0b10, true >(moveList, position);
-	else if (color == BLACK && castlingBitmask == 0b10 &&  isEnPassantAllowed) GenerateMoves<BLACK, 0b10, true >(moveList, position);
+		 if (color == WHITE) GenerateMoves<WHITE>(position, moveList);
+	else if (color == BLACK) GenerateMoves<BLACK>(position, moveList);
 
 	return moveList;
 }
