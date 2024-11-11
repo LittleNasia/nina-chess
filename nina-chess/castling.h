@@ -126,6 +126,19 @@ public:
 	uint32_t CastlingPermissionsBitmask;
 };
 
+template<Color color>
+forceinline constexpr Bitboard GetKingStartposBitmask()
+{
+	ValidateColor<color>();
+	if constexpr (color == WHITE)
+	{
+		return 0x8;
+	}
+	else
+	{
+		return 0x800000000000000;
+	}
+}
 
 // bitmask of the path of king during castling
 template<Color color>

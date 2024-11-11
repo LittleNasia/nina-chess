@@ -21,6 +21,23 @@ struct Side
 	forceinline constexpr Bitboard& GetPieceBitboard(const PieceType pieceType)		  { return (&Pawns)[pieceType]; }
 	forceinline constexpr Bitboard  GetPieceBitboard(const PieceType pieceType) const { return (&Pawns)[pieceType]; }
 
+	template<PieceType pieceType>
+	forceinline constexpr Bitboard& GetPieceBitboard()
+	{
+		switch (pieceType)
+		{
+		case PAWN:   return Pawns;
+		case KNIGHT: return Knights;
+		case BISHOP: return Bishops;
+		case ROOK:   return Rooks;
+		case QUEEN:  return Queens;
+		case KING:   return King;
+#ifdef _DEBUG
+		default:     return Pawns;
+#endif
+		}
+	}
+
 	forceinline constexpr void RemovePieces(const Bitboard piece)
 	{
 		Pawns &= ~piece;

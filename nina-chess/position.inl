@@ -165,7 +165,7 @@ forceinline constexpr const Side& Position::GetSide() const
 }
 
 template<Color color>
-inline constexpr Side& Position::GetSide()
+forceinline constexpr Side& Position::GetSide()
 {
 	ValidateColor<color>();
 	if constexpr (color == WHITE)
@@ -178,7 +178,49 @@ inline constexpr Side& Position::GetSide()
 	}
 }
 
-template<Color sideToMove, bool isCastling, bool isEnPassant>
+template<Color sideToMove>
+forceinline constexpr PieceType Position::RemoveCapturedPieces(const Move& move)
+{
+	constexpr Color oppositeColor = GetOppositeColor<sideToMove>();
+	FiftyMoveRule = 0;
+
+	Side& enemyPieces(GetSide<oppositeColor>());
+
+	PieceType capturedPieceType = PIECE_TYPE_NONE;
+
+	if (move.ToBitmask() & enemyPieces.Pawns)
+	{
+		Hash = UpdateHash<oppositeColor, 1>(Hash, PAWN, move.ToBitmask());
+		capturedPieceType = PAWN;
+	}
+	else if (move.ToBitmask() & enemyPieces.Knights)
+	{
+		Hash = UpdateHash<oppositeColor, 1>(Hash, KNIGHT, move.ToBitmask());
+		capturedPieceType = KNIGHT;
+	}
+	else if (move.ToBitmask() & enemyPieces.Bishops)
+	{
+		Hash = UpdateHash<oppositeColor, 1>(Hash, BISHOP, move.ToBitmask());
+		capturedPieceType = BISHOP;
+	}
+	else if (move.ToBitmask() & enemyPieces.Rooks)
+	{
+		Hash = UpdateHash<oppositeColor, 1>(Hash, ROOK, move.ToBitmask());
+		capturedPieceType = ROOK;
+	}
+	else if (move.ToBitmask() & enemyPieces.Queens)
+	{
+		Hash = UpdateHash<oppositeColor, 1>(Hash, QUEEN, move.ToBitmask());
+		capturedPieceType = QUEEN;
+	}
+	enemyPieces.RemovePieces(move.ToBitmask());
+
+	DEBUG_ASSERT(capturedPieceType != PIECE_TYPE_NONE);
+
+	return capturedPieceType;
+}
+
+template<Color sideToMove, MoveType moveType>
 forceinline Position& position::MakeMove(const Position& pos, Position& newPos, const Move& move)
 {
 	ValidateColor<sideToMove>();
@@ -205,32 +247,63 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 	Side& whitePieces = (sideToMove == WHITE ? ownPieces : enemyPieces);
 	Side& blackPieces = (sideToMove == BLACK ? ownPieces : enemyPieces);
 
-	if constexpr (isCastling)
+	if constexpr (moveType == MoveType::KINGSIDE_CASTLING)
 	{
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
-		if (move.ToBitmask() == QueensideCastlingRookBitmask<sideToMove>())
-		{
-			const Bitboard rookMoveBitmask = (move.ToBitmask() | QueensideCastlingRookDestination<sideToMove>());
-			const Bitboard kingMoveBitmask = (move.FromBitmask() | QueensideCastlingKingDestination<sideToMove>());
-			ownPieces.Rooks ^= rookMoveBitmask;
-			ownPieces.King ^= kingMoveBitmask;
-			newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, ROOK, rookMoveBitmask);
-			newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, KING, kingMoveBitmask);
-		}
-		else if (move.ToBitmask() == KingsideCastlingRookBitmask<sideToMove>())
-		{
-			const Bitboard rookMoveBitmask = (move.ToBitmask() | KingsideCastlingRookDestination<sideToMove>());
-			const Bitboard kingMoveBitmask = (move.FromBitmask() | KingsideCastlingKingDestination<sideToMove>());
-			ownPieces.Rooks ^= rookMoveBitmask;
-			ownPieces.King ^= kingMoveBitmask;
-			newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, ROOK, rookMoveBitmask);
-			newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, KING, kingMoveBitmask);
-		}
 		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
-		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(newPos.EnPassantSquare)];
+
+		constexpr Bitboard rookMoveBitmask = (KingsideCastlingRookBitmask<sideToMove>() | KingsideCastlingRookDestination<sideToMove>());
+		constexpr Bitboard kingMoveBitmask = (GetKingStartposBitmask<sideToMove>() | KingsideCastlingKingDestination<sideToMove>());
+		
+		constexpr size_t rookStartIndex = BitIndex<KingsideCastlingRookBitmask<sideToMove>()>();
+		constexpr size_t rookEndIndex = BitIndex<KingsideCastlingRookDestination<sideToMove>()>();
+		constexpr size_t kingStartIndex = BitIndex<GetKingStartposBitmask<sideToMove>()>();
+		constexpr size_t kingEndIndex = BitIndex<KingsideCastlingKingDestination<sideToMove>()>();
+
+		constexpr Piece rookPiece = GetPieceFromPieceType<ROOK, sideToMove>();
+		constexpr Piece kingPiece = GetPieceFromPieceType<KING, sideToMove>();
+
+		constexpr uint64_t hashUpdate = ZOBRIST_PIECE_KEYS[rookStartIndex][rookPiece] ^
+			ZOBRIST_PIECE_KEYS[rookEndIndex][rookPiece] ^
+			ZOBRIST_PIECE_KEYS[kingStartIndex][kingPiece] ^
+			ZOBRIST_PIECE_KEYS[kingEndIndex][kingPiece];
+
+		newPos.Hash ^= hashUpdate;
+		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+
+		ownPieces.Rooks ^= rookMoveBitmask;
+		ownPieces.King ^= kingMoveBitmask;
 	}
-	else if constexpr (isEnPassant)
+	if constexpr (moveType == MoveType::QUEENSIDE_CASTLING)
+	{
+		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
+		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+
+		constexpr Bitboard rookMoveBitmask = (QueensideCastlingRookBitmask<sideToMove>() | QueensideCastlingRookDestination<sideToMove>());
+		constexpr Bitboard kingMoveBitmask = (GetKingStartposBitmask<sideToMove>() | QueensideCastlingKingDestination<sideToMove>());
+
+		constexpr size_t rookStartIndex = BitIndex<QueensideCastlingRookBitmask<sideToMove>()>();
+		constexpr size_t rookEndIndex = BitIndex<QueensideCastlingRookDestination<sideToMove>()>();
+		constexpr size_t kingStartIndex = BitIndex<GetKingStartposBitmask<sideToMove>()>();
+		constexpr size_t kingEndIndex = BitIndex<QueensideCastlingKingDestination<sideToMove>()>();
+
+		constexpr Piece rookPiece = GetPieceFromPieceType<ROOK, sideToMove>();
+		constexpr Piece kingPiece = GetPieceFromPieceType<KING, sideToMove>();
+
+		constexpr uint64_t hashUpdate = ZOBRIST_PIECE_KEYS[rookStartIndex][rookPiece] ^
+			ZOBRIST_PIECE_KEYS[rookEndIndex][rookPiece] ^
+			ZOBRIST_PIECE_KEYS[kingStartIndex][kingPiece] ^
+			ZOBRIST_PIECE_KEYS[kingEndIndex][kingPiece];
+
+		newPos.Hash ^= hashUpdate;
+		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+
+		ownPieces.Rooks ^= rookMoveBitmask;
+		ownPieces.King ^= kingMoveBitmask;
+	}
+	if constexpr (moveType == MoveType::EN_PASSANT)
 	{
 		newPos.FiftyMoveRule = 0;
 		const auto enPassantSquareIndex = BitIndex(pos.EnPassantSquare);
@@ -239,89 +312,97 @@ forceinline Position& position::MakeMove(const Position& pos, Position& newPos, 
 		ownPieces.Pawns ^= (move.FromBitmask() | pos.EnPassantSquare);
 		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, PAWN, (move.FromBitmask() | pos.EnPassantSquare));
 		newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, PAWN, enPassantVictimBitmask);
-		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(newPos.EnPassantSquare)];
+		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
 	}
-	// normal move, maybe capture
-	else
+	if constexpr (moveType == MoveType::DOUBLE_PAWN_ADVANCE)
 	{
-		// remove old castling perms because nobody wants them
-		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
-		
-		if (move.MovingPieceType() == KING)
-		{
-			newPos.CastlingPermissions.RemoveCastling<sideToMove>();
-		}
+		newPos.FiftyMoveRule = 0;
 
-		// remove captured pieces
-		if (move.ToBitmask() & enemyPieces.Pieces)
-		{
-			newPos.FiftyMoveRule = 0;
-
-			if (move.ToBitmask() & enemyPieces.Pawns)
-			{
-				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, PAWN, move.ToBitmask());
-			}
-			else if (move.ToBitmask() & enemyPieces.Knights)
-			{
-				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, KNIGHT, move.ToBitmask());
-			}
-			else if (move.ToBitmask() & enemyPieces.Bishops)
-			{
-				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, BISHOP, move.ToBitmask());
-			}
-			else if (move.ToBitmask() & enemyPieces.Rooks)
-			{
-				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, ROOK, move.ToBitmask());
-			}
-			else if (move.ToBitmask() & enemyPieces.Queens)
-			{
-				newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, QUEEN, move.ToBitmask());
-			}
-			enemyPieces.RemovePieces(move.ToBitmask());
-		}
-
-		Bitboard& pieceBitmask = ownPieces.GetPieceBitboard(move.MovingPieceType());
-		pieceBitmask ^= move.FromBitmask() | move.ToBitmask();
-		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, move.MovingPieceType(), move.FromBitmask() | move.ToBitmask());
-
-		// do enPassant and promotions
-		if (move.MovingPieceType() == PAWN)
-		{
-			newPos.FiftyMoveRule = 0;
-			if (std::abs((long long)move.FromIndex() - (long long)move.ToIndex()) == 16)
-			{
-				newPos.EnPassantSquare = GetPawnAdvances<sideToMove>(move.FromBitmask());
-			}
-			if constexpr (sideToMove == WHITE)
-			{
-				pieceBitmask &= 0xffffffffffffff;
-				if (move.ToBitmask() & ~0xffffffffffffff)
-				{
-					newPos.Hash ^= ZOBRIST_PIECE_KEYS[move.ToIndex()][WHITE_PAWN];
-				}
-			}
-			else
-			{
-				pieceBitmask &= 0xffffffffffffff00;
-				if (move.ToBitmask() & ~0xffffffffffffff00)
-				{
-					newPos.Hash ^= ZOBRIST_PIECE_KEYS[move.ToIndex()][BLACK_PAWN];
-				}
-			}
-			if (move.PromotionPieceType() != PIECE_TYPE_NONE)
-			{
-				ownPieces.GetPieceBitboard(move.PromotionPieceType()) |= move.ToBitmask();
-				newPos.Hash = UpdateHash<sideToMove, 1>(newPos.Hash, move.PromotionPieceType(), move.ToBitmask());
-			}
-		}
-		if (pos.WhitePieces.Rooks != newPos.WhitePieces.Rooks || pos.BlackPieces.Rooks != newPos.BlackPieces.Rooks)
-			newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
+		newPos.EnPassantSquare = GetPawnAdvances<sideToMove>(move.FromBitmask());
 		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(newPos.EnPassantSquare)];
-		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+
+		const Bitboard moveBitmask = move.FromBitmask() | move.ToBitmask();
+
+		ownPieces.Pawns ^= moveBitmask;
+		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, PAWN, moveBitmask);
+	}
+	constexpr bool isPromotion = IsMoveTypePromotion<moveType>();
+	constexpr bool isCapture = IsMoveTypeCapture<moveType>();
+
+	if constexpr (isPromotion)
+	{
+		newPos.FiftyMoveRule = 0;
+
+		constexpr PieceType promotionPieceType = GetPromotionPieceFromMoveType<moveType>();
+
+		ownPieces.GetPieceBitboard<promotionPieceType>() |= move.ToBitmask();
+		ownPieces.GetPieceBitboard<PAWN>() ^= move.FromBitmask();
+		newPos.Hash = UpdateHash<sideToMove, 1>(newPos.Hash, promotionPieceType, move.ToBitmask());
+		newPos.Hash = UpdateHash<sideToMove, 1>(newPos.Hash, PAWN, move.FromBitmask());
+		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+
+		if constexpr (isCapture)
+		{
+			const PieceType capturedPieceType = newPos.RemoveCapturedPieces<sideToMove>(move);
+			if (capturedPieceType == ROOK)
+			{
+				newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+				newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
+				newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			}
+		}
+	}
+
+	if constexpr (moveType == MoveType::CAPTURE)
+	{
+		newPos.FiftyMoveRule = 0;
+
+		const Bitboard moveBitmask = move.FromBitmask() | move.ToBitmask();
+		const PieceType movingPieceType = move.MovingPieceType();
+
+		ownPieces.GetPieceBitboard(movingPieceType) ^= moveBitmask;
+		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, movingPieceType, moveBitmask);
+		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+
+		const PieceType capturedPieceType = newPos.RemoveCapturedPieces<sideToMove>(move);
+		if (movingPieceType == ROOK || capturedPieceType == ROOK)
+		{
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		}
+		if (movingPieceType == KING)
+		{
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.CastlingPermissions.RemoveCastling<sideToMove>();
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		}
+	}
+
+	if constexpr (moveType == MoveType::NORMAL)
+	{
+		const Bitboard moveBitmask = move.FromBitmask() | move.ToBitmask();
+		const PieceType movingPieceType = move.MovingPieceType();
+
+		ownPieces.GetPieceBitboard(movingPieceType) ^= moveBitmask;
+		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, movingPieceType, moveBitmask);
+		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+
+		if (movingPieceType == ROOK)
+		{
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		}
+		else if (movingPieceType == KING)
+		{
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.CastlingPermissions.RemoveCastling<sideToMove>();
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		}
 	}
 
 	newPos.UpdateOccupiedBitboard();
-
 	DEBUG_ASSERT(newPos.Hash == newPos.CalculateHash());
 
 	return newPos;
@@ -331,28 +412,58 @@ template<Color sideToMove>
 forceinline Position& position::MakeMove(const Position& pos, Position& newPos, const Move& move)
 {
 	ValidateColor<sideToMove>();
-	const bool isCastling = move.IsCastling();
-	const bool isEnPassant = move.IsEnPassant();
+	const MoveType moveType = move.GetMoveType();
 
-	if		(!isCastling && !isEnPassant) MakeMove<sideToMove, false, false>(pos, newPos, move);
-	else if ( isCastling && !isEnPassant) MakeMove<sideToMove, true , false>(pos, newPos, move);
-	else if (!isCastling &&  isEnPassant) MakeMove<sideToMove, false, true >(pos, newPos, move);
-
-	return newPos;
+	switch (moveType)
+	{
+	case MoveType::NORMAL:
+		return MakeMove<sideToMove, MoveType::NORMAL>(pos, newPos, move);
+	case MoveType::CAPTURE:
+		return MakeMove<sideToMove, MoveType::CAPTURE>(pos, newPos, move);
+	case MoveType::DOUBLE_PAWN_ADVANCE:
+		return MakeMove<sideToMove, MoveType::DOUBLE_PAWN_ADVANCE>(pos, newPos, move);
+	case MoveType::KINGSIDE_CASTLING:
+		return MakeMove<sideToMove, MoveType::KINGSIDE_CASTLING>(pos, newPos, move);
+	case MoveType::QUEENSIDE_CASTLING:
+		return MakeMove<sideToMove, MoveType::QUEENSIDE_CASTLING>(pos, newPos, move);
+	case MoveType::EN_PASSANT:
+		return MakeMove<sideToMove, MoveType::EN_PASSANT>(pos, newPos, move);
+	case MoveType::PROMOTION_TO_QUEEN:
+		return MakeMove<sideToMove, MoveType::PROMOTION_TO_QUEEN>(pos, newPos, move);
+	case MoveType::PROMOTION_TO_ROOK:
+		return MakeMove<sideToMove, MoveType::PROMOTION_TO_ROOK>(pos, newPos, move);
+	case MoveType::PROMOTION_TO_BISHOP:
+		return MakeMove<sideToMove, MoveType::PROMOTION_TO_BISHOP>(pos, newPos, move);
+	case MoveType::PROMOTION_TO_KNIGHT:
+		return MakeMove<sideToMove, MoveType::PROMOTION_TO_KNIGHT>(pos, newPos, move);
+	case MoveType::PROMOTION_TO_QUEEN_AND_CAPTURE:
+		return MakeMove<sideToMove, MoveType::PROMOTION_TO_QUEEN_AND_CAPTURE>(pos, newPos, move);
+	case MoveType::PROMOTION_TO_ROOK_AND_CAPTURE:
+		return MakeMove<sideToMove, MoveType::PROMOTION_TO_ROOK_AND_CAPTURE>(pos, newPos, move);
+	case MoveType::PROMOTION_TO_BISHOP_AND_CAPTURE:
+		return MakeMove<sideToMove, MoveType::PROMOTION_TO_BISHOP_AND_CAPTURE>(pos, newPos, move);
+	case MoveType::PROMOTION_TO_KNIGHT_AND_CAPTURE:
+		return MakeMove<sideToMove, MoveType::PROMOTION_TO_KNIGHT_AND_CAPTURE>(pos, newPos, move);
+#ifdef _DEBUG
+	default:
+		DEBUG_ASSERT(false);
+#endif
+	}
 }
 
 forceinline Position& position::MakeMove(const Position& pos, Position& newPos, const Move& move)
 {
 	const auto& sideToMove = pos.SideToMove;
-	const bool isCastling = move.IsCastling();
-	const bool isEnPassant = move.IsEnPassant();
 
-	if		(sideToMove == WHITE && !isCastling && !isEnPassant) MakeMove<WHITE, false, false>(pos, newPos, move);
-	else if (sideToMove == BLACK && !isCastling && !isEnPassant) MakeMove<BLACK, false, false>(pos, newPos, move);
-	else if (sideToMove == WHITE &&  isCastling && !isEnPassant) MakeMove<WHITE, true , false>(pos, newPos, move);
-	else if (sideToMove == BLACK &&  isCastling && !isEnPassant) MakeMove<BLACK, true , false>(pos, newPos, move);
-	else if (sideToMove == WHITE && !isCastling &&  isEnPassant) MakeMove<WHITE, false, true >(pos, newPos, move);
-	else if (sideToMove == BLACK && !isCastling &&  isEnPassant) MakeMove<BLACK, false, true >(pos, newPos, move);
-
-	return newPos;
+	switch (sideToMove)
+	{
+	case WHITE:
+		return MakeMove<WHITE>(pos, newPos, move);
+	case BLACK:
+		return MakeMove<BLACK>(pos, newPos, move);
+#ifdef _DEBUG
+	default:
+		DEBUG_ASSERT(false);
+#endif
+	}
 }

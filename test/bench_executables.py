@@ -16,6 +16,8 @@ FIRST_IS_BETTER = 1
 SECOND_IS_BETTER = -1
 NO_MEANINGFUL_DIFFERENCE = 0
 
+ALPHA = 0.02
+
 def isExecutableRatingFinished(executableStatus):
     for metric in executableStatus:
         if executableStatus[metric] == EXECUTABLE_NOT_REJECTED_NOR_ACCEPTED:
@@ -98,7 +100,7 @@ def benchmarkFiles(runs, defaultFile, *filenames):
                 defaultScores = speeds[defaultFile][metric]
                 comparedScores = speeds[file][metric]
 
-                compareResult = compareSpeeds(defaultScores, comparedScores)
+                compareResult = compareSpeeds(defaultScores, comparedScores, ALPHA)
 
                 if(compareResult == FIRST_IS_BETTER):
                     statuses[file][metric] = EXECUTABLE_REJECTED
