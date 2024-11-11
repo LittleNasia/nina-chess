@@ -63,12 +63,6 @@
     <ClCompile Include="uci.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="position.cpp">
-      <Filter>Header Files\Chess</Filter>
-    </ClCompile>
-    <ClCompile Include="transposition_table.cpp">
-      <Filter>Header Files\Search</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="uci.h">
