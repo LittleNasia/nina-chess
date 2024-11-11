@@ -1,9 +1,9 @@
-#include "perft.h"
 #include "targets.h"
+#ifdef _BENCH
+#include "perft.h"
 
 #include <thread>
 
-#ifdef _BENCH
 int main()
 {
 	constexpr bool hidePerftOutput = true;

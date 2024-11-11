@@ -1,11 +1,10 @@
 #include "targets.h"
+#if _UCI
 #include "uci.h"
 
 #include <iostream>
 #include <random>
 
-
-#if _UCI
 int main()
 {
 	try

@@ -89,14 +89,14 @@ struct PerftInfo
 };
 
 template<Color sideToMove>
-inline void Perft(PositionStack& PositionStack, PerftInfo& PerftInfo)
+inline void Perft(PositionStack& PositionStack, PerftInfo& perftInfo)
 {
 	constexpr Color oppositeSide = GetOppositeColor<sideToMove>();
 	const Position& position = PositionStack.GetCurrentPosition();
 
-	if (PerftInfo.RemainingDepth <= 0)
+	if (perftInfo.RemainingDepth <= 0)
 	{
-		PerftInfo.Nodes++;
+		perftInfo.Nodes++;
 		return;
 	}
 	
@@ -107,10 +107,10 @@ inline void Perft(PositionStack& PositionStack, PerftInfo& PerftInfo)
 		position::MakeMove<sideToMove>(position, newPosition, moveList[moveId]);
 
 		PositionStack.IncrementDepth();
-		PerftInfo.RemainingDepth--;
-		Perft<oppositeSide>(PositionStack, PerftInfo);
+		perftInfo.RemainingDepth--;
+		Perft<oppositeSide>(PositionStack, perftInfo);
 		PositionStack.DecrementDepth();
-		PerftInfo.RemainingDepth++;
+		perftInfo.RemainingDepth++;
 	}
 }
 
@@ -202,7 +202,7 @@ inline size_t TestSearch(const bool hideOutput = false, const size_t depthLimit 
 
 		for (const auto& testPosition : testPositions)
 		{
-			if (testPosition.Depth > depthLimit)
+			if (testPosition.Depth >= depthLimit)
 			{
 				continue;
 			}

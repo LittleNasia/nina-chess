@@ -1,7 +1,6 @@
-#include "perft.h"
 #include "targets.h"
-
 #ifdef _TEST
+#include "perft.h"
 
 int main()
 {

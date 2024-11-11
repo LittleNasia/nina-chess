@@ -1,3 +1,5 @@
+#include "targets.h"
+#if _UCI
 #include "uci.h"
 
 #include <atomic>
@@ -406,3 +408,4 @@ void uci::Loop()
 		}
 	}
 }
+#endif
