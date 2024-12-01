@@ -320,7 +320,18 @@ void Setoption(std::stringstream& input)
 {
 	std::string token;
 	input >> token;
-	throw new std::runtime_error("Not implemented");
+	if (token == "name")
+	{
+		input >> token;
+		if (token == "hash")
+		{
+			input >> token;
+			if (token == "value")
+			{
+				input >> currentState.HashSize;
+			}
+		}
+	}
 }
 
 void Isready()
