@@ -18,7 +18,54 @@ public:
 
 	BitboardFeatureAccumulator() = default;
 
-	forceinline constexpr void AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput);
+	template<size_t bitboardIndex>
+	forceinline constexpr void AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput)
+	{
+		const Bitboard newFeatures = newFeaturesIterator.Get<bitboardIndex>(0.f);
+		const Bitboard oldFeatures = oldFeaturesIterator.Get<bitboardIndex>(0.f);
+
+		Bitboard addedFeatures = newFeatures & ~oldFeatures;
+		Bitboard removedFeatures = ~newFeatures & oldFeatures;
+
+		// add weights of added features
+		while (addedFeatures)
+		{
+			const uint32_t featureIndex = PopBitAndGetIndex(addedFeatures);
+			const size_t weightsIndex = getWeightsIndex(bitboardIndex, featureIndex);
+
+			for (size_t outputIndex = 0; outputIndex < outputSize; outputIndex++)
+			{
+				m_Output[outputIndex] += m_Weights->Weights[weightsIndex][outputIndex];
+			}
+		}
+
+		// subtract weights of removed features
+		while (removedFeatures)
+		{
+			const uint32_t featureIndex = PopBitAndGetIndex(removedFeatures);
+			const size_t weightsIndex = getWeightsIndex(bitboardIndex, featureIndex);
+
+			for (size_t outputIndex = 0; outputIndex < outputSize; outputIndex++)
+			{
+				m_Output[outputIndex] -= m_Weights->Weights[weightsIndex][outputIndex];
+			}
+		}
+
+		if constexpr (bitboardIndex + 1 < BitboardFeatureIterator::NumBitboardFeatures())
+		{
+			AccumulateFeatures<bitboardIndex + 1>(newFeaturesIterator, oldFeaturesIterator, previousAccumulatorOutput);
+		}
+	}
+
+	forceinline constexpr void AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput)
+	{
+		std::memcpy(m_Output, previousAccumulatorOutput, sizeof(m_Output));
+
+		AccumulateFeatures<0>(newFeaturesIterator, oldFeaturesIterator, previousAccumulatorOutput);
+
+		validateOutput(newFeaturesIterator);
+	}
+
 	forceinline constexpr void Reset(const BitboardFeatureIterator& newFeaturesIterator);
 
 	forceinline constexpr const float* GetOutput() const { return m_Output; } 
@@ -34,3 +81,4 @@ private:
 };
 
 #include "accumulator.inl"
+

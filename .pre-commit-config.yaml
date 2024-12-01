@@ -1,0 +1,59 @@
+default_install_hook_types: [commit-msg]
+repos:
+  - repo: local
+    hooks:
+      # A hook can be run via 'pre-commit run <id>'
+      - id: all
+        # That's what will show up in the progress output
+        name: devops gaming
+
+        entry: hooks/commit-msg.sh
+        language: script
+
+        # By default output of the script is only visible if it fails.
+        # This makes it always visible.
+        # The only problem is that things are shown *after* the hook
+        # has been run, not during the execution. Idk if it's a big problem
+        # or not, but if it's plausable, you can instead output into a log file
+        verbose: true
+        # Makes the script run even if no files were changed
+        always_run: true
+        # Makes the script run only once and not per every changed file
+        #pass_filenames: false
+        # Works for any other git action
+        stages: [commit-msg]
+
+      # - id: bash-shebang
+      #   name: bash-shebang
+
+      #   # if using 'language: script', then shebang in script must be
+      #   #
+      #   # #!/usr/bin/env bash
+      #   # NOT
+      #   # #!/bin/bash
+      #   #
+      #   # Git runs stuff in mingw, so the paths of programs will differ.
+      #   # The former option is more portable even outside of windows.
+      #   # The form of '#!env bash' can also be used, but apparently it's bad practice, because it relies on $PATH
+      #   entry: hooks/bash-shebang.sh
+      #   language: script
+
+      #   verbose: true
+      #   always_run: true
+      #   pass_filenames: false
+
+      # - id: pwsh
+      #   name: pwsh
+      #   entry: pwsh hooks/pwsh.ps1
+      #   language: system
+      #   verbose: true
+      #   always_run: true
+      #   pass_filenames: false
+
+      # - id: pwsh-shebang
+      #   name: pwsh-shebang
+      #   entry: hooks/pwsh-shebang.ps1
+      #   language: script
+      #   verbose: true
+      #   always_run: true
+      #   pass_filenames: false

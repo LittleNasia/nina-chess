@@ -33,47 +33,6 @@ forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, o
 }
 
 template<typename BitboardFeatureIterator, size_t outputSize>
-forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput)
-{
-	std::memcpy(m_Output, previousAccumulatorOutput, sizeof(m_Output));
-
-	for (size_t bitboard_index = 0; bitboard_index < BitboardFeatureIterator::NumBitboardFeatures(); bitboard_index++)
-	{
-		const Bitboard newFeatures = newFeaturesIterator.Get(bitboard_index);
-		const Bitboard oldFeatures = oldFeaturesIterator.Get(bitboard_index);
-
-		Bitboard addedFeatures = newFeatures & ~oldFeatures;
-		Bitboard removedFeatures = ~newFeatures & oldFeatures;
-
-		// add weights of added features
-		while (addedFeatures)
-		{
-			const uint32_t featureIndex = PopBitAndGetIndex(addedFeatures);
-			const size_t weightsIndex = getWeightsIndex(bitboard_index, featureIndex);
-
-			for (size_t outputIndex = 0; outputIndex < outputSize; outputIndex++)
-			{
-				m_Output[outputIndex] += m_Weights->Weights[weightsIndex][outputIndex];
-			}
-		}
-
-		// subtract weights of removed features
-		while (removedFeatures)
-		{
-			const uint32_t featureIndex = PopBitAndGetIndex(removedFeatures);
-			const size_t weightsIndex = getWeightsIndex(bitboard_index, featureIndex);
-
-			for (size_t outputIndex = 0; outputIndex < outputSize; outputIndex++)
-			{
-				m_Output[outputIndex] -= m_Weights->Weights[weightsIndex][outputIndex];
-			}
-		}
-	}
-
-	validateOutput(newFeaturesIterator);
-}
-
-template<typename BitboardFeatureIterator, size_t outputSize>
 forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::Reset(const BitboardFeatureIterator& newFeaturesIterator)
 {
 	std::memcpy(m_Output, m_Weights->Bias, sizeof(m_Output));
@@ -111,7 +70,7 @@ forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, o
 		float outputCopy[outputSize];
 		std::memcpy(outputCopy, m_Output, sizeof(outputCopy));
 		Reset(newFeaturesIterator);
-		for (int outputIndex = 0; outputIndex < outputSize; outputIndex++)
+		for (size_t outputIndex = 0; outputIndex < outputSize; outputIndex++)
 		{
 			const float val = m_Output[outputIndex];
 			const float valCopy = outputCopy[outputIndex];
