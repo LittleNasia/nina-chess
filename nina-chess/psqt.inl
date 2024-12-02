@@ -1,6 +1,6 @@
 #include "psqt.h"
 
-inline PSQT::PSQT(std::ifstream&& weightsFile):
+forceinline PSQT::PSQT(std::ifstream&& weightsFile):
 	PSQT(weightsFile)
 {
 }

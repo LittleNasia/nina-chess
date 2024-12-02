@@ -21,13 +21,13 @@ public:
 };
 
 template<Color sideToMove>
-inline constexpr void UciIncrementalUpdater::FullUpdate(const Move& move)
+forceinline constexpr void UciIncrementalUpdater::FullUpdate(const Move& move)
 {
 	MakeMoveUpdate<sideToMove>(move);
 	MoveGenerationUpdateWithoutGuard<GetOppositeColor<sideToMove>()>();
 }
 
-inline SearchIncrementalUpdater UciIncrementalUpdater::CreateSearchIncrementalUpdater(int64_t depthToSearchTo)
+forceinline SearchIncrementalUpdater UciIncrementalUpdater::CreateSearchIncrementalUpdater(int64_t depthToSearchTo)
 {
 	return SearchIncrementalUpdater(*this, depthToSearchTo);
 }

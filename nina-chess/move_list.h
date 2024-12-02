@@ -14,7 +14,7 @@ struct MoveListMiscellaneous
 	Bitboard Checkers = 0;
 	Bitboard AttackedSquares = 0;
 
-	void Reset()
+	forceinline void Reset()
 	{
 		std::memset(PieceMoves, 0, sizeof(PieceMoves));
 		Pinmask = 0;

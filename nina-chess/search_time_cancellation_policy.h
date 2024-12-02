@@ -32,7 +32,7 @@ forceinline bool SearchTimeCancellationPolicy::ShouldAbort() const
 	return searchDuration >= m_MaxSearchDuration;
 }
 
-inline int64_t SearchTimeCancellationPolicy::getSearchDurationInMs() const
+forceinline int64_t SearchTimeCancellationPolicy::getSearchDurationInMs() const
 {
 	const auto currentTime = std::chrono::high_resolution_clock::now();
 	return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - m_StartTime).count();

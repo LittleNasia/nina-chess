@@ -50,7 +50,7 @@ private:
 
 
 template<Color sideToMove>
-inline constexpr void CommonIncrementalUpdater::MakeMoveUpdate(const Move& move)
+forceinline constexpr void CommonIncrementalUpdater::MakeMoveUpdate(const Move& move)
 {
 	const Position& previousPosition = m_PositionStack->GetCurrentPosition();
 	Position& newPosition = m_PositionStack->GetNextPosition();
@@ -60,7 +60,7 @@ inline constexpr void CommonIncrementalUpdater::MakeMoveUpdate(const Move& move)
 }
 
 template<Color sideToMove>
-inline constexpr void CommonIncrementalUpdater::MoveGenerationUpdateWithoutGuard()
+forceinline constexpr void CommonIncrementalUpdater::MoveGenerationUpdateWithoutGuard()
 {
 	const auto& currentPosition = m_PositionStack->GetCurrentPosition();
 	const auto& moveList = m_PositionStack->GetMoveList<sideToMove>();
@@ -69,14 +69,14 @@ inline constexpr void CommonIncrementalUpdater::MoveGenerationUpdateWithoutGuard
 }
 
 template<Color sideToMove>
-inline constexpr CommonIncrementalUpdater::MoveGenerationUpdateGuard CommonIncrementalUpdater::MoveGenerationUpdate()
+forceinline constexpr CommonIncrementalUpdater::MoveGenerationUpdateGuard CommonIncrementalUpdater::MoveGenerationUpdate()
 {
 	MoveGenerationUpdateWithoutGuard<sideToMove>();
 
 	return MoveGenerationUpdateGuard(m_Evaluator);
 }
 
-inline constexpr void CommonIncrementalUpdater::UndoMoveUpdate()
+forceinline constexpr void CommonIncrementalUpdater::UndoMoveUpdate()
 {
 	m_PositionStack->DecrementDepth();
 }

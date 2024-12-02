@@ -19,7 +19,7 @@ private:
 	uint64_t m_NodeLimit;
 };
 
-inline constexpr uint64_t SearchNodesCancellationPolicy::getNodeLimit(const SearchConstraints& searchConstraints)
+forceinline constexpr uint64_t SearchNodesCancellationPolicy::getNodeLimit(const SearchConstraints& searchConstraints)
 {
 	uint64_t nodeLimit = searchConstraints.Nodes == -1
 		? std::numeric_limits<uint64_t>::max()

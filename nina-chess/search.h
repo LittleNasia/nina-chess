@@ -19,6 +19,6 @@ struct AlphaBeta
 };
 
 template<bool showOutput>	
-std::vector<SearchResult> StartSearch(UciIncrementalUpdater& uciIncrementalUpdater, SharedSearchContext& searchContext);
+forceinline std::vector<SearchResult> StartSearch(UciIncrementalUpdater& uciIncrementalUpdater, SharedSearchContext& searchContext);
 
 #include "search.inl"

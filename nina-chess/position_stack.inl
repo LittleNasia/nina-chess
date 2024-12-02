@@ -7,7 +7,7 @@ forceinline void PositionStack::Reset(const Position& pos)
 	m_Depth = 0;
 }
 
-inline constexpr bool PositionStack::IsThreefoldRepetition() const
+forceinline constexpr bool PositionStack::IsThreefoldRepetition() const
 {
 	const Position& currentPosition = GetCurrentPosition();
 	const int64_t plyToSearchTo = 0;
@@ -76,7 +76,7 @@ forceinline constexpr MoveList& PositionStack::GetMoveList()
 }
 
 template<Color sideToMove>
-inline constexpr MoveList& PositionStack::GetMoveListSkippingHashCheck()
+forceinline constexpr MoveList& PositionStack::GetMoveListSkippingHashCheck()
 {
 	const Position& currentPosition = GetCurrentPosition();
 	MoveList& currentMoveList = m_MoveListStack[m_Depth];

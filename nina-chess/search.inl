@@ -132,7 +132,7 @@ inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUp
 }
 
 template<Color color, bool showOutput>
-std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
+forceinline std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
 {
 	std::vector<SearchResult> searchResults;
 
@@ -194,7 +194,7 @@ std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& incrementalU
 }
 
 template<bool showOutput>
-std::vector<SearchResult> StartSearch(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
+forceinline std::vector<SearchResult> StartSearch(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
 {
 	std::vector<SearchResult> results;
 

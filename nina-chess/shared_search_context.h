@@ -29,7 +29,7 @@ private:
 };
 
 
-inline constexpr int64_t SharedSearchContext::calculateSearchDepth(const SearchConstraints& searchConstraints)
+forceinline constexpr int64_t SharedSearchContext::calculateSearchDepth(const SearchConstraints& searchConstraints)
 {
 	int64_t searchDepth = searchConstraints.Depth == -1
 		? std::numeric_limits<int64_t>::max()
