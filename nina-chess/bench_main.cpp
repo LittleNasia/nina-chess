@@ -29,7 +29,7 @@ int main()
 
 	constexpr bool hideSearchTestOutput = true;
 	constexpr uint32_t numSearchWarmupRuns = 1;
-	constexpr size_t benchDepthLimit = 7;
+	constexpr size_t benchDepthLimit = 6;
 	for (uint32_t warmupRunIndex = 0; warmupRunIndex < numSearchWarmupRuns; warmupRunIndex++)
 	{
 		TestSearch(hideSearchTestOutput, benchDepthLimit);

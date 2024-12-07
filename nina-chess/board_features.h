@@ -1,7 +1,6 @@
 #pragma once
 #include "utils.h"
 
-#include "serializable.h"
 #include "side.h"
 
 struct BoardFeatures

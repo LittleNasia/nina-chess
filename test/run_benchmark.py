@@ -24,6 +24,24 @@ OLD_EXECUTABLE_PDB_NAME = f"{OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION}.exe"
 NEW_EXECUTABLE_PATH = f"./test/{NEW_EXECUTABLE_NAME}"
 OLD_EXECUTABLE_PATH = f"./test/{OLD_EXECUTABLE_NAME}"
 
+def createBuildExecutableCommand(solutionPath, outputPath, outputExecutableName, target, isRebuild, parameters = ()):
+    command  = f"msbuild {solutionPath} "
+    command += f"/p:Platform=x64 "
+    command += f"/p:Configuration={target} "
+
+    if(outputPath != ""):
+        command += f"/p:OutDir=\"{outputPath}/\" "
+    if(outputExecutableName != ""):
+        command += f"/p:TargetName={outputExecutableName} "
+    if(isRebuild):
+        command += f"/t:Rebuild "
+    for parameter in parameters:
+        command += f"/p:{parameter[0]}={parameter[1]} "
+
+    print("Created msbuild command", command)
+    return command
+    
+
 NUM_BENCHMARK_RUNS = 10
 
 def deleteReadOnlyFile(action, name, exc):
@@ -35,8 +53,8 @@ def prepareExecutables():
     if not os.path.exists(PREV_VERSION_CLONE_DEST):
         os.mkdir(PREV_VERSION_CLONE_DEST)
     subprocess.run("git clone . " + PREV_VERSION_CLONE_DEST)
-    subprocess.run(f"msbuild nina-chess.sln /p:OutDir=\"{cwd}/test/\" /p:Configuration=Bench /p:Platform=x64 /p:TargetName={NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION}")
-    subprocess.run(f"msbuild ./test/clone/nina-chess.sln /p:OutDir=\"{cwd}/test/\" /p:Configuration=Bench /p:Platform=x64 /p:TargetName={OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION} /t:Rebuild")
+    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath=f"{cwd}/test", outputExecutableName=NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION, target="Bench", isRebuild=False))
+    subprocess.run(createBuildExecutableCommand(solutionPath="./test/clone/nina-chess.sln", outputPath=f"{cwd}/test", outputExecutableName=OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION, target="Bench", isRebuild=True))
 
 def cleanEnvironment():
     if os.path.exists(PREV_VERSION_CLONE_DEST):
@@ -62,9 +80,12 @@ def runBenchmark(numRuns = NUM_BENCHMARK_RUNS):
     cleanEnvironment()
 
 def runTests():
+    # run in release all tests
+    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath="", outputExecutableName="", target="Test", isRebuild=True))
     subprocess.run(f'"{cwd}/x64/Test/nina-chess.exe"', check=True)
-    # run in debug with assertions
-    subprocess.run(f"msbuild nina-chess.sln /p:RunAssertions=true /p:TestPerftNodeLimit=1000000 /p:Configuration=Test /p:Platform=x64")
+    # run in debug with assertions, with a node limit so it doesn't take forever
+    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath="", outputExecutableName="", target="Test", isRebuild=True, 
+                                                parameters=(("RunAssertions", "true"), ("TestPerftNodeLimit", 1000000))))
     subprocess.run(f'"{cwd}/x64/Test/nina-chess.exe"', check=True)
 
 commitName = sys.argv[1]
