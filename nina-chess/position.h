@@ -306,13 +306,11 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 	newPos.OccupiedBitmask = pos.OccupiedBitmask;
 	newPos.CastlingPermissions = pos.CastlingPermissions;
 	newPos.Hash = pos.Hash;
-	newPos.FiftyMoveRule = pos.FiftyMoveRule;
 
 	//update all the things that are easy to update
 	newPos.Hash ^= ZOBRIST_SIDE_TO_MOVE_KEY;
 	newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
 	newPos.EnPassantSquare = 0ULL;
-	newPos.FiftyMoveRule++;
 	newPos.SideToMove = oppositeColor;
 
 	// start making the move
@@ -323,6 +321,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 	if constexpr (moveType == MoveType::KINGSIDE_CASTLING)
 	{
+		newPos.FiftyMoveRule = pos.FiftyMoveRule + 1;
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
 		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
@@ -351,6 +350,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 	}
 	if constexpr (moveType == MoveType::QUEENSIDE_CASTLING)
 	{
+		newPos.FiftyMoveRule = pos.FiftyMoveRule + 1;
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
 		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
@@ -455,6 +455,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 	if constexpr (moveType == MoveType::NORMAL)
 	{
+		newPos.FiftyMoveRule = pos.FiftyMoveRule + 1;
 		const Bitboard moveBitmask = move.FromBitmask() | move.ToBitmask();
 		const PieceType movingPieceType = move.MovingPieceType();
 
