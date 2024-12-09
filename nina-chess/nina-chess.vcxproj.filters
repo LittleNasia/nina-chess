@@ -200,26 +200,11 @@
     <ClInclude Include="zobrist.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
+    <ClInclude Include="move_type.h">
+      <Filter>Header Files\Chess</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
-    <None Include="evaluator.inl">
-      <Filter>Header Files\Eval</Filter>
-    </None>
-    <None Include="accumulator.inl">
-      <Filter>Header Files\NN</Filter>
-    </None>
-    <None Include="position.inl">
-      <Filter>Header Files\Chess</Filter>
-    </None>
-    <None Include="position_stack.inl">
-      <Filter>Header Files\Search</Filter>
-    </None>
-    <None Include="psqt.inl">
-      <Filter>Header Files\Eval</Filter>
-    </None>
-    <None Include="search.inl">
-      <Filter>Header Files\Search</Filter>
-    </None>
   </ItemGroup>
 </Project>

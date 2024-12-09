@@ -104,7 +104,7 @@ inline void Perft(PositionStack& PositionStack, PerftInfo& perftInfo)
 	const auto& moveList = PositionStack.GetMoveListSkippingHashCheck<sideToMove>();
 	for (uint32_t moveId = 0; moveId < moveList.GetNumMoves(); moveId++)
 	{
-		position::MakeMove<sideToMove>(position, newPosition, moveList[moveId]);
+		Position::MakeMove<sideToMove>(position, newPosition, moveList[moveId]);
 
 		PositionStack.IncrementDepth();
 		perftInfo.RemainingDepth--;
@@ -143,7 +143,7 @@ inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = 
 		PerftInfo perftInfo;
 		perftInfo.Nodes = 0;
 		perftInfo.RemainingDepth = testPosition.Depth;
-		positionStack.SetCurrentPosition(position::ParseFen(testPosition.Fen));
+		positionStack.SetCurrentPosition(Position::ParseFen(testPosition.Fen));
 
 		const auto start = std::chrono::high_resolution_clock::now();
 		if (positionStack.GetCurrentPosition().SideToMove == WHITE)
@@ -167,7 +167,7 @@ inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = 
 		{
 			std::cout << "found error in position\n";
 			std::cout << testPosition.Fen << "\n";
-			position::PrintBoard(positionStack.GetCurrentPosition());
+			Position::PrintBoard(positionStack.GetCurrentPosition());
 			return false;
 		}
 	}
@@ -213,7 +213,7 @@ inline size_t TestSearch(const bool hideOutput = false, const size_t depthLimit 
 			}
 
 			searchConstraints.Depth = int(testPosition.Depth);
-			positionStack.SetCurrentPosition(position::ParseFen(testPosition.Fen));
+			positionStack.SetCurrentPosition(Position::ParseFen(testPosition.Fen));
 			const Position& currentPosition = positionStack.GetCurrentPosition();
 
 			UciIncrementalUpdater incrementalUpdater(&evaluator, &positionStack, currentPosition);

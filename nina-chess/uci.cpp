@@ -289,7 +289,7 @@ void Setposition(std::stringstream& input)
 			if (!currentFen.empty())
 			{
 				currentState.IncrementalUpdater = 
-					UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), position::ParseFen(currentFen));
+					UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), Position::ParseFen(currentFen));
 			}
 
 			parse_moves(input);
@@ -312,7 +312,7 @@ void Setposition(std::stringstream& input)
 	if (parsingFen)
 	{
 		currentState.IncrementalUpdater =
-			UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), position::ParseFen(currentFen));
+			UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), Position::ParseFen(currentFen));
 	}
 }
 
@@ -410,7 +410,7 @@ void uci::Loop()
 		}
 		if (token == "print")
 		{
-			position::PrintBoard(currentState.IncrementalUpdater.GetPositionStack().GetCurrentPosition());
+			Position::PrintBoard(currentState.IncrementalUpdater.GetPositionStack().GetCurrentPosition());
 			std::cout << std::endl;
 		}
 		if (token == "isready")

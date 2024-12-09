@@ -343,6 +343,7 @@
     <ClInclude Include="common_incremental_updater.h" />
     <ClInclude Include="evaluator.h" />
     <ClInclude Include="intrinsics.h" />
+    <ClInclude Include="move_type.h" />
     <ClInclude Include="piece.h" />
     <ClInclude Include="piece_type.h" />
     <ClInclude Include="score.h" />
@@ -375,13 +376,7 @@
     <ClInclude Include="zobrist.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="accumulator.inl" />
     <None Include="cpp.hint" />
-    <None Include="evaluator.inl" />
-    <None Include="position.inl" />
-    <None Include="psqt.inl" />
-    <None Include="position_stack.inl" />
-    <None Include="search.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -54,7 +54,7 @@ forceinline constexpr void CommonIncrementalUpdater::MakeMoveUpdate(const Move& 
 {
 	const Position& previousPosition = m_PositionStack->GetCurrentPosition();
 	Position& newPosition = m_PositionStack->GetNextPosition();
-	position::MakeMove<sideToMove>(previousPosition, newPosition, move);
+	Position::MakeMove<sideToMove>(previousPosition, newPosition, move);
 
 	m_PositionStack->IncrementDepth();
 }
