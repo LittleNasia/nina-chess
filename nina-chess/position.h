@@ -310,7 +310,6 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 	//update all the things that are easy to update
 	newPos.Hash ^= ZOBRIST_SIDE_TO_MOVE_KEY;
 	newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
-	newPos.EnPassantSquare = 0ULL;
 	newPos.SideToMove = oppositeColor;
 
 	// start making the move
@@ -321,6 +320,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 	if constexpr (moveType == MoveType::KINGSIDE_CASTLING)
 	{
+		newPos.EnPassantSquare = 0ULL;
 		newPos.FiftyMoveRule = pos.FiftyMoveRule + 1;
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
 		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
@@ -350,6 +350,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 	}
 	if constexpr (moveType == MoveType::QUEENSIDE_CASTLING)
 	{
+		newPos.EnPassantSquare = 0ULL;
 		newPos.FiftyMoveRule = pos.FiftyMoveRule + 1;
 		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
 		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
@@ -379,6 +380,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 	}
 	if constexpr (moveType == MoveType::EN_PASSANT)
 	{
+		newPos.EnPassantSquare = 0ULL;
 		newPos.FiftyMoveRule = 0;
 		const auto enPassantSquareIndex = BitIndex(pos.EnPassantSquare);
 		const auto enPassantVictimBitmask = EN_PASSANT_VICTIM_BITMASK_LOOKUP[enPassantSquareIndex];
@@ -405,6 +407,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 	if constexpr (isPromotion)
 	{
+		newPos.EnPassantSquare = 0ULL;
 		newPos.FiftyMoveRule = 0;
 
 		constexpr PieceType promotionPieceType = GetPromotionPieceFromMoveType<moveType>();
@@ -429,6 +432,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 	if constexpr (moveType == MoveType::CAPTURE)
 	{
+		newPos.EnPassantSquare = 0ULL;
 		newPos.FiftyMoveRule = 0;
 
 		const Bitboard moveBitmask = move.FromBitmask() | move.ToBitmask();
@@ -455,6 +459,7 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 	if constexpr (moveType == MoveType::NORMAL)
 	{
+		newPos.EnPassantSquare = 0ULL;
 		newPos.FiftyMoveRule = pos.FiftyMoveRule + 1;
 		const Bitboard moveBitmask = move.FromBitmask() | move.ToBitmask();
 		const PieceType movingPieceType = move.MovingPieceType();
