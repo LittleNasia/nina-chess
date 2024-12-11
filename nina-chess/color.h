@@ -9,15 +9,13 @@ enum Color : uint8_t
 };
 
 template<Color color>
-consteval void ValidateColor()
-{
-	static_assert(color < COLOR_NONE);
-}
+consteval void ValidateColor() { static_assert(color < COLOR_NONE); }
+template<Color color>
+forceinline constexpr Color GetOppositeColor();
 
-forceinline constexpr void ValidateColor(const Color color)
-{
-	DEBUG_ASSERT(color < COLOR_NONE);
-}
+forceinline constexpr void ValidateColor(const Color color) { DEBUG_ASSERT(color < COLOR_NONE); }
+forceinline constexpr Color GetOppositeColor(const Color color);
+
 
 template<Color color>
 forceinline constexpr Color GetOppositeColor()

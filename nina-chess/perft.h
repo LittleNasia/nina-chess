@@ -1,12 +1,4 @@
 #pragma once
-#include "utils.h"
-
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <sstream>
-
 #include "evaluator.h"
 #include "move_gen.h"
 #include "position.h"
@@ -16,6 +8,10 @@
 #include "shared_search_context.h"
 #include "transposition_table.h"
 #include "uci_incremental_updater.h"
+#include "utils.h"
+
+inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = std::numeric_limits<size_t>::max());
+inline size_t TestSearch(const bool hideOutput = false, const size_t depthLimit = std::numeric_limits<size_t>::max());
 
 struct PerftTestEntry
 {
@@ -114,7 +110,7 @@ inline void Perft(PositionStack& PositionStack, PerftInfo& perftInfo)
 	}
 }
 
-inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = std::numeric_limits<size_t>::max())
+inline size_t TestPerft(const bool hideOutput, const size_t nodeLimit)
 {
 	PositionStack* positionStackMemory = new PositionStack;
 	PositionStack& positionStack = *positionStackMemory;
@@ -181,7 +177,7 @@ inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = 
 	return nps;
 }
 
-inline size_t TestSearch(const bool hideOutput = false, const size_t depthLimit = std::numeric_limits<size_t>::max())
+inline size_t TestSearch(const bool hideOutput, const size_t depthLimit)
 {
 	try
 	{

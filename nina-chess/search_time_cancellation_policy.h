@@ -1,19 +1,13 @@
 #pragma once
-#include "utils.h"
-
-#include <chrono>
-
 #include "search_constraints.h"
+#include "utils.h"
 
 using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
 class SearchTimeCancellationPolicy
 {
 public:
-	SearchTimeCancellationPolicy(const TimePoint& startTime, const SearchConstraints& searchConstraints) :
-		m_StartTime{ startTime },
-		m_MaxSearchDuration{ calculateMaxSearchDuration(searchConstraints.Time, searchConstraints.Movetime) }
-	{}
+	SearchTimeCancellationPolicy(const TimePoint& startTime, const SearchConstraints& searchConstraints);
 
 	forceinline bool ShouldAbort() const;
 	forceinline constexpr int64_t GetTimeLimit() const { return m_MaxSearchDuration; }
@@ -25,6 +19,13 @@ private:
 	TimePoint m_StartTime;
 	int64_t m_MaxSearchDuration;
 };
+
+
+SearchTimeCancellationPolicy::SearchTimeCancellationPolicy(const TimePoint& startTime, const SearchConstraints& searchConstraints) :
+	m_StartTime{ startTime },
+	m_MaxSearchDuration{ calculateMaxSearchDuration(searchConstraints.Time, searchConstraints.Movetime) }
+{
+}
 
 forceinline bool SearchTimeCancellationPolicy::ShouldAbort() const
 {

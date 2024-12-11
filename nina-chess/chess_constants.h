@@ -5,6 +5,11 @@ inline constexpr uint32_t BOARD_ROWS = 8;
 inline constexpr uint32_t BOARD_COLUMNS = 8;
 inline constexpr uint32_t NUM_BOARD_SQUARES = 64;
 
+forceinline constexpr uint32_t GetColumnIndexFromChessFile(const char file);
+forceinline constexpr uint32_t GetRowIndexFromChessRank(const char rank);
+forceinline constexpr uint32_t GetSquareIndexFromChessSquareName(const char* square_name);
+forceinline constexpr uint32_t TwoDimensionalIndexToOneDimensional(const uint32_t row, const uint32_t col);
+
 inline constexpr int ROW_OF_SQUARE[NUM_BOARD_SQUARES] =
 {
 	0, 0, 0, 0, 0, 0, 0, 0,
@@ -29,13 +34,6 @@ inline constexpr int COLUMN_OF_SQUARE[NUM_BOARD_SQUARES] =
 	0, 1, 2, 3, 4, 5, 6, 7,
 };
 
-forceinline constexpr uint32_t TwoDimensionalIndexToOneDimensional(const uint32_t row, const uint32_t col)
-{
-	DEBUG_ASSERT(row < BOARD_ROWS);
-	DEBUG_ASSERT(col < BOARD_COLUMNS);
-	return row * BOARD_COLUMNS + col;
-}
-
 inline const char* NAME_OF_SQUARE[NUM_BOARD_SQUARES] =
 {
 	"h1","g1","f1","e1","d1","c1","b1","a1",
@@ -47,6 +45,14 @@ inline const char* NAME_OF_SQUARE[NUM_BOARD_SQUARES] =
 	"h7","g7","f7","e7","d7","c7","b7","a7",
 	"h8","g8","f8","e8","d8","c8","b8","a8",
 };
+
+
+forceinline constexpr uint32_t TwoDimensionalIndexToOneDimensional(const uint32_t row, const uint32_t col)
+{
+	DEBUG_ASSERT(row < BOARD_ROWS);
+	DEBUG_ASSERT(col < BOARD_COLUMNS);
+	return row * BOARD_COLUMNS + col;
+}
 
 forceinline constexpr uint32_t GetColumnIndexFromChessFile(const char file)
 {

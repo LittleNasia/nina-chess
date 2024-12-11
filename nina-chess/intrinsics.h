@@ -1,6 +1,12 @@
 #pragma once
 #include "utils.h"
 
+forceinline size_t Pext(const Bitboard b, const Bitboard mask);
+forceinline uint32_t Popcnt(const Bitboard bb);
+forceinline uint32_t Tzcnt(const Bitboard bb);
+forceinline Bitboard Blsi(const Bitboard bb);
+
+
 forceinline size_t Pext(const Bitboard b, const Bitboard mask)
 {
 	return _pext_u64(b, mask);

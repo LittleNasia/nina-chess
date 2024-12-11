@@ -1,12 +1,9 @@
 #pragma once
-#include "utils.h"
-
-#include <string_view>
-
 #include "attacks.h"
 #include "castling.h"
 #include "move.h"
 #include "side.h"
+#include "utils.h"
 #include "zobrist.h"
 
 struct Position
@@ -21,7 +18,7 @@ struct Position
 		const Color sideToMove,
 		const uint32_t fiftyMoveRule);
 
-	forceinline Position(
+	forceinline constexpr Position(
 		const Side& whitePieces,
 		const Side& blackPieces,
 		const Bitboard enPassantSquare,
@@ -30,30 +27,8 @@ struct Position
 		const uint32_t fiftyMoveRule,
 		const uint64_t hash);
 
-	template<Color color>
-	constexpr const Side& GetSide() const;
-
-	template<Color color>
-	constexpr Side& GetSide();
-
-	forceinline constexpr Castling GetCurrentCastling() const;
-	template<Color color>
-	forceinline constexpr Castling GetCurrentCastling() const;
-
-	forceinline uint64_t CalculateHash() const;
-
-	forceinline constexpr bool IsDrawn() const;
-	forceinline constexpr bool IsFiftyMoveRule() const;
-	forceinline constexpr bool IsInsufficientMaterial() const;
-
-	forceinline constexpr void UpdateOccupiedBitboard();
-
-	template<Color color>
-	forceinline constexpr PieceType RemoveCapturedPieces(const Move& move);
-
 	Side WhitePieces;
 	Side BlackPieces;
-
 	Bitboard OccupiedBitmask;
 	Bitboard EnPassantSquare;
 	Castling CastlingPermissions;
@@ -61,17 +36,30 @@ struct Position
 	uint64_t Hash;
 	uint32_t FiftyMoveRule;
 
+	template<Color color>
+	forceinline constexpr Castling GetCurrentCastling() const;
+	template<Color color>
+	forceinline constexpr const Side& GetSide() const;
+	template<Color color>
+	forceinline constexpr Side& GetSide();
+	template<Color color>
+	forceinline constexpr PieceType RemoveCapturedPieces(const Move& move);
+
+	forceinline uint64_t CalculateHash() const;
+	forceinline constexpr Castling GetCurrentCastling() const;
+	forceinline constexpr bool IsDrawn() const;
+	forceinline constexpr bool IsFiftyMoveRule() const;
+	forceinline constexpr bool IsInsufficientMaterial() const;
+	forceinline constexpr void UpdateOccupiedBitboard();
+
 	template<Color sideToMove, MoveType moveType>
 	forceinline static Position& MakeMove(const Position& pos, Position& newPos, const Move& move);
-
 	template<Color sideToMove>
 	forceinline static Position& MakeMove(const Position& pos, Position& newPos, const Move& move);
 
 	forceinline static Position& MakeMove(const Position& pos, Position& newPos, const Move& move);
-
-	forceinline static void PrintBoard(const Position& currPos);
-
 	forceinline static Position ParseFen(const std::string_view fen);
+	forceinline static void PrintBoard(const Position& currPos);
 };
 
 
@@ -100,7 +88,7 @@ forceinline Position::Position(const Side& whitePieces, const Side& blackPieces,
 	ValidateColor(sideToMove);
 }
 
-forceinline Position::Position(const Side& whitePieces, const Side& blackPieces,
+forceinline constexpr Position::Position(const Side& whitePieces, const Side& blackPieces,
 	const Bitboard enPassantSquare, const Castling castling, const Color sideToMove,
 	const uint32_t fiftyMoveRule, const uint64_t hash) :
 	WhitePieces(whitePieces.Pawns, whitePieces.Knights, whitePieces.Bishops, whitePieces.Rooks, whitePieces.Queens, whitePieces.King),
@@ -147,7 +135,7 @@ forceinline uint64_t Position::CalculateHash() const
 {
 	uint64_t calculatedHash = 0ULL;
 	calculatedHash ^= (ZOBRIST_SIDE_TO_MOVE_KEY * SideToMove);
-	calculatedHash ^= ZOBRIST_CASTLING_KEYS[CastlingPermissions.CastlingPermissionsBitmask];
+	calculatedHash ^= ZOBRIST_CASTLING_KEYS[CastlingPermissions.CurrentCastlingPermissions];
 	calculatedHash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(EnPassantSquare)];
 
 	for (Color color = WHITE; auto & side : { WhitePieces, BlackPieces })
@@ -322,17 +310,17 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 	{
 		newPos.EnPassantSquare = 0ULL;
 		newPos.FiftyMoveRule = pos.FiftyMoveRule + 1;
-		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
-		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 
-		constexpr Bitboard rookMoveBitmask = (KingsideCastlingRookBitmask<sideToMove>() | KingsideCastlingRookDestination<sideToMove>());
-		constexpr Bitboard kingMoveBitmask = (GetKingStartposBitmask<sideToMove>() | KingsideCastlingKingDestination<sideToMove>());
+		constexpr Bitboard rookMoveBitmask = (Castling::KingsideCastlingRookBitmask<sideToMove>() | Castling::KingsideCastlingRookDestination<sideToMove>());
+		constexpr Bitboard kingMoveBitmask = (Castling::KingStartposBitmask<sideToMove>() | Castling::KingsideCastlingKingDestination<sideToMove>());
 
-		constexpr size_t rookStartIndex = BitIndex<KingsideCastlingRookBitmask<sideToMove>()>();
-		constexpr size_t rookEndIndex = BitIndex<KingsideCastlingRookDestination<sideToMove>()>();
-		constexpr size_t kingStartIndex = BitIndex<GetKingStartposBitmask<sideToMove>()>();
-		constexpr size_t kingEndIndex = BitIndex<KingsideCastlingKingDestination<sideToMove>()>();
+		constexpr size_t rookStartIndex = BitIndex<Castling::KingsideCastlingRookBitmask<sideToMove>()>();
+		constexpr size_t rookEndIndex = BitIndex<Castling::KingsideCastlingRookDestination<sideToMove>()>();
+		constexpr size_t kingStartIndex = BitIndex<Castling::KingStartposBitmask<sideToMove>()>();
+		constexpr size_t kingEndIndex = BitIndex<Castling::KingsideCastlingKingDestination<sideToMove>()>();
 
 		constexpr Piece rookPiece = GetPieceFromPieceType<ROOK, sideToMove>();
 		constexpr Piece kingPiece = GetPieceFromPieceType<KING, sideToMove>();
@@ -352,17 +340,17 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 	{
 		newPos.EnPassantSquare = 0ULL;
 		newPos.FiftyMoveRule = pos.FiftyMoveRule + 1;
-		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 		newPos.CastlingPermissions.RemoveCastling<sideToMove>();
-		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+		newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 
-		constexpr Bitboard rookMoveBitmask = (QueensideCastlingRookBitmask<sideToMove>() | QueensideCastlingRookDestination<sideToMove>());
-		constexpr Bitboard kingMoveBitmask = (GetKingStartposBitmask<sideToMove>() | QueensideCastlingKingDestination<sideToMove>());
+		constexpr Bitboard rookMoveBitmask = (Castling::QueensideCastlingRookBitmask<sideToMove>() | Castling::QueensideCastlingRookDestination<sideToMove>());
+		constexpr Bitboard kingMoveBitmask = (Castling::KingStartposBitmask<sideToMove>() | Castling::QueensideCastlingKingDestination<sideToMove>());
 
-		constexpr size_t rookStartIndex = BitIndex<QueensideCastlingRookBitmask<sideToMove>()>();
-		constexpr size_t rookEndIndex = BitIndex<QueensideCastlingRookDestination<sideToMove>()>();
-		constexpr size_t kingStartIndex = BitIndex<GetKingStartposBitmask<sideToMove>()>();
-		constexpr size_t kingEndIndex = BitIndex<QueensideCastlingKingDestination<sideToMove>()>();
+		constexpr size_t rookStartIndex = BitIndex<Castling::QueensideCastlingRookBitmask<sideToMove>()>();
+		constexpr size_t rookEndIndex = BitIndex<Castling::QueensideCastlingRookDestination<sideToMove>()>();
+		constexpr size_t kingStartIndex = BitIndex<Castling::KingStartposBitmask<sideToMove>()>();
+		constexpr size_t kingEndIndex = BitIndex<Castling::QueensideCastlingKingDestination<sideToMove>()>();
 
 		constexpr Piece rookPiece = GetPieceFromPieceType<ROOK, sideToMove>();
 		constexpr Piece kingPiece = GetPieceFromPieceType<KING, sideToMove>();
@@ -423,9 +411,9 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 			const PieceType capturedPieceType = newPos.RemoveCapturedPieces<sideToMove>(move);
 			if (capturedPieceType == ROOK)
 			{
-				newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+				newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 				newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
-				newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+				newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			}
 		}
 	}
@@ -445,15 +433,15 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 		const PieceType capturedPieceType = newPos.RemoveCapturedPieces<sideToMove>(move);
 		if (movingPieceType == ROOK || capturedPieceType == ROOK)
 		{
-			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
-			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 		}
 		if (movingPieceType == KING)
 		{
-			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			newPos.CastlingPermissions.RemoveCastling<sideToMove>();
-			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 		}
 	}
 
@@ -470,15 +458,15 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 		if (movingPieceType == ROOK)
 		{
-			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
-			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 		}
 		else if (movingPieceType == KING)
 		{
-			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			newPos.CastlingPermissions.RemoveCastling<sideToMove>();
-			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CastlingPermissionsBitmask];
+			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 		}
 	}
 
@@ -621,11 +609,11 @@ forceinline void Position::PrintBoard(const Position& curr_pos)
 	std::cout << "\n";
 	std::cout << "castling: BLACK: ";
 	std::cout <<
-		bool(curr_pos.CastlingPermissions.CastlingPermissionsBitmask & 0b1000) <<
-		bool(curr_pos.CastlingPermissions.CastlingPermissionsBitmask & 0b0100) <<
+		bool(curr_pos.CastlingPermissions.CurrentCastlingPermissions & 0b1000) <<
+		bool(curr_pos.CastlingPermissions.CurrentCastlingPermissions & 0b0100) <<
 		" WHITE: " <<
-		bool(curr_pos.CastlingPermissions.CastlingPermissionsBitmask & 0b0010) <<
-		bool(curr_pos.CastlingPermissions.CastlingPermissionsBitmask & 0b0001) <<
+		bool(curr_pos.CastlingPermissions.CurrentCastlingPermissions & 0b0010) <<
+		bool(curr_pos.CastlingPermissions.CurrentCastlingPermissions & 0b0001) <<
 		"\n";
 	std::cout << "side_to_move " << (curr_pos.SideToMove == WHITE ? "WHITE" : "BLACK");
 }
@@ -763,16 +751,16 @@ forceinline Position Position::ParseFen(const std::string_view fen)
 		switch (fen_castling_rights[castling_index])
 		{
 		case 'K':
-			castling_rights.CastlingPermissionsBitmask |= KingsideCastlingPermissionsBitmask<WHITE>();
+			castling_rights.CurrentCastlingPermissions |= Castling::KingsideCastlingPermissionsBitmask<WHITE>();
 			break;
 		case 'Q':
-			castling_rights.CastlingPermissionsBitmask |= QueensideCastlingPermissionsBitmask<WHITE>();
+			castling_rights.CurrentCastlingPermissions |= Castling::QueensideCastlingPermissionsBitmask<WHITE>();
 			break;
 		case 'k':
-			castling_rights.CastlingPermissionsBitmask |= KingsideCastlingPermissionsBitmask<BLACK>();
+			castling_rights.CurrentCastlingPermissions |= Castling::KingsideCastlingPermissionsBitmask<BLACK>();
 			break;
 		case 'q':
-			castling_rights.CastlingPermissionsBitmask |= QueensideCastlingPermissionsBitmask<BLACK>();
+			castling_rights.CurrentCastlingPermissions |= Castling::QueensideCastlingPermissionsBitmask<BLACK>();
 			break;
 		default:
 			std::cout << "fen sucks\n";

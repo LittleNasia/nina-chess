@@ -11,6 +11,12 @@ enum class Score : int32_t
 	UNKNOWN = 10002
 };
 
+forceinline constexpr Score GetDrawValueWithSmallVariance(uint64_t randomSeed);
+forceinline constexpr void ValidateScore(Score score);
+forceinline constexpr Score operator-(const Score score);
+forceinline std::ostream& operator<<(std::ostream& os, const Score score);
+
+
 forceinline constexpr Score operator-(const Score score)
 {
 	return static_cast<Score>(-static_cast<int32_t>(score));

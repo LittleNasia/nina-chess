@@ -1,9 +1,8 @@
 #pragma once
-#include "utils.h"
-
 #include "bit_manip.h"
+#include "chess_constants.h"
 #include "move_type.h"
-
+#include "utils.h"
 
 struct Move
 {
@@ -26,30 +25,28 @@ public:
 	forceinline constexpr Move();
 	forceinline constexpr Move(const uint32_t from, const uint32_t to, const PieceType piece, const MoveType moveType, const PieceType promotionPieceType = PIECE_TYPE_NONE);
 
-	forceinline constexpr std::string GetUciPromotionPiece() const;
-	forceinline constexpr bool IsKingsideCastling() const { return GetMoveType() == MoveType::KINGSIDE_CASTLING; }
-	forceinline constexpr bool IsQueensideCastling() const { return GetMoveType() == MoveType::QUEENSIDE_CASTLING; }
-	forceinline constexpr bool operator==(const Move& other) const { return m_encoded_move == other.m_encoded_move; }
-
-	forceinline std::string ToUciMove() const { return std::string(NAME_OF_SQUARE[BitIndex(FromBitmask())]) + NAME_OF_SQUARE[BitIndex(ToBitmask())] + GetUciPromotionPiece(); }
-
-	forceinline constexpr Bitboard   FromBitmask()			const { return 1ULL << FromIndex(); }
-	forceinline constexpr Bitboard   ToBitmask()			const { return 1ULL << ToIndex(); }
-	forceinline constexpr uint32_t   FromIndex()			const { return (m_encoded_move & INDEX_FROM_BITMASK); }
-	forceinline constexpr uint32_t   ToIndex()				const { return (m_encoded_move & INDEX_TO_BITMASK) >> INDEX_TO_OFFSET; }
-	forceinline constexpr PieceType  MovingPieceType()		const { return static_cast<PieceType>((m_encoded_move & PIECE_BITMASK) >> PIECE_OFFSET); }
-	forceinline constexpr PieceType  PromotionPieceType()	const { return static_cast<PieceType>((m_encoded_move & PROMOTION_PIECE_BITMASK) >> PROMOTION_PIECE_OFFSET); }
-	forceinline constexpr MoveType   GetMoveType()			const { return static_cast<MoveType>((m_encoded_move & MOVE_TYPE_BITMASK) >> MOVE_TYPE_OFFSET); }
+	forceinline			  std::string ToUciMove()					const { return std::string(NAME_OF_SQUARE[BitIndex(FromBitmask())]) + NAME_OF_SQUARE[BitIndex(ToBitmask())] + GetUciPromotionPiece(); }
+	forceinline constexpr Bitboard    FromBitmask()					const { return 1ULL << FromIndex(); }
+	forceinline constexpr Bitboard    ToBitmask()					const { return 1ULL << ToIndex(); }
+	forceinline constexpr uint32_t    FromIndex()					const { return (m_EncodedMove & INDEX_FROM_BITMASK); }
+	forceinline constexpr uint32_t    ToIndex()						const { return (m_EncodedMove & INDEX_TO_BITMASK) >> INDEX_TO_OFFSET; }
+	forceinline constexpr PieceType   MovingPieceType()				const { return static_cast<PieceType>((m_EncodedMove & PIECE_BITMASK) >> PIECE_OFFSET); }
+	forceinline constexpr PieceType   PromotionPieceType()			const { return static_cast<PieceType>((m_EncodedMove & PROMOTION_PIECE_BITMASK) >> PROMOTION_PIECE_OFFSET); }
+	forceinline constexpr MoveType    GetMoveType()					const { return static_cast<MoveType>((m_EncodedMove & MOVE_TYPE_BITMASK) >> MOVE_TYPE_OFFSET); }
+	forceinline constexpr std::string GetUciPromotionPiece()		const;
+	forceinline constexpr bool		  IsKingsideCastling()			const { return GetMoveType() == MoveType::KINGSIDE_CASTLING; }
+	forceinline constexpr bool		  IsQueensideCastling()			const { return GetMoveType() == MoveType::QUEENSIDE_CASTLING; }
+	forceinline constexpr bool		  operator==(const Move& other) const { return m_EncodedMove == other.m_EncodedMove; }
 
 private:
-	uint32_t m_encoded_move;
+	uint32_t m_EncodedMove;
 };
 
 forceinline constexpr Move::Move() : Move(0, 0, PIECE_TYPE_NONE, MoveType::NORMAL, PIECE_TYPE_NONE)
 {}
 
 forceinline constexpr Move::Move(const uint32_t from, const uint32_t to, const PieceType piece, const MoveType moveType, const PieceType promotionPieceType) :
-	m_encoded_move{
+	m_EncodedMove{
 	(from << INDEX_FROM_OFFSET) |
 	(to << INDEX_TO_OFFSET) |
 	(piece << PIECE_OFFSET) |

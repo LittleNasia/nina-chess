@@ -1,7 +1,6 @@
 #pragma once
-#include "utils.h"
-
 #include "piece_type.h"
+#include "utils.h"
 
 enum class MoveType
 {
@@ -20,6 +19,14 @@ enum class MoveType
 	PROMOTION_TO_BISHOP_AND_CAPTURE,
 	PROMOTION_TO_KNIGHT_AND_CAPTURE
 };
+
+template<MoveType moveType>
+consteval PieceType GetPromotionPieceFromMoveType();
+template<MoveType moveType>
+consteval bool IsMoveTypeCapture();
+template<MoveType moveType>
+consteval bool IsMoveTypePromotion();
+
 
 template<MoveType moveType>
 consteval bool IsMoveTypePromotion()

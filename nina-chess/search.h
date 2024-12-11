@@ -1,8 +1,5 @@
 #pragma once
-#include "utils.h"
-
-#include <iostream>
-
+#include "alpha_beta.h"
 #include "evaluator.h"
 #include "individual_search_context.h"
 #include "move.h"
@@ -11,13 +8,7 @@
 #include "shared_search_context.h"
 #include "transposition_table.h"
 #include "uci_incremental_updater.h"
-
-struct AlphaBeta
-{
-	Score Alpha;
-	const Score Beta;
-	forceinline constexpr AlphaBeta Invert() const { return { -Beta, -Alpha }; }
-};
+#include "utils.h"
 
 template<bool showOutput>	
 forceinline std::vector<SearchResult> StartSearch(UciIncrementalUpdater& uciIncrementalUpdater, SharedSearchContext& searchContext);

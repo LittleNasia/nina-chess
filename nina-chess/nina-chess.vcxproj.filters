@@ -188,9 +188,6 @@
     <ClInclude Include="targets.h">
       <Filter>Header Files\Core\Build</Filter>
     </ClInclude>
-    <ClInclude Include="serializable.h">
-      <Filter>Header Files\Core</Filter>
-    </ClInclude>
     <ClInclude Include="intrinsics.h">
       <Filter>Header Files\Hardware</Filter>
     </ClInclude>
@@ -202,6 +199,9 @@
     </ClInclude>
     <ClInclude Include="move_type.h">
       <Filter>Header Files\Chess</Filter>
+    </ClInclude>
+    <ClInclude Include="alpha_beta.h">
+      <Filter>Header Files\Search</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -9,3 +9,39 @@ localVariables
 functionArguments
 templateArguments
 CONSTANT_VARIABLES
+
+
+
+struct/class name
+{
+public:
+	constructor1() {one liners are inline}
+	constructor2();
+	constructor3();
+
+	int PublicMember1;
+	int PublicMember2;
+	int PublicMember3;
+
+	template<class T>
+	forceinline constexpr void TemplatedMemberFunction1() { return x; }
+	template<class T>
+	forceinline constexpr void TemplatedMemberFunction2();
+
+	forceinline constexpr void NonTemplatedMemberFunction1() {return x; }
+	forceinline constexpr void NonTemplatedMemberFunction2();
+
+	template<class T>
+	static consteval void TemplatedStaticFunction1() { return 10; }
+	template<class T>
+	static consteval void TemplatedStaticFunction2();
+
+	forceinline constexpr static void NonTemplatedStaticFunction1() { return x; }
+	forceinline constexpr static void NonTemplatedStaticFunction2();
+
+private:
+	forceinline constexpr void privateMethod1() { return x; }
+	forceinline constexpr void privateMethod2();
+
+	int m_PrivateMember;
+}

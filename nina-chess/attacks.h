@@ -1,9 +1,33 @@
 #pragma once
-#include "utils.h"
-
 #include "bit_manip.h"
 #include "bitmasks.h"
 #include "side.h"
+#include "utils.h"
+
+template<Color color>
+forceinline Bitboard GetAllAttacks(const Side& pieces, const Bitboard occupiedBitmask);
+template <Color color>
+forceinline constexpr Bitboard GetDoubleAdvances(const Bitboard pawns);
+template<Color color>
+forceinline constexpr Bitboard GetDoubleAdvancesCandidates();
+template<Color color>
+forceinline constexpr Bitboard GetAllPawnAttacks(Bitboard pieces);
+template <Color color>
+forceinline constexpr Bitboard GetPawnAdvances(const Bitboard pawns);
+template <Color color>
+forceinline constexpr Bitboard GetPawnsLeftAttacks(Bitboard pawns);
+template <Color color>
+forceinline constexpr Bitboard GetPawnsRightAttacks(Bitboard pawns);
+
+
+forceinline Bitboard GetAllBishopAttacks(Bitboard bishopsBitmask, const Bitboard occupiedBitmask);
+forceinline Bitboard GetAllKnightAttacks(Bitboard knights);
+forceinline Bitboard GetAllQueenAttacks(Bitboard queensBitmask, const Bitboard occupiedBitmask);
+forceinline Bitboard GetAllRookAttacks(Bitboard rooksBitmask, const Bitboard occupiedBitmask);
+forceinline Bitboard GetKingAttacks(const Bitboard kingBitmask);
+forceinline Bitboard GetSingleBishopAttacks(const Bitboard bishopBitmask, const Bitboard occupiedBitmask);
+forceinline Bitboard GetSingleRookAttacks(const Bitboard rookBitmask, const Bitboard occupiedBitmask);
+
 
 template <Color color>
 forceinline constexpr Bitboard GetPawnAdvances(const Bitboard pawns)

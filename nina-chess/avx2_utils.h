@@ -1,7 +1,9 @@
 #pragma once
+#include "simd.h"
 #include "utils.h"
 
-#include "simd.h"
+forceinline float simd_horizontal_sum(const SimdVector& input);
+
 
 #ifdef __AVX2__
 forceinline float simd_horizontal_sum(const SimdVector& input)

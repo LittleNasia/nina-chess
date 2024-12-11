@@ -1,10 +1,9 @@
 #pragma once
-#include "utils.h"
-
 #include "accumulator.h"
 #include "chess_bitboard_feature_iterator.h"
 #include "move_list.h"
 #include "position.h"
+#include "utils.h"
 
 class PSQT
 {
@@ -16,11 +15,8 @@ public:
 	forceinline PSQT(std::ifstream& weightsFile);
 
 	forceinline constexpr void Reset(const Position& position, const MoveList& moveList);
-
 	forceinline constexpr void IncrementalUpdate(const Position& position, const MoveList& moveList);
-
 	forceinline constexpr void UndoUpdate() { m_Depth--; }
-
 	forceinline float Evaluate() { return std::tanhf(m_Accumulators[m_Depth].GetOutput()[0] / 16.f); }
 
 private:

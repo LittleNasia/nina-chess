@@ -1,7 +1,6 @@
 #pragma once
 #include "utils.h"
 
-
 inline constexpr float HARDCODED_PSQT_WEIGHTS[25][64] =
 {
 	// white pawns

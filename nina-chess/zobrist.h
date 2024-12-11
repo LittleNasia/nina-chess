@@ -1,4 +1,6 @@
 #pragma once
+#include "chess_constants.h"
+#include "piece.h"
 #include "utils.h"
 
 inline constexpr uint64_t ZOBRIST_SIDE_TO_MOVE_KEY = 0x6969696969ULL;

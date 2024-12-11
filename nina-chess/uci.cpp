@@ -69,19 +69,15 @@ struct GoState
 void DumpUciState(const std::string_view& filename)
 {
 	std::ofstream file(filename.data(), std::ios::binary);
-
-	currentState.UciTranspositionTable->Serialize(file);
 }
 
 void LoadUciState(const std::string_view& filename)
 {
 	std::ifstream file(filename.data(), std::ios::binary);
-
-	currentState.UciTranspositionTable->Deserialize(file);
 }
 
 void Ucinewgame()
-{
+{									 
 	currentState.UciTranspositionTable = std::make_unique<TranspositionTable>(currentState.HashSize);
 }
 
@@ -226,8 +222,8 @@ void FindCastlingMoveFallback(const Position& position, const MoveList& moveList
 
 	if (moveFromBitmask & sideToMovePieces.King)
 	{
-		constexpr Bitboard kingsideKingDestinations = KingsideCastlingKingDestination<WHITE>() | KingsideCastlingKingDestination<BLACK>();
-		constexpr Bitboard queensideKingDestinations = QueensideCastlingKingDestination<WHITE>() | QueensideCastlingKingDestination<BLACK>();
+		constexpr Bitboard kingsideKingDestinations = Castling::KingsideCastlingKingDestination<WHITE>() | Castling::KingsideCastlingKingDestination<BLACK>();
+		constexpr Bitboard queensideKingDestinations = Castling::QueensideCastlingKingDestination<WHITE>() | Castling::QueensideCastlingKingDestination<BLACK>();
 
 		const bool isKingsideCastling = moveToBitmask & (kingsideKingDestinations);
 		const bool isQueensideCastling = moveToBitmask & (queensideKingDestinations);

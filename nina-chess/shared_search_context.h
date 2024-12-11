@@ -1,19 +1,13 @@
 #pragma once
-#include "utils.h"
-
 #include "search_cancellation_policy.h"
 #include "transposition_table.h"
+#include "utils.h"
 
 class SharedSearchContext
 {
 public:
 	SharedSearchContext(const SearchConstraints searchConstraints, const TimePoint& searchStartTimepoint,
-		TranspositionTable* transposition_table) :
-		m_TranspositionTable(transposition_table),
-		m_CancellationPolicy(searchStartTimepoint, searchConstraints),
-		m_SearchDepth( calculateSearchDepth(searchConstraints) )
-	{
-	}
+		TranspositionTable* transposition_table);
 
 	forceinline constexpr SearchCancellationPolicy& GetCancellationPolicy() { return m_CancellationPolicy; }
 	forceinline constexpr TranspositionTable& GetTranspositionTable() { return *m_TranspositionTable; }
@@ -28,6 +22,14 @@ private:
 	int64_t m_SearchDepth;
 };
 
+
+SharedSearchContext::SharedSearchContext(const SearchConstraints searchConstraints, const TimePoint& searchStartTimepoint,
+	TranspositionTable* transposition_table) :
+	m_TranspositionTable(transposition_table),
+	m_CancellationPolicy(searchStartTimepoint, searchConstraints),
+	m_SearchDepth(calculateSearchDepth(searchConstraints))
+{
+}
 
 forceinline constexpr int64_t SharedSearchContext::calculateSearchDepth(const SearchConstraints& searchConstraints)
 {

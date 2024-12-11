@@ -1,7 +1,7 @@
 #pragma once
-#include "utils.h"
-
+#include "color.h"
 #include "piece_type.h"
+#include "utils.h"
 
 enum Piece : uint32_t
 {
@@ -23,16 +23,16 @@ enum Piece : uint32_t
 };
 
 template<Piece piece>
-consteval void ValidatePiece()
-{
-	static_assert(piece < PIECE_NONE);
-}
+consteval void ValidatePiece() { static_assert(piece < PIECE_NONE); }
+template<PieceType pieceType, Color color>
+forceinline constexpr Piece GetPieceFromPieceType();
 
 constexpr char PIECE_NAMES[] =
 {
 	'P','N','B','R','Q','K',
 	'p','n','b','r','q','k',
 };
+
 
 template<PieceType pieceType, Color color>
 forceinline constexpr Piece GetPieceFromPieceType()

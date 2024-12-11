@@ -329,6 +329,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="accumulator.h" />
+    <ClInclude Include="alpha_beta.h" />
     <ClInclude Include="architecture.h" />
     <ClInclude Include="attacks.h" />
     <ClInclude Include="avx2_utils.h" />
@@ -364,7 +365,6 @@
     <ClInclude Include="search_nodes_cancellation_policy.h" />
     <ClInclude Include="position_stack.h" />
     <ClInclude Include="search_time_cancellation_policy.h" />
-    <ClInclude Include="serializable.h" />
     <ClInclude Include="side.h" />
     <ClInclude Include="simd.h" />
     <ClInclude Include="individual_search_context.h" />

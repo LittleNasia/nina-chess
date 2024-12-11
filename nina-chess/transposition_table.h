@@ -1,11 +1,7 @@
 #pragma once
-#include "utils.h"
-
-#include <vector>
-
 #include "move.h"
 #include "score.h"
-#include "serializable.h"
+#include "utils.h"
 
 enum class TTFlag
 {
@@ -23,7 +19,7 @@ struct TranspositionTableEntry
 	TTFlag Flag = TTFlag::EXACT;
 };
 
-class TranspositionTable : public Serializable
+class TranspositionTable
 {
 public:
 	forceinline TranspositionTable(const size_t sizeInMb);
@@ -31,8 +27,6 @@ public:
 	forceinline void Insert(const TranspositionTableEntry& entry, const bool forceOverwrite);
 	forceinline const TranspositionTableEntry& Get(const uint64_t key) const;
 
-	forceinline void Serialize(std::ofstream& output);
-	forceinline void Deserialize(std::ifstream& input);
 private:
 	std::vector<TranspositionTableEntry> m_Entries;
 };
@@ -60,25 +54,4 @@ forceinline const TranspositionTableEntry& TranspositionTable::Get(const uint64_
 	const size_t index = FastModulo(key, m_Entries.size());
 
 	return m_Entries[index];
-}
-
-forceinline void TranspositionTable::Serialize(std::ofstream& output)
-{
-	size_t entryCount = m_Entries.size();
-	output.write((char*)&entryCount, sizeof(entryCount));
-	for (const auto& entry : m_Entries)
-	{
-		output.write((char*)&entry, sizeof(entry));
-	}
-}
-
-forceinline void TranspositionTable::Deserialize(std::ifstream& input)
-{
-	size_t entryCount;
-	input.read((char*)&entryCount, sizeof(entryCount));
-	m_Entries.resize(entryCount);
-	for (auto& entry : m_Entries)
-	{
-		input.read((char*)&entry, sizeof(entry));
-	}
 }

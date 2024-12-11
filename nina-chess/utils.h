@@ -1,8 +1,17 @@
 #pragma once
+#include <atomic>
+#include <chrono>
 #include <cstdint>
+#include <fstream>
 #include <intrin.h>
+#include <iostream>
+#include <limits>
+#include <memory>
 #include <ostream>
+#include <random>
+#include <sstream>
 #include <stdexcept>
+#include <string_view>
 
 using Bitboard = std::uint64_t;
 

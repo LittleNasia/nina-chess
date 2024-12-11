@@ -1,10 +1,24 @@
 #pragma once
-#include "utils.h"
-
 #include "attacks.h"
 #include "bitmasks.h"
 #include "move_list.h"
 #include "position.h"
+#include "utils.h"
+
+template<Color color>
+forceinline constexpr Bitboard GetLegalPawnCapturesLeft(const Bitboard pawns, const Bitboard bishopPinmask, const Bitboard rookPinmask, const Bitboard enemyPieces);
+template<Color color>
+forceinline constexpr Bitboard GetLegalPawnCapturesRight(const Bitboard pawns, const Bitboard bishopPinmask, const Bitboard rookPinmask, const Bitboard enemyPieces);
+template<Color color>
+forceinline constexpr Bitboard GetLegalPawnAdvances(const Bitboard pawns, const Bitboard bishopPinmask, const Bitboard rookPinmask, const Bitboard occupied);
+template<Color color>
+forceinline constexpr Bitboard GetPawnDoubleAdvances(const Bitboard singleAdvancePawnMoves, const Bitboard occupied);
+template<Color color>
+forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList);
+
+forceinline constexpr Bitboard GetKingMoves(const size_t kingIndex, const Bitboard attackedSquares);
+forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList);
+
 
 forceinline void FillPinmask(const size_t square, Bitboard& pinmask, Bitboard pinners)
 {
@@ -283,7 +297,7 @@ forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList
 	// king can't move to these squares
 	const Bitboard attackedSquares = GetAllAttacks<oppositeColor>(oppositePieces, position.OccupiedBitmask ^ king);
 	const bool hasEP = static_cast<bool>(position.EnPassantSquare);
-	const uint32_t castlingPermissions = position.GetCurrentCastling<color>().CastlingPermissionsBitmask;
+	const uint32_t castlingPermissions = position.GetCurrentCastling<color>().CurrentCastlingPermissions;
 
 	Bitboard bishopCheckers = 0ULL;
 	Bitboard bishopPinners = 0ULL;
@@ -429,25 +443,25 @@ forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList
 	// kingside castling
 	if (castlingPermissions & 0b1)
 	{
-		const bool canCastle = !((attackedSquares & KingsideCastlingKingPath<color>()) ||
-			(position.OccupiedBitmask & (KingsideCastlingRookPath<color>() & ~king)));
+		const bool canCastle = !((attackedSquares & Castling::KingsideCastlingKingPath<color>()) ||
+			(position.OccupiedBitmask & (Castling::KingsideCastlingRookPath<color>() & ~king)));
 		if (canCastle)
 		{
 			constexpr bool isKingsideCastling = true;
 			constexpr bool isQueensideCastling = false;
-			WriteMoves<KING, color, isKingsideCastling, isQueensideCastling >(moveList, KingsideCastlingRookBitmask<color>(), kingIndex, oppositePieces.Pieces);
+			WriteMoves<KING, color, isKingsideCastling, isQueensideCastling >(moveList, Castling::KingsideCastlingRookBitmask<color>(), kingIndex, oppositePieces.Pieces);
 		}
 	}
 	// queenside castling
 	if (castlingPermissions & 0b10)
 	{
-		const bool canCastle = !((attackedSquares & QueensideCastlingKingPath<color>()) ||
-			(position.OccupiedBitmask & (QueensideCastlingRookPath<color>() & ~king)));
+		const bool canCastle = !((attackedSquares & Castling::QueensideCastlingKingPath<color>()) ||
+			(position.OccupiedBitmask & (Castling::QueensideCastlingRookPath<color>() & ~king)));
 		if (canCastle)
 		{
 			constexpr bool isKingsideCastling = false;
 			constexpr bool isQueensideCastling = true;
-			WriteMoves<KING, color, isKingsideCastling, isQueensideCastling >(moveList, QueensideCastlingRookBitmask<color>(), kingIndex, oppositePieces.Pieces);
+			WriteMoves<KING, color, isKingsideCastling, isQueensideCastling >(moveList, Castling::QueensideCastlingRookBitmask<color>(), kingIndex, oppositePieces.Pieces);
 		}
 	}
 	return moveList;

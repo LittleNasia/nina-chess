@@ -1,7 +1,7 @@
 #pragma once
-#include "utils.h"
-
+#include "castling.h"
 #include "side.h"
+#include "utils.h"
 
 struct BoardFeatures
 {
