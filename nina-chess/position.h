@@ -297,7 +297,6 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 	//update all the things that are easy to update
 	newPos.Hash ^= ZOBRIST_SIDE_TO_MOVE_KEY;
-	newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
 	newPos.SideToMove = oppositeColor;
 
 	// start making the move
@@ -331,8 +330,12 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 			ZOBRIST_PIECE_KEYS[kingEndIndex][kingPiece];
 
 		newPos.Hash ^= hashUpdate;
-		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
-
+		if (pos.EnPassantSquare)
+		{
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		}
+		
 		ownPieces.Rooks ^= rookMoveBitmask;
 		ownPieces.King ^= kingMoveBitmask;
 	}
@@ -361,7 +364,11 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 			ZOBRIST_PIECE_KEYS[kingEndIndex][kingPiece];
 
 		newPos.Hash ^= hashUpdate;
-		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		if (pos.EnPassantSquare)
+		{
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		}
 
 		ownPieces.Rooks ^= rookMoveBitmask;
 		ownPieces.King ^= kingMoveBitmask;
@@ -376,13 +383,18 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 		ownPieces.Pawns ^= (move.FromBitmask() | pos.EnPassantSquare);
 		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, PAWN, (move.FromBitmask() | pos.EnPassantSquare));
 		newPos.Hash = UpdateHash<oppositeColor, 1>(newPos.Hash, PAWN, enPassantVictimBitmask);
-		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		if (pos.EnPassantSquare)
+		{
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		}
 	}
 	if constexpr (moveType == MoveType::DOUBLE_PAWN_ADVANCE)
 	{
 		newPos.FiftyMoveRule = 0;
 
 		newPos.EnPassantSquare = GetPawnAdvances<sideToMove>(move.FromBitmask());
+		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
 		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(newPos.EnPassantSquare)];
 
 		const Bitboard moveBitmask = move.FromBitmask() | move.ToBitmask();
@@ -404,12 +416,16 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 		ownPieces.GetPieceBitboard<PAWN>() ^= move.FromBitmask();
 		newPos.Hash = UpdateHash<sideToMove, 1>(newPos.Hash, promotionPieceType, move.ToBitmask());
 		newPos.Hash = UpdateHash<sideToMove, 1>(newPos.Hash, PAWN, move.FromBitmask());
-		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		if (pos.EnPassantSquare)
+		{
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		}
 
 		if constexpr (isCapture)
 		{
 			const PieceType capturedPieceType = newPos.RemoveCapturedPieces<sideToMove>(move);
-			if (capturedPieceType == ROOK)
+			if (capturedPieceType == ROOK && move.ToBitmask() & Castling::AllCastlingRooksBitmask())
 			{
 				newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 				newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
@@ -428,16 +444,20 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 		ownPieces.GetPieceBitboard(movingPieceType) ^= moveBitmask;
 		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, movingPieceType, moveBitmask);
-		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		if (pos.EnPassantSquare)
+		{
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		}
 
 		const PieceType capturedPieceType = newPos.RemoveCapturedPieces<sideToMove>(move);
-		if (movingPieceType == ROOK || capturedPieceType == ROOK)
+		if ((movingPieceType == ROOK || capturedPieceType == ROOK) && moveBitmask & Castling::AllCastlingRooksBitmask())
 		{
 			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
 			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 		}
-		if (movingPieceType == KING)
+		if (movingPieceType == KING && moveBitmask & Castling::KingStartposBitmask<sideToMove>())
 		{
 			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			newPos.CastlingPermissions.RemoveCastling<sideToMove>();
@@ -454,15 +474,19 @@ forceinline Position& Position::MakeMove(const Position& pos, Position& newPos, 
 
 		ownPieces.GetPieceBitboard(movingPieceType) ^= moveBitmask;
 		newPos.Hash = UpdateHash<sideToMove, 2>(newPos.Hash, movingPieceType, moveBitmask);
-		newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		if (pos.EnPassantSquare)
+		{
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex(pos.EnPassantSquare)];
+			newPos.Hash ^= ZOBRIST_EN_PASSANT_KEYS[BitIndex<0>()];
+		}
 
-		if (movingPieceType == ROOK)
+		if (movingPieceType == ROOK && moveBitmask & Castling::AllCastlingRooksBitmask())
 		{
 			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			newPos.CastlingPermissions.UpdateCastling(whitePieces.Rooks, blackPieces.Rooks);
 			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 		}
-		else if (movingPieceType == KING)
+		else if (movingPieceType == KING && moveBitmask & Castling::KingStartposBitmask<sideToMove>())
 		{
 			newPos.Hash ^= ZOBRIST_CASTLING_KEYS[newPos.CastlingPermissions.CurrentCastlingPermissions];
 			newPos.CastlingPermissions.RemoveCastling<sideToMove>();
