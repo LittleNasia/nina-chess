@@ -24,8 +24,8 @@ class TranspositionTable
 public:
 	forceinline TranspositionTable(const size_t sizeInMb);
 
-	forceinline void Insert(const TranspositionTableEntry& entry, const bool forceOverwrite);
-	forceinline const TranspositionTableEntry& Get(const uint64_t key) const;
+	forceinline constexpr void Insert(const TranspositionTableEntry& entry, const bool forceOverwrite);
+	forceinline constexpr const TranspositionTableEntry& Get(const uint64_t key) const;
 
 private:
 	std::vector<TranspositionTableEntry> m_Entries;
@@ -38,7 +38,7 @@ forceinline TranspositionTable::TranspositionTable(const size_t sizeInMb)
 	m_Entries.resize(entryCount);
 }
 
-forceinline void TranspositionTable::Insert(const TranspositionTableEntry& entry, const bool forceOverwrite)
+forceinline constexpr void TranspositionTable::Insert(const TranspositionTableEntry& entry, const bool forceOverwrite)
 {
 	const size_t index = FastModulo(entry.Key, m_Entries.size());
 
@@ -49,7 +49,7 @@ forceinline void TranspositionTable::Insert(const TranspositionTableEntry& entry
 	}
 }
 
-forceinline const TranspositionTableEntry& TranspositionTable::Get(const uint64_t key) const
+forceinline constexpr const TranspositionTableEntry& TranspositionTable::Get(const uint64_t key) const
 {
 	const size_t index = FastModulo(key, m_Entries.size());
 
