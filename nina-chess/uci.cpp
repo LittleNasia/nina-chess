@@ -38,7 +38,7 @@ struct UciState
 	{
 	}
 
-	TranspositionTable& GetTranspositionTable() { return *UciTranspositionTable; }
+	TranspositionTable& GetTranspositionTable() const { return *UciTranspositionTable; }
 
 	uint64_t HashSize;
 	std::string WeightsFilename;
@@ -173,8 +173,8 @@ struct UciMove
 
 UciMove ParseMove(const std::string& move)
 {
-	uint32_t moveFromIndex = GetSquareIndexFromChessSquareName(move.substr(0, 2).c_str());
-	uint32_t moveToIndex = GetSquareIndexFromChessSquareName(move.substr(2, 2).c_str());
+	const uint32_t moveFromIndex = GetSquareIndexFromChessSquareName(move.substr(0, 2).c_str());
+	const uint32_t moveToIndex = GetSquareIndexFromChessSquareName(move.substr(2, 2).c_str());
 	if (move.length() == 5)
 	{
 		switch (move[4])
@@ -215,8 +215,8 @@ void FindAndMakeUciMove(const Position& position, const MoveList& moveList, cons
 
 void FindCastlingMoveFallback(const Position& position, const MoveList& moveList, const UciMove& uciMove)
 {
-	Bitboard moveFromBitmask = 1ULL << uciMove.MoveFromIndex;
-	Bitboard moveToBitmask = 1ULL << uciMove.MoveToIndex;
+	const Bitboard moveFromBitmask = 1ULL << uciMove.MoveFromIndex;
+	const Bitboard moveToBitmask = 1ULL << uciMove.MoveToIndex;
 
 	const Side& sideToMovePieces = position.SideToMove == WHITE ? position.WhitePieces : position.BlackPieces;
 

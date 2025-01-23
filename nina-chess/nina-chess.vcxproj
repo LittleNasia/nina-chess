@@ -246,7 +246,9 @@
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <DisableSpecificWarnings>4324;4061;4820;4514;4355;4626;5027;4625;5026;4623;4710;4711;5045;4715;4062</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4324;4061;4820;4514;4355;4626;5027;4625;5026;4623;4710;4711;5045;4715;4062;4530;4577;4007</DisableSpecificWarnings>
+      <AdditionalOptions>$(CompilerAdditionalOptions) %(AdditionalOptions)</AdditionalOptions>
+      <CallingConvention>$(CustomCallingConvention)</CallingConvention>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -276,8 +278,10 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <Optimization>MaxSpeed</Optimization>
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
-      <DisableSpecificWarnings>4324;4061;4820;4514;4355;4626;5027;4625;5026;4623;4710;4711;5045;4715;4062</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4324;4061;4820;4514;4355;4626;5027;4625;5026;4623;4710;4711;5045;4715;4062;4530;4577;4007</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalOptions>$(CompilerAdditionalOptions) %(AdditionalOptions)</AdditionalOptions>
+      <CallingConvention>$(CustomCallingConvention)</CallingConvention>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -305,12 +309,13 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <CallingConvention>Cdecl</CallingConvention>
       <Optimization>MaxSpeed</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
-      <DisableSpecificWarnings>4324;4061;4820;4514;4355;4626;5027;4625;5026;4623;4710;4711;5045;4715;4062</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4324;4061;4820;4514;4355;4626;5027;4625;5026;4623;4710;4711;5045;4715;4062;4530;4577;4007</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalOptions>$(CompilerAdditionalOptions) %(AdditionalOptions)</AdditionalOptions>
+      <CallingConvention>$(CustomCallingConvention)</CallingConvention>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

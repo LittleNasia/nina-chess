@@ -4,6 +4,7 @@ import subprocess
 import glob
 import random
 import os
+import statistics
 
 
 MIN_RUNS = 5
@@ -48,7 +49,7 @@ def compareSpeeds(firstName, secondName, speedsFirst, speedsSecond, alpha):
 benchmarkedMetrics = ["perft", "search"]
 
 
-def benchmarkFiles(runs, defaultFile, *filenames):
+def benchmarkFiles(runs, defaultFile, filenames):
     speeds = {}
     statuses = {}
 
@@ -58,7 +59,7 @@ def benchmarkFiles(runs, defaultFile, *filenames):
     files = [ defaultFile ]
     for file in filenames:
         files.append(file)
-        
+
     for file in files:
         speeds[file] = {}
         statuses[file] = {}
@@ -81,8 +82,9 @@ def benchmarkFiles(runs, defaultFile, *filenames):
                 metric = benchmarkedMetrics[metricIndex]
                 metricResult = int(benchOutput[metricIndex])
                 speeds[file][metric].append(metricResult);
-            
-                print(f"\t\tachieved speed in metric {metric}", speeds[file][metric])
+
+                avg = statistics.fmean(speeds[file][metric])
+                print(f"\t\tachieved speed in metric {metric}", speeds[file][metric], f" average value is {avg}")
 
 
         for file in files:
@@ -106,11 +108,10 @@ def benchmarkFiles(runs, defaultFile, *filenames):
                     statuses[file][metric] = EXECUTABLE_REJECTED
                 elif(compareResult == SECOND_IS_BETTER):
                     statuses[file][metric] = EXECUTABLE_ACCEPTED
+                else:
+                    statuses[file][metric] = EXECUTABLE_NOT_REJECTED_NOR_ACCEPTED
 
-            isBenchmarkForExecutableFinished = isExecutableRatingFinished(statuses[file])
-            if(isBenchmarkForExecutableFinished):
-                files.remove(file)
-            
+
 
         if run >= runs:
             break

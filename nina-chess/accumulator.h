@@ -18,14 +18,16 @@ public:
 
 	BitboardFeatureAccumulator() = default;
 
-	forceinline constexpr void AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput);
+	forceinline constexpr void AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator,
+		const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput);
 	forceinline constexpr const float* GetOutput() const { return m_Output; }
 	forceinline constexpr void Reset(const BitboardFeatureIterator& newFeaturesIterator);
 	forceinline constexpr void SetWeights(Weights& weightsToSet) { m_Weights = &weightsToSet; }
 
 private:
 	template<size_t bitboardIndex>
-	forceinline constexpr void accumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput);
+	forceinline constexpr void accumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator,
+		const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput);
 
 	forceinline constexpr size_t getWeightsIndex(const size_t bitboard_index, const uint32_t feature_in_bitboard_index);
 	forceinline constexpr void validateOutput(const BitboardFeatureIterator& new_features_iterator);
@@ -36,10 +38,11 @@ private:
 
 template<typename BitboardFeatureIterator, size_t outputSize>
 template<size_t bitboardIndex>
-forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::accumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput)
+forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::accumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator,
+	const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput)
 {
-	const Bitboard newFeatures = newFeaturesIterator.Get<bitboardIndex>(0.f);
-	const Bitboard oldFeatures = oldFeaturesIterator.Get<bitboardIndex>(0.f);
+	const Bitboard newFeatures = newFeaturesIterator.template Get<bitboardIndex>(0.f);
+	const Bitboard oldFeatures = oldFeaturesIterator.template Get<bitboardIndex>(0.f);
 
 	Bitboard addedFeatures = newFeatures & ~oldFeatures;
 	Bitboard removedFeatures = ~newFeatures & oldFeatures;
@@ -75,7 +78,8 @@ forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, o
 }
 
 template<typename BitboardFeatureIterator, size_t outputSize>
-forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator, const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput)
+forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, outputSize>::AccumulateFeatures(const BitboardFeatureIterator& newFeaturesIterator,
+	const BitboardFeatureIterator& oldFeaturesIterator, const float* previousAccumulatorOutput)
 {
 	std::memcpy(m_Output, previousAccumulatorOutput, sizeof(m_Output));
 

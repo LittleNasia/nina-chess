@@ -401,3 +401,11 @@ FodyWeavers.xsd
 /test/clone/*
 /test/*.exe
 /weights
+/.idea
+/cmake-build-clang
+/cmake-build-gcc
+/cmake-build-vs
+/out/build/x64-Debug
+/bench_main.cpp.gcda
+/CMakeFiles
+/cmake_test
