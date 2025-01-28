@@ -1,15 +1,3 @@
 # nina-chess
 
-move gen will be fast one day idk 
-
-hess engine will exist maybe one day haha
-
-
-
-
-
-# Copyright Notice
-
-Copyright (c) 2024 LittleNasia
-
-This project is licensed under the Server Side Public License, Version 1. See the LICENSE file for more details.
+Cute engin with exist everything other than good play. Would be fast if it didn't generate moves on leaf nodes, as moves in a given position are used for evaluation (lolz that's so cool).
