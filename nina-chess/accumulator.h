@@ -107,7 +107,7 @@ forceinline constexpr void BitboardFeatureAccumulator<BitboardFeatureIterator, o
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_real_distribution<float> dis(value * -0.1f, value * 0.1f);
+		std::uniform_real_distribution<float> dis(std::abs(value) * -0.1f, std::abs(value) * 0.1f);
 
 		value += dis(gen);
 	}
