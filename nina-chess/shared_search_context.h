@@ -1,6 +1,7 @@
 #pragma once
 #include "search_cancellation_policy.h"
 #include "transposition_table.h"
+#include "search_core.h"
 #include "utils.h"
 
 class SharedSearchContext
@@ -36,6 +37,8 @@ forceinline constexpr int64_t SharedSearchContext::calculateSearchDepth(const Se
 	int64_t searchDepth = searchConstraints.Depth == -1
 		? std::numeric_limits<int64_t>::max()
 		: searchConstraints.Depth;
+	searchDepth = std::max(searchDepth, MAX_DEPTH);
+	
 
 	return searchDepth;
 }
