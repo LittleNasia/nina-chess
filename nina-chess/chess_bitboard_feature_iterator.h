@@ -72,14 +72,7 @@ forceinline constexpr Bitboard ChessBitboardFeatureIterator::Get(const size_t in
 	case 17:
 	case 18:
 	case 19:
-	{
-		const int pieceTypeIndex = static_cast<int>(index - 14);
-		DEBUG_IF(index >= PIECE_TYPE_NONE)
-		{
-			throw std::runtime_error("invalid index for piece moves bitboard");
-		}
-		return m_MoveListMiscellaneous.PieceMoves[pieceTypeIndex];
-	}
+		return m_MoveListMiscellaneous.PieceMoves[index - 14];
 	case 20:
 		return m_MoveListMiscellaneous.Pinmask;
 	case 21:
