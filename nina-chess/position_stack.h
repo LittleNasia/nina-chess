@@ -1,8 +1,12 @@
 #pragma once
+#include "color.h"
+#include "move.h"
 #include "move_gen.h"
+#include "move_list.h"
 #include "position.h"
 #include "search_core.h"
 #include "utils.h"
+#include <cstdint>
 
 struct PositionStack
 {
@@ -26,6 +30,9 @@ public:
 	forceinline void Reset();
 	forceinline void Reset(const Position& position);
 	forceinline constexpr void SetCurrentPosition(const Position& position);
+
+	forceinline Position& MakeMove(const Move& move);
+	forceinline void UndoMove() { DecrementDepth(); }
 
 private:
 	forceinline constexpr uint64_t GetHashAtPly(const int64_t ply) const { return m_PositionStack[ply].Hash; }
@@ -73,6 +80,15 @@ forceinline void PositionStack::Reset()
 forceinline constexpr void PositionStack::SetCurrentPosition(const Position& position)
 {
 	m_PositionStack[m_Depth] = position;
+}
+
+forceinline Position& PositionStack::MakeMove(const Move& move)
+{
+	auto& currentPosition = GetCurrentPosition();
+	auto& nextPosition = GetNextPosition();
+	Position::MakeMove(currentPosition, nextPosition, move);
+	IncrementDepth();
+	return nextPosition;
 }
 
 forceinline constexpr Position& PositionStack::GetPositionAt(const int64_t depthOfPosition)

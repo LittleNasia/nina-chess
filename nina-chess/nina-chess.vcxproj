@@ -346,7 +346,6 @@
     <ClInclude Include="chess_bitboard_feature_iterator.h" />
     <ClInclude Include="chess_constants.h" />
     <ClInclude Include="color.h" />
-    <ClInclude Include="common_incremental_updater.h" />
     <ClInclude Include="evaluator.h" />
     <ClInclude Include="intrinsics.h" />
     <ClInclude Include="move_type.h" />
@@ -355,7 +354,6 @@
     <ClInclude Include="score.h" />
     <ClInclude Include="search_core.h" />
     <ClInclude Include="search_result.h" />
-    <ClInclude Include="uci_incremental_updater.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_list.h" />
     <ClInclude Include="perft.h" />
@@ -366,7 +364,6 @@
     <ClInclude Include="search_cancellation_policy.h" />
     <ClInclude Include="search_constraints.h" />
     <ClInclude Include="shared_search_context.h" />
-    <ClInclude Include="search_incremental_updater.h" />
     <ClInclude Include="search_nodes_cancellation_policy.h" />
     <ClInclude Include="position_stack.h" />
     <ClInclude Include="search_time_cancellation_policy.h" />

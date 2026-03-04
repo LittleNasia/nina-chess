@@ -46,9 +46,6 @@
     <Filter Include="Header Files\Core\Build">
       <UniqueIdentifier>{80e2d014-7380-479a-a018-40316edf770c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Search\IncrementalUpdater">
-      <UniqueIdentifier>{5b004387-05e9-43d8-8de8-b7dbe987c292}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nina-chess.cpp">
@@ -82,15 +79,6 @@
     </ClInclude>
     <ClInclude Include="individual_search_context.h">
       <Filter>Header Files\Search\SearchContext</Filter>
-    </ClInclude>
-    <ClInclude Include="uci_incremental_updater.h">
-      <Filter>Header Files\Search\IncrementalUpdater</Filter>
-    </ClInclude>
-    <ClInclude Include="search_incremental_updater.h">
-      <Filter>Header Files\Search\IncrementalUpdater</Filter>
-    </ClInclude>
-    <ClInclude Include="common_incremental_updater.h">
-      <Filter>Header Files\Search\IncrementalUpdater</Filter>
     </ClInclude>
     <ClInclude Include="color.h">
       <Filter>Header Files\Chess</Filter>

@@ -1,16 +1,22 @@
 #pragma once
+#include "color.h"
 #include "evaluator.h"
-#include "move_gen.h"
 #include "position.h"
 #include "position_stack.h"
 #include "search.h"
 #include "search_constraints.h"
-#include "shared_search_context.h"
 #include "transposition_table.h"
-#include "uci_incremental_updater.h"
-#include "utils.h"
+#include <chrono>
+#include <cstdint>
+#include <exception>
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-inline size_t TestPerft(const bool hideOutput = false, const size_t nodeLimit = std::numeric_limits<size_t>::max());
 inline size_t TestSearch(const bool hideOutput = false, const size_t depthLimit = std::numeric_limits<size_t>::max());
 
 struct PerftTestEntry
@@ -210,14 +216,13 @@ inline size_t TestSearch(const bool hideOutput, const size_t depthLimit)
 
 			searchConstraints.Depth = int(testPosition.Depth);
 			positionStack.SetCurrentPosition(Position::ParseFen(testPosition.Fen));
-			const Position& currentPosition = positionStack.GetCurrentPosition();
+			evaluator.Reset(positionStack);
 
-			UciIncrementalUpdater incrementalUpdater(&evaluator, &positionStack, currentPosition);
 			SharedSearchContext searchContext(searchConstraints, std::chrono::high_resolution_clock().now(), transpositionTable);
 
 			const auto start = std::chrono::high_resolution_clock::now();
 
-			const auto& searchResults = StartSearch<false>(incrementalUpdater, searchContext);
+			const auto& searchResults = StartSearch<false>(positionStack, evaluator, searchContext);
 
 			const auto stop = std::chrono::high_resolution_clock::now();
 			const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);

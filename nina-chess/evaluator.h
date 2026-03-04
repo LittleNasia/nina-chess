@@ -1,10 +1,14 @@
 #pragma once
-#include "chess.h"
+#include "color.h"
 #include "move_list.h"
+#include "position.h"
 #include "position_stack.h"
 #include "psqt.h"
 #include "score.h"
 #include "utils.h"
+#include <cstdint>
+#include <fstream>
+#include <string_view>
 
 class Evaluator
 {
@@ -14,6 +18,7 @@ public:
 	
 	template<Color sideToMove>
 	forceinline constexpr Score Evaluate(const MoveList& moveList, const int64_t searchDepth);
+
 	template<Color sideToMove>
 	forceinline constexpr void IncrementalUpdate(const Position& newPos, const MoveList& moveList);
 

@@ -1,18 +1,36 @@
 #include "targets.h"
 #if _UCI
-#include "uci.h"
 
+#include "uci.h"
 #include <atomic>
 #include <iostream>
 #include <sstream>
 #include <thread>
-
 #include "evaluator.h"
 #include "move_gen.h"
 #include "position.h"
 #include "search.h"
 #include "transposition_table.h"
-#include "uci_incremental_updater.h"
+#include <chrono>
+#include <cstdint>
+#include <cstdlib>
+#include <fstream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include "castling.h"
+#include "chess_constants.h"
+#include "color.h"
+#include "move.h"
+#include "move_list.h"
+#include "piece_type.h"
+#include "position_stack.h"
+#include "search_constraints.h"
+#include "search_time_cancellation_policy.h"
+#include "shared_search_context.h"
+#include "side.h"
+#include "utils.h"
 
 using namespace uci;
 
@@ -33,8 +51,7 @@ struct UciState
 		SearchThread{},
 		UciEvaluator(std::make_unique<Evaluator>(WeightsFilename)),
 		UciPositionStack(std::make_unique<PositionStack>()),
-		UciTranspositionTable(std::make_unique<TranspositionTable>(HashSize)),
-		IncrementalUpdater{ UciEvaluator.get(), UciPositionStack.get(), Position() }
+		UciTranspositionTable(std::make_unique<TranspositionTable>(HashSize))
 	{
 	}
 
@@ -49,8 +66,6 @@ struct UciState
 	std::unique_ptr<Evaluator> UciEvaluator;
 	std::unique_ptr<PositionStack> UciPositionStack;
 	std::unique_ptr<TranspositionTable> UciTranspositionTable;
-
-	UciIncrementalUpdater IncrementalUpdater;
 };
 static UciState currentState;
 
@@ -76,22 +91,24 @@ void LoadUciState(const std::string_view& filename)
 }
 
 void Ucinewgame()
-{									 
+{
 	currentState.UciTranspositionTable = std::make_unique<TranspositionTable>(currentState.HashSize);
+	currentState.UciPositionStack->Reset(Position());
+	currentState.UciEvaluator->Reset(*currentState.UciPositionStack);
 }
 
 void SearchThreadFunction(const TimePoint& search_start_timepoint, const SearchConstraints& search_constraints)
 {
 	currentState.SearchRunning.test_and_set();
 	SharedSearchContext search_context(search_constraints, search_start_timepoint, &currentState.GetTranspositionTable());
-	StartSearch<true>(currentState.IncrementalUpdater, search_context);
+	StartSearch<true>(*currentState.UciPositionStack, *currentState.UciEvaluator, search_context);
 	currentState.SearchRunning.clear();
 }
 
 void Go(const GoState& state)
 {
 	const TimePoint search_start_timepoint = std::chrono::high_resolution_clock::now();
-	const Position& current_position = currentState.IncrementalUpdater.GetPositionStack().GetCurrentPosition();
+	const Position& current_position = currentState.UciPositionStack->GetCurrentPosition();
 	if (currentState.SearchRunning.test())
 	{
 		return;
@@ -202,9 +219,17 @@ void FindAndMakeUciMove(const Position& position, const MoveList& moveList, cons
 				continue;
 
 			if (position.SideToMove == WHITE)
-				currentState.IncrementalUpdater.FullUpdate<WHITE>(currentMove);
+			{
+				currentState.UciPositionStack->MakeMove(currentMove);
+				auto& currentPosMoveList = currentState.UciPositionStack->GetMoveList();
+				currentState.UciEvaluator->IncrementalUpdate<WHITE>(currentState.UciPositionStack->GetCurrentPosition(), currentPosMoveList);
+			}
 			else
-				currentState.IncrementalUpdater.FullUpdate<BLACK>(currentMove);
+			{
+				currentState.UciPositionStack->MakeMove(currentMove);
+				auto& currentPosMoveList = currentState.UciPositionStack->GetMoveList();
+				currentState.UciEvaluator->IncrementalUpdate<BLACK>(currentState.UciPositionStack->GetCurrentPosition(), currentPosMoveList);
+			}
 
 			return;
 		}
@@ -236,9 +261,17 @@ void FindCastlingMoveFallback(const Position& position, const MoveList& moveList
 					(curr_move.IsQueensideCastling() && isQueensideCastling))
 				{
 					if (position.SideToMove == WHITE)
-						currentState.IncrementalUpdater.FullUpdate<WHITE>(curr_move);
+					{
+						currentState.UciPositionStack->MakeMove(curr_move);
+						auto& currentPosMoveList = currentState.UciPositionStack->GetMoveList();
+						currentState.UciEvaluator->IncrementalUpdate<WHITE>(currentState.UciPositionStack->GetCurrentPosition(), currentPosMoveList);
+					}
 					else
-						currentState.IncrementalUpdater.FullUpdate<BLACK>(curr_move);
+					{
+						currentState.UciPositionStack->MakeMove(curr_move);
+						auto& currentPosMoveList = currentState.UciPositionStack->GetMoveList();
+						currentState.UciEvaluator->IncrementalUpdate<BLACK>(currentState.UciPositionStack->GetCurrentPosition(), currentPosMoveList);
+					}
 
 					return;
 				}
@@ -255,7 +288,7 @@ void parse_moves(std::stringstream& input)
 	{
 		UciMove move = ParseMove(token);
 
-		const auto& lastPosition = currentState.IncrementalUpdater.GetPositionStack().GetCurrentPosition();
+		const auto& lastPosition =  currentState.UciPositionStack->GetCurrentPosition();
 
 		MoveList currentPositionMoveList;
 		GenerateMoves(lastPosition, currentPositionMoveList);
@@ -283,16 +316,16 @@ void Setposition(std::stringstream& input)
 			parsingFen = false;
 			if (!currentFen.empty())
 			{
-				currentState.IncrementalUpdater = 
-					UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), Position::ParseFen(currentFen));
+				currentState.UciPositionStack->Reset(Position::ParseFen(currentFen));
+				currentState.UciEvaluator->Reset(*currentState.UciPositionStack);
 			}
 
 			parse_moves(input);
 		}
 		else if (token == "startpos")
 		{
-			currentState.IncrementalUpdater =
-				UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), Position());
+			currentState.UciPositionStack->Reset(Position());
+			currentState.UciEvaluator->Reset(*currentState.UciPositionStack);
 		}
 		else if (parsingFen || token == "fen")
 		{
@@ -306,8 +339,8 @@ void Setposition(std::stringstream& input)
 	// we did not receive any moves and as such the parsing loop has exited
 	if (parsingFen)
 	{
-		currentState.IncrementalUpdater =
-			UciIncrementalUpdater(currentState.UciEvaluator.get(), currentState.UciPositionStack.get(), Position::ParseFen(currentFen));
+		currentState.UciPositionStack->Reset(Position::ParseFen(currentFen));
+		currentState.UciEvaluator->Reset(*currentState.UciPositionStack);
 	}
 }
 
@@ -405,7 +438,7 @@ void uci::Loop()
 		}
 		if (token == "print")
 		{
-			Position::PrintBoard(currentState.IncrementalUpdater.GetPositionStack().GetCurrentPosition());
+			Position::PrintBoard( currentState.UciPositionStack->GetCurrentPosition());
 			std::cout << std::endl;
 		}
 		if (token == "isready")

@@ -1,17 +1,41 @@
 #pragma once
 #include "alpha_beta.h"
+#include "alpha_beta.h"
+#include "color.h"
+#include "color.h"
+#include "evaluator.h"
 #include "evaluator.h"
 #include "individual_search_context.h"
+#include "individual_search_context.h"
 #include "move.h"
+#include "move.h"
+#include "move_gen.h"
+#include "move_list.h"
+#include "position.h"
+#include "position.h"
 #include "position_stack.h"
+#include "position_stack.h"
+#include "score.h"
+#include "score.h"
+#include "search_result.h"
 #include "search_result.h"
 #include "shared_search_context.h"
+#include "shared_search_context.h"
 #include "transposition_table.h"
-#include "uci_incremental_updater.h"
+#include "transposition_table.h"
 #include "utils.h"
+#include "utils.h"
+#include <chrono>
+#include <cstdint>
+#include <cstdint>
+#include <iostream>
+#include <ostream>
+#include <utility>
+#include <vector>
+#include <vector>
 
 template<bool showOutput>	
-forceinline std::vector<SearchResult> StartSearch(UciIncrementalUpdater& uciIncrementalUpdater, SharedSearchContext& searchContext);
+forceinline std::vector<SearchResult> StartSearch(PositionStack& posStack, SharedSearchContext& searchContext);
 
 
 forceinline Score GetScoreFromTranspositionTable(const Position& position,
@@ -43,14 +67,78 @@ forceinline Score GetScoreFromTranspositionTable(const Position& position,
 	return Score::UNKNOWN;
 }
 
-template<Color sideToMove, bool isRootNode = false>
-inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUpdater, IndividualSearchContext& searchContext)
+class IncrementalUpdater
 {
+	// Move generation update is tricky, because it might not happen on every node (as we might return prematurely)
+	// so we can't undo it on every single node, as we don't know whether we've hit the update or not
+	// this object just ensures that if move generation update was done, it will be undone on the next return
+	struct MoveGenerationUpdateGuard
+	{
+		forceinline constexpr MoveGenerationUpdateGuard(MoveGenerationUpdateGuard&& other)
+		{
+			m_Evaluator = other.m_Evaluator;
+			other.m_Evaluator = nullptr;
+		}
+		forceinline constexpr MoveGenerationUpdateGuard(Evaluator* evaluator) : m_Evaluator(evaluator) {}
+		forceinline constexpr ~MoveGenerationUpdateGuard()
+		{
+			if(m_Evaluator)
+				m_Evaluator->UndoUpdate();
+		}
+
+	private:
+		Evaluator* m_Evaluator;
+	};
+public:
+
+	IncrementalUpdater(Evaluator& evaluator, PositionStack& positionStack, IndividualSearchContext& searchContext) :
+		m_Evaluator(evaluator),
+		m_PositionStack(positionStack),
+		m_SearchContext(searchContext)
+	{}
+
+	void MakeMoveUpdate(const Move& move)
+	{
+		m_PositionStack.MakeMove(move);
+		m_SearchContext.MakeMove();
+	}
+
+	void UndoMoveUpdate()
+	{
+		m_PositionStack.UndoMove();
+		m_SearchContext.UndoMove();
+	}
+
+	template<Color sideToMove>
+	const std::pair<MoveList&, MoveGenerationUpdateGuard> GenerateMoves()
+	{
+		auto& moveList = m_PositionStack.GetMoveList<sideToMove>();
+
+		return std::pair<MoveList&, MoveGenerationUpdateGuard>( moveList, MoveGenerationUpdate<sideToMove>(moveList));
+	}
+
+	template<Color sideToMove>
+	[[nodiscard]] [[maybe_unused]] forceinline constexpr MoveGenerationUpdateGuard MoveGenerationUpdate(const MoveList& moveList)
+	{
+		auto& currentPosition = m_PositionStack.GetCurrentPosition();
+		m_Evaluator.IncrementalUpdate<sideToMove>(currentPosition, moveList);
+
+		return MoveGenerationUpdateGuard(&m_Evaluator);
+	}
+private:
+	Evaluator& m_Evaluator;
+	PositionStack& m_PositionStack;
+	IndividualSearchContext& m_SearchContext;
+};
+
+template<Color sideToMove, bool isRootNode = false>
+inline Score Search(AlphaBeta alphaBeta, PositionStack& positionStack, Evaluator& evaluator, IndividualSearchContext& searchContext)
+{
+	IncrementalUpdater incrementalUpdater(evaluator, positionStack, searchContext);
+
 	auto& nodes = searchContext.Nodes;
 	auto& cancellationPolicy = static_cast<SharedSearchContext&>(searchContext).GetCancellationPolicy();
 	auto& transpositionTable = static_cast<SharedSearchContext&>(searchContext).GetTranspositionTable();
-	auto& positionStack = incrementalUpdater.GetPositionStack();
-	auto& evaluator = incrementalUpdater.GetEvaluator();
 
 	constexpr Color oppositeSide = GetOppositeColor<sideToMove>();
 	const Position& position = positionStack.GetCurrentPosition();
@@ -74,7 +162,7 @@ inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUp
 	}
 
 	// is score in TT
-	if ((score = GetScoreFromTranspositionTable(position, alphaBeta, transpositionTable, incrementalUpdater.GetRemainingDepth())) != Score::UNKNOWN)
+	if ((score = GetScoreFromTranspositionTable(position, alphaBeta, transpositionTable, searchContext.GetRemainingDepth())) != Score::UNKNOWN)
 	{
 		nodes++;
 		ValidateScore(score);
@@ -82,14 +170,14 @@ inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUp
 	}
 
 	// is leaf node for another reason
-	[[maybe_unused]] const auto& guard = incrementalUpdater.MoveGenerationUpdate<sideToMove>();
-	const MoveList& moveList = positionStack.GetMoveList<sideToMove>();
-	if (incrementalUpdater.GetRemainingDepth() == 0 || moveList.GetNumMoves() == 0)
+	[[maybe_unused]] const auto&& [moveList, guard] = incrementalUpdater.GenerateMoves<sideToMove>();
+	
+	if (searchContext.GetRemainingDepth() == 0 || moveList.GetNumMoves() == 0)
 	{
-		score = evaluator.Evaluate<sideToMove>(moveList, incrementalUpdater.GetSearchDepth());
+		score = evaluator.Evaluate<sideToMove>(moveList, searchContext.GetSearchDepth());
 		ValidateScore(score);
 
-		const TranspositionTableEntry entry = { position.Hash, score, incrementalUpdater.GetRemainingDepth(), Move(), TTFlag::EXACT };
+		const TranspositionTableEntry entry = { position.Hash, score, searchContext.GetRemainingDepth(), Move(), TTFlag::EXACT };
 		transpositionTable.Insert(entry, isRootNode);
 
 		nodes++;
@@ -105,8 +193,8 @@ inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUp
 	{
 		const Move& currentMove = moveList[moveIndex];
 
-		incrementalUpdater.MakeMoveUpdate<sideToMove>(currentMove);
-		score = -Search<oppositeSide>(alphaBeta.Invert(), incrementalUpdater, searchContext);
+		incrementalUpdater.MakeMoveUpdate(currentMove);
+		score = -Search<oppositeSide>(alphaBeta.Invert(), positionStack, evaluator, searchContext);
 		incrementalUpdater.UndoMoveUpdate();
 
 		if (cancellationPolicy.IsAborted())
@@ -126,7 +214,7 @@ inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUp
 		{
 			if (score >= alphaBeta.Beta)
 			{
-				const TranspositionTableEntry entry = { position.Hash, score, incrementalUpdater.GetRemainingDepth(), bestMove, TTFlag::BETA };
+				const TranspositionTableEntry entry = { position.Hash, score, searchContext.GetRemainingDepth(), bestMove, TTFlag::BETA };
 				transpositionTable.Insert(entry, isRootNode);
 
 				return alphaBeta.Beta;
@@ -137,27 +225,26 @@ inline Score Search(AlphaBeta alphaBeta, SearchIncrementalUpdater& incrementalUp
 		}
 	}
 
-	const TranspositionTableEntry entry = { position.Hash, score, incrementalUpdater.GetRemainingDepth(), bestMove, transpositionTableEntryFlag };
+	const TranspositionTableEntry entry = { position.Hash, score, searchContext.GetRemainingDepth(), bestMove, transpositionTableEntryFlag };
 	transpositionTable.Insert(entry, isRootNode);
 
 	return alphaBeta.Alpha;
 }
 
 template<Color color, bool showOutput>
-forceinline std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
+forceinline std::vector<SearchResult> IterativeDeepening(PositionStack& positionStack, Evaluator& evaluator, SharedSearchContext& searchContext)
 {
 	std::vector<SearchResult> searchResults;
 
 	for (int64_t depth = 1; depth <= searchContext.GetSearchDepth(); depth++)
 	{
-		const Position& rootPos = incrementalUpdater.GetPositionStack().GetCurrentPosition();
+		const Position& rootPos = positionStack.GetCurrentPosition();
 
-		AlphaBeta alphaBeta = { Score::NEGATIVE_INF, Score::POSITIVE_INF };
-		SearchIncrementalUpdater searchIncrementalUpdater = incrementalUpdater.CreateSearchIncrementalUpdater(depth);
-		IndividualSearchContext individualSearchContext = IndividualSearchContext(searchContext);
+		AlphaBeta alphaBeta = { Score::NEGATIVE_INF, Score::POSITIVE_INF }; 
+		IndividualSearchContext individualSearchContext = IndividualSearchContext(searchContext, depth);
 
 		auto startTimepoint = std::chrono::high_resolution_clock::now();
-		const auto score = Search<color, true>(alphaBeta, searchIncrementalUpdater, individualSearchContext);
+		const auto score = Search<color, true>(alphaBeta, positionStack, evaluator, individualSearchContext);
 		auto endTimepoint = std::chrono::high_resolution_clock::now();
 		size_t duration = (size_t)std::chrono::duration_cast<std::chrono::milliseconds>(endTimepoint - startTimepoint).count();
 
@@ -174,7 +261,7 @@ forceinline std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& 
 		Position currentPosition = rootPos;
 		for (int pvDepth = 0; pvDepth < depth; pvDepth++)
 		{
-			MoveList currentPositionMoves = GenerateMoves(currentPosition, incrementalUpdater.GetPositionStack().GetMoveList());
+			MoveList currentPositionMoves = GenerateMoves(currentPosition, positionStack.GetMoveList());
 			const auto& currentTranspositionTableEntry = searchContext.GetTranspositionTable().Get(currentPosition.Hash);
 
 			if (currentTranspositionTableEntry.BestMove.FromBitmask() == 0 && currentTranspositionTableEntry.BestMove.ToBitmask() == 0)
@@ -206,22 +293,22 @@ forceinline std::vector<SearchResult> IterativeDeepening(UciIncrementalUpdater& 
 }
 
 template<bool showOutput>
-forceinline std::vector<SearchResult> StartSearch(UciIncrementalUpdater& incrementalUpdater, SharedSearchContext& searchContext)
+forceinline std::vector<SearchResult> StartSearch(PositionStack& positionStack, Evaluator& evaluator, SharedSearchContext& searchContext)
 {
 	std::vector<SearchResult> results;
 
 	if constexpr (showOutput)
 		std::cout << "info time limit " << searchContext.GetCancellationPolicy().GetTimeLimit() << std::endl;
 
-	const Position& rootPosition = incrementalUpdater.GetPositionStack().GetCurrentPosition();
+	const Position& rootPosition = positionStack.GetCurrentPosition();
 
 	if (rootPosition.SideToMove == Color::WHITE)
 	{
-		results = IterativeDeepening<Color::WHITE, showOutput>(incrementalUpdater, searchContext);
+		results = IterativeDeepening<Color::WHITE, showOutput>(positionStack, evaluator, searchContext);
 	}
 	else
 	{
-		results = IterativeDeepening<Color::BLACK, showOutput>(incrementalUpdater, searchContext);
+		results = IterativeDeepening<Color::BLACK, showOutput>(positionStack, evaluator, searchContext);
 	}
 
 	if constexpr (showOutput)
