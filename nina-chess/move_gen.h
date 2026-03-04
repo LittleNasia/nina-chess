@@ -36,7 +36,7 @@ forceinline void FillCheckmask(const size_t square, Bitboard& checkmask, Bitboar
 	while (checkers)
 	{
 		const Bitboard checker = PopBit(checkers);
-		checkmask |= PIN_BETWEEN_TABLE[square][BitIndex(checker)] | (1ULL<<square);
+		checkmask |= PIN_BETWEEN_TABLE[square][BitIndex(checker)] | (1ULL << square);
 	}
 }
 template<Color color>
@@ -89,6 +89,7 @@ template<PieceType pieceType, Color color, bool isKingsideCastling = false, bool
 forceinline void WriteMoves(MoveList& moveList, Bitboard movesMask, const uint32_t pieceIndex, const Bitboard enemies)
 {
 	constexpr PieceType movingPieceType = pieceType;
+	moveList.MoveListMisc.PieceMoves[pieceType] |= movesMask;
 	while (movesMask)
 	{
 		const Bitboard moveTarget = PopBit(movesMask);
@@ -96,7 +97,7 @@ forceinline void WriteMoves(MoveList& moveList, Bitboard movesMask, const uint32
 
 		if constexpr (isKingsideCastling)
 		{
-			moveList.PushMove({ pieceIndex, moveTargetIndex, movingPieceType, MoveType::KINGSIDE_CASTLING});
+			moveList.PushMove({ pieceIndex, moveTargetIndex, movingPieceType, MoveType::KINGSIDE_CASTLING });
 		}
 		else if constexpr (isQueensideCastling)
 		{
@@ -104,7 +105,7 @@ forceinline void WriteMoves(MoveList& moveList, Bitboard movesMask, const uint32
 		}
 		else if constexpr (isEnPassant)
 		{
-			moveList.PushMove({ pieceIndex, moveTargetIndex, movingPieceType, MoveType::EN_PASSANT});
+			moveList.PushMove({ pieceIndex, moveTargetIndex, movingPieceType, MoveType::EN_PASSANT });
 		}
 		else
 		{
@@ -112,7 +113,6 @@ forceinline void WriteMoves(MoveList& moveList, Bitboard movesMask, const uint32
 			moveList.PushMove({ pieceIndex, moveTargetIndex, movingPieceType, (isCapture ? MoveType::CAPTURE : MoveType::NORMAL) });
 		}
 	}
-	moveList.MoveListMisc.PieceMoves[pieceType] |= movesMask;
 }
 
 template<Color color>
@@ -130,6 +130,7 @@ forceinline void WritePawnMoves(MoveList& moveList, const Bitboard leftPawnCaptu
 		Bitboard currentPawnAttacks = (GetPawnsLeftAttacks<color>(pawn) & leftPawnCaptures) |
 			(GetPawnsRightAttacks<color>(pawn) & rightPawnCaptures);
 		currentPawnMoves |= currentPawnAttacks;
+		moveList.MoveListMisc.PieceMoves[movingPieceType] |= currentPawnMoves;
 
 		while (currentPawnAttacks)
 		{
@@ -150,6 +151,7 @@ forceinline void WritePawnMoves(MoveList& moveList, const Bitboard leftPawnCaptu
 
 		Bitboard currentPawnNormalMoves = (GetPawnAdvances<color>(pawn) & legalPawnAdvances);
 		currentPawnMoves |= currentPawnNormalMoves;
+		moveList.MoveListMisc.PieceMoves[movingPieceType] |= currentPawnMoves;
 
 		while (currentPawnNormalMoves)
 		{
@@ -170,6 +172,7 @@ forceinline void WritePawnMoves(MoveList& moveList, const Bitboard leftPawnCaptu
 
 		Bitboard currentPawnDoubleAdvances = GetDoubleAdvances<color>(pawn) & pawnDoubleAdvances;
 		currentPawnMoves |= currentPawnDoubleAdvances;
+		moveList.MoveListMisc.PieceMoves[movingPieceType] |= currentPawnMoves;
 		while (currentPawnDoubleAdvances)
 		{
 			const Bitboard move = PopBit(currentPawnDoubleAdvances);
@@ -177,9 +180,8 @@ forceinline void WritePawnMoves(MoveList& moveList, const Bitboard leftPawnCaptu
 
 			moveList.PushMove({ pawnIndex, moveIndex, movingPieceType, MoveType::DOUBLE_PAWN_ADVANCE });
 		}
-		moveList.MoveListMisc.PieceMoves[movingPieceType] |= currentPawnMoves;
 	}
-}  
+}
 
 template<Color color, bool isCheck, bool isUnblockableCheck>
 forceinline void WriteSliderMoves(MoveList& moveList, Bitboard movableBishops, Bitboard movableRooks, Bitboard queens, const Bitboard occupied, const Bitboard allies,
@@ -189,6 +191,7 @@ forceinline void WriteSliderMoves(MoveList& moveList, Bitboard movableBishops, B
 	{
 		const Bitboard currentBishop = PopBit(movableBishops);
 		Bitboard currentBishopMoves = GetSingleBishopAttacks(currentBishop, occupied);
+		moveList.MoveListMisc.PieceMoves[BISHOP] |= currentBishopMoves;
 		if constexpr (isCheck && isUnblockableCheck)
 		{
 			currentBishopMoves &= checkers;
@@ -197,17 +200,18 @@ forceinline void WriteSliderMoves(MoveList& moveList, Bitboard movableBishops, B
 		{
 			currentBishopMoves &= (rookCheckmask | bishopCheckmask);
 		}
-		if(currentBishop & bishopPinmask)
+		if (currentBishop & bishopPinmask)
 			currentBishopMoves &= bishopPinmask;
 		currentBishopMoves &= ~allies;
-		if(currentBishopMoves)
+		if (currentBishopMoves)
 			WriteMoves<BISHOP, color>(moveList, currentBishopMoves, BitIndex(currentBishop), occupied & ~allies);
-		moveList.MoveListMisc.PieceMoves[BISHOP] |= currentBishopMoves;
 	}
 	while (movableRooks)
 	{
 		const Bitboard currentRook = PopBit(movableRooks);
 		Bitboard currentRookMoves = GetSingleRookAttacks(currentRook, occupied);
+		moveList.MoveListMisc.PieceMoves[ROOK] |= currentRookMoves;
+
 		if constexpr (isCheck && isUnblockableCheck)
 		{
 			currentRookMoves &= checkers;
@@ -219,9 +223,8 @@ forceinline void WriteSliderMoves(MoveList& moveList, Bitboard movableBishops, B
 		if (currentRook & rookPinmask)
 			currentRookMoves &= rookPinmask;
 		currentRookMoves &= ~allies;
-		if(currentRookMoves)
+		if (currentRookMoves)
 			WriteMoves<ROOK, color>(moveList, currentRookMoves, BitIndex(currentRook), occupied & ~allies);
-		moveList.MoveListMisc.PieceMoves[ROOK] |= currentRookMoves;
 	}
 	while (queens)
 	{
@@ -229,8 +232,9 @@ forceinline void WriteSliderMoves(MoveList& moveList, Bitboard movableBishops, B
 		const Bitboard currentQueenRookMoves = GetSingleRookAttacks(currentQueen, occupied);
 		const Bitboard currentQueenBishopMoves = GetSingleBishopAttacks(currentQueen, occupied);
 		Bitboard currentQueenMoves = currentQueenRookMoves | currentQueenBishopMoves;
+		moveList.MoveListMisc.PieceMoves[QUEEN] |= currentQueenMoves;
 
-		if(currentQueen & rookPinmask)
+		if (currentQueen & rookPinmask)
 			currentQueenMoves &= (rookPinmask & currentQueenRookMoves);
 		if (currentQueen & bishopPinmask)
 			currentQueenMoves &= (bishopPinmask & currentQueenBishopMoves);
@@ -245,7 +249,6 @@ forceinline void WriteSliderMoves(MoveList& moveList, Bitboard movableBishops, B
 		}
 		if (currentQueenMoves)
 			WriteMoves<QUEEN, color>(moveList, currentQueenMoves, BitIndex(currentQueen), occupied & ~allies);
-		moveList.MoveListMisc.PieceMoves[QUEEN] |= currentQueenMoves;
 	}
 }
 
@@ -258,6 +261,7 @@ forceinline void WriteKnightMoves(MoveList& moveList, Bitboard movableKnights, c
 	{
 		const uint32_t KnightIndex = PopBitAndGetIndex(movableKnights);
 		Bitboard currentKnightMoves = KNIGHT_MOVE_BITMASKS[KnightIndex];
+		moveList.MoveListMisc.PieceMoves[movingPieceType] |= currentKnightMoves;
 		if constexpr (isCheck && isUnblockableCheck)
 		{
 			currentKnightMoves &= checkers;
@@ -267,7 +271,7 @@ forceinline void WriteKnightMoves(MoveList& moveList, Bitboard movableKnights, c
 			currentKnightMoves &= (bishopCheckmask | rookCheckmask);
 		}
 		currentKnightMoves &= ~allies;
-		
+
 		while (currentKnightMoves)
 		{
 			const Bitboard move = PopBit(currentKnightMoves);
@@ -277,7 +281,7 @@ forceinline void WriteKnightMoves(MoveList& moveList, Bitboard movableKnights, c
 
 			moveList.PushMove({ KnightIndex, moveTarget, movingPieceType, currentMoveType });
 		}
-		moveList.MoveListMisc.PieceMoves[movingPieceType] |= currentKnightMoves;
+
 	}
 }
 
@@ -373,7 +377,7 @@ forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList
 	const Bitboard movableRooks = currPieces.Rooks & ~bishopPinmask;
 	const Bitboard movableKnights = currPieces.Knights & ~(bishopPinmask | rookPinmask);
 	// pinned queens can move always
-	
+
 	// no checks
 	if (!(knightCheckers | pawnCheckers | rookCheckers | bishopCheckers))
 	{
@@ -389,7 +393,7 @@ forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList
 		WriteSliderMoves<color, true, false>(moveList, movableBishops, movableRooks,
 			currPieces.Queens, position.OccupiedBitmask, currPieces.Pieces, bishopPinmask,
 			rookPinmask, rookCheckers | bishopCheckers, bishopCheckmask, rookCheckmask);
-		pawnLeftCaptures &= (bishopCheckmask|rookCheckmask);
+		pawnLeftCaptures &= (bishopCheckmask | rookCheckmask);
 		pawnRightCaptures &= (bishopCheckmask | rookCheckmask);
 		legalPawnAdvances &= (bishopCheckmask | rookCheckmask);
 		legalPawnDoubleAdvances &= (bishopCheckmask | rookCheckmask);
@@ -429,7 +433,7 @@ forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList
 			const Bitboard kingRookAttacks = GetSingleRookAttacks(king, occupiedBitmaskWithEnPassantMoveMade);
 			if (
 				!(kingBishopAttacks & enemyBishopQueen)
-				&& 
+				&&
 				!(kingRookAttacks & enemyRookQueen)
 				)
 			{
@@ -471,7 +475,7 @@ forceinline MoveList& GenerateMoves(const Position& position, MoveList& moveList
 {
 	const Color color = position.SideToMove;
 
-		 if (color == WHITE) GenerateMoves<WHITE>(position, moveList);
+	if (color == WHITE) GenerateMoves<WHITE>(position, moveList);
 	else if (color == BLACK) GenerateMoves<BLACK>(position, moveList);
 
 	return moveList;
