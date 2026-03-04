@@ -52,18 +52,17 @@ struct UciState
 
 	UciIncrementalUpdater IncrementalUpdater;
 };
-
 static UciState currentState;
 
 struct GoState
 {
-	int Depth = -1;
-	int Wtime = -1;
-	int Btime = -1;
-	int Winc = -1;
-	int Binc = -1;
-	int Nodes = -1;
-	int Movetime = -1;
+	int Depth = invalidInt;
+	int Wtime = invalidInt;
+	int Btime = invalidInt;
+	int Winc = invalidInt;
+	int Binc = invalidInt;
+	int Nodes = invalidInt;
+	int Movetime = invalidInt;
 };
 
 void DumpUciState(const std::string_view& filename)
@@ -102,19 +101,19 @@ void Go(const GoState& state)
 	constraints.Depth = state.Depth;
 	constraints.Movetime = state.Movetime;
 
-	int time_for_move = -1;
-	if (current_position.SideToMove == WHITE && state.Wtime != -1)
+	int time_for_move = invalidInt;
+	if (current_position.SideToMove == WHITE && state.Wtime != invalidInt)
 	{
 		time_for_move = state.Wtime;
-		if (state.Winc != -1)
+		if (state.Winc != invalidInt)
 		{
 			time_for_move += state.Winc;
 		}
 	}
-	else if (current_position.SideToMove == BLACK && state.Btime != -1)
+	else if (current_position.SideToMove == BLACK && state.Btime != invalidInt)
 	{
 		time_for_move = state.Btime;
-		if (state.Binc != -1)
+		if (state.Binc != invalidInt)
 		{
 			time_for_move += state.Binc;
 		}

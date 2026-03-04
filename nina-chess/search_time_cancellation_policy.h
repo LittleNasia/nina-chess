@@ -45,11 +45,11 @@ forceinline constexpr int64_t SearchTimeCancellationPolicy::calculateMaxSearchDu
 	constexpr double compensationFactor = 0.98f;
 
 	// 5% of total time allocated to each move, otherwise infinity sekonds
-	const int64_t allocationFromTotalTime = totalTime == -1
+	const int64_t allocationFromTotalTime = totalTime == invalidInt
 		? std::numeric_limits<int64_t>::max()
 		: int64_t(static_cast<double>(totalTime) * timePerMoveFactor);
 
-	const int64_t movetimeDuration = movetime == -1
+	const int64_t movetimeDuration = movetime == invalidInt
 		? std::numeric_limits<int64_t>::max()
 		: movetime;
 

@@ -18,7 +18,7 @@ private:
 
 forceinline constexpr uint64_t SearchNodesCancellationPolicy::getNodeLimit(const SearchConstraints& searchConstraints)
 {
-	uint64_t nodeLimit = searchConstraints.Nodes == -1
+	uint64_t nodeLimit = searchConstraints.Nodes == invalidInt
 		? std::numeric_limits<uint64_t>::max()
 		: searchConstraints.Nodes;
 

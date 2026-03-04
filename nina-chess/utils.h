@@ -26,6 +26,8 @@ inline constexpr bool IS_DEBUG = ADD_DEBUG_CODE;
 #define DEBUG_IF(x) if constexpr(IS_DEBUG) if (x)
 #define DEBUG_ASSERT(x) DEBUG_IF(!(x)) throw std::runtime_error("Assertion failed: " #x)
 
+inline constexpr int32_t invalidInt = std::numeric_limits<int32_t>::max();
+
 // TODO determine which functions should be forceinlined and which shouldnt
 // forceinlining everything doesn't seem to give performance benefits anymore
 // maybe not anymore, forceinlining everything seems to be the way to go now for some reason ? ? ?
