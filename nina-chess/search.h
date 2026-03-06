@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -259,9 +260,10 @@ forceinline std::vector<SearchResult> IterativeDeepening(PositionStack& position
 		result.Depth = depth;
 
 		Position currentPosition = rootPos;
+		std::unique_ptr<MoveList> rootMoveList = std::make_unique<MoveList>();
 		for (int pvDepth = 0; pvDepth < depth; pvDepth++)
 		{
-			MoveList currentPositionMoves = GenerateMoves(currentPosition, positionStack.GetMoveList());
+			MoveList currentPositionMoves = GenerateMoves(currentPosition, *rootMoveList);
 			const auto& currentTranspositionTableEntry = searchContext.GetTranspositionTable().Get(currentPosition.Hash);
 
 			if (currentTranspositionTableEntry.BestMove.FromBitmask() == 0 && currentTranspositionTableEntry.BestMove.ToBitmask() == 0)
