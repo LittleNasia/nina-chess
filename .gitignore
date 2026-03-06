@@ -410,3 +410,5 @@ FodyWeavers.xsd
 /CMakeFiles
 /cmake_test
 /nina-chess/weights
+/.claude
+/nina-chess/data.bin

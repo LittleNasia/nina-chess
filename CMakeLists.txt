@@ -5,11 +5,13 @@ set(CMAKE_CXX_STANDARD 26)
 set(SOURCE_FILES ./nina-chess/bench_main.cpp
         ./nina-chess/nina-chess.cpp
         ./nina-chess/test_main.cpp
-        ./nina-chess/uci.cpp )
+        ./nina-chess/uci.cpp
+        ./nina-chess/game_generation_main.cpp )
 add_executable(nina-chess ${SOURCE_FILES})
 add_executable(bench ${SOURCE_FILES})
 add_executable(test ${SOURCE_FILES})
 add_executable(debug ${SOURCE_FILES})
+add_executable(gamegen ${SOURCE_FILES})
 
 target_compile_definitions(nina-chess PUBLIC
         ADD_DEBUG_CODE=false)
@@ -23,6 +25,9 @@ target_compile_definitions(test PUBLIC
         _PERFTNODES=18446744073709551615ULL)
 target_compile_definitions(debug PUBLIC
         ADD_DEBUG_CODE=true)
+target_compile_definitions(gamegen PUBLIC
+        ADD_DEBUG_CODE=false
+        _GAMEGEN)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(ALL_TARGET_GCC_FLAGS -mavx2 -mbmi -mbmi2 -static -Wno-return-type -Wno-switch)
@@ -32,6 +37,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(bench PRIVATE ${RELEASE_GCC_FLAGS})
     target_compile_options(test PRIVATE ${RELEASE_GCC_FLAGS})
     target_compile_options(debug PRIVATE ${ALL_TARGET_GCC_FLAGS})
+    target_compile_options(gamegen PRIVATE ${RELEASE_GCC_FLAGS})
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(ALL_TARGET_CLANG_FLAGS -mavx2 -mbmi -mbmi2 -static -Wno-return-type -Wno-switch)
     set(RELEASE_CLANG_FLAGS ${ALL_TARGET_CLANG_FLAGS} -O3 -ffast-math)
@@ -41,6 +47,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(bench PRIVATE ${RELEASE_CLANG_FLAGS})
     target_compile_options(test PRIVATE ${RELEASE_CLANG_FLAGS})
     target_compile_options(debug PRIVATE ${ALL_TARGET_CLANG_FLAGS})
+    target_compile_options(gamegen PRIVATE ${RELEASE_CLANG_FLAGS})
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 endif()

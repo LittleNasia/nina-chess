@@ -11,3 +11,8 @@
 #undef _UCI
 #define _UCI false
 #endif
+
+#ifdef _GAMEGEN
+#undef _UCI
+#define _UCI false
+#endif

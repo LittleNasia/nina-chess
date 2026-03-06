@@ -2,7 +2,10 @@
 #include "bit_manip.h"
 #include "chess_constants.h"
 #include "move_type.h"
+#include "piece_type.h"
 #include "utils.h"
+#include <cstdint>
+#include <string>
 
 struct Move
 {
