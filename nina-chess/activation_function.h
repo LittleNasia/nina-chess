@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simd.h"
+#include "utils.h"
 
 enum class ActivationFunction
 {
@@ -19,5 +20,4 @@ forceinline SimdVector ApplyActivation(SimdVector input)
 	{
 		return SimdTanh(input);
 	}
-	return input;
 }

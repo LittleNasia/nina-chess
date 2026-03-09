@@ -65,7 +65,7 @@ private:
 	forceinline float* forwardAvx(const float* input)
 	{
 		static constexpr int inputPacksPerPass = ((NUM_INPUT_PACKS < INPUT_VECTORS_PARSED) ? NUM_INPUT_PACKS : INPUT_VECTORS_PARSED);
-		static constexpr size_t numInputPasses = NUM_INPUT_PACKS / inputPacksPerPass;
+		static constexpr int numInputPasses = NUM_INPUT_PACKS / inputPacksPerPass;
 
 		int flatInputIndex = 0;
 		for (int inputPass = 0; inputPass < numInputPasses; inputPass++,
@@ -197,10 +197,10 @@ forceinline void DenseLayer<inputNeurons, outputNeurons, activationFunction>::In
 	const float bound = 1.f / std::sqrt(static_cast<float>(inputNeurons));
 	std::uniform_real_distribution<float> weightDist(-bound, bound);
 	std::memset(Biases, 0, sizeof(Biases));
-	for (int inputNeuronIndex = 0; inputNeuronIndex < inputNeurons; inputNeuronIndex++)
+	for (size_t inputNeuronIndex = 0; inputNeuronIndex < inputNeurons; inputNeuronIndex++)
 	{
-		const int currInputPack = inputNeuronIndex / FLOATS_PER_REGISTER;
-		const int neuronInPackIndex = inputNeuronIndex % FLOATS_PER_REGISTER;
+		const size_t currInputPack = inputNeuronIndex / FLOATS_PER_REGISTER;
+		const size_t neuronInPackIndex = inputNeuronIndex % FLOATS_PER_REGISTER;
 		for (int outputNeuronIndex = 0; outputNeuronIndex < outputNeurons; outputNeuronIndex++)
 		{
 			float randomVal = weightDist(prng);
