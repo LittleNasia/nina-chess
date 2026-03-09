@@ -5,10 +5,12 @@
 #include "avx_utils.h"
 #include "rng.h"
 #include "simd.h"
+#include "utils.h"
 #include <cmath>
 #include <cstring>
 #include <fstream>
 #include <memory>
+#include <pmmintrin.h>
 #include <random>
 
 template<int inputNeurons, int outputNeurons, ActivationFunction activationFunction = ActivationFunction::RELU>
@@ -56,55 +58,35 @@ public:
 		// input * weights get calculated later depending on architecture
 		// but this step is always identical
 		std::memcpy(Output, Biases, sizeof(Output));
-#ifdef __AVX2__
-		return forwardAvx2(input);
-#else
-		if constexpr (outputNeurons == 1)
-		{
-			return forwardSingle(input);
-		}
-		else
-		{
-			return forwardMulti(input);
-		}
-#endif
+		return forwardAvx(input);
 	}
 
 private:
-#ifdef __AVX2__
-	forceinline float* forwardAvx2(const float* input)
+	forceinline float* forwardAvx(const float* input)
 	{
-		static constexpr int actualVectorsParsedCount = ((NUM_INPUT_PACKS < INPUT_VECTORS_PARSED) ? NUM_INPUT_PACKS : INPUT_VECTORS_PARSED);
-		static constexpr size_t numOuterIterations = NUM_INPUT_PACKS / actualVectorsParsedCount;
+		static constexpr int inputPacksPerPass = ((NUM_INPUT_PACKS < INPUT_VECTORS_PARSED) ? NUM_INPUT_PACKS : INPUT_VECTORS_PARSED);
+		static constexpr size_t numInputPasses = NUM_INPUT_PACKS / inputPacksPerPass;
 
-		int baseInputIndex = 0;
-		for (int outerIteration = 0; outerIteration < numOuterIterations; outerIteration++,
-			baseInputIndex += FLOATS_PER_REGISTER * actualVectorsParsedCount)
+		int flatInputIndex = 0;
+		for (int inputPass = 0; inputPass < numInputPasses; inputPass++,
+			flatInputIndex += FLOATS_PER_REGISTER * inputPacksPerPass)
 		{
-			SimdVector inputs[actualVectorsParsedCount];
-			for (int inputVector = 0, inputIndex = baseInputIndex; inputVector < actualVectorsParsedCount;
+			SimdVector inputs[inputPacksPerPass];
+			for (int inputVector = 0, inputIndex = flatInputIndex; inputVector < inputPacksPerPass;
 				inputVector++, inputIndex += FLOATS_PER_REGISTER)
 			{
-				inputs[inputVector] = _mm256_load_ps(&input[inputIndex]);
-
-				if constexpr (activationFunction == ActivationFunction::RELU)
-				{
-					inputs[inputVector] = _mm256_max_ps(inputs[inputVector], _mm256_setzero_ps());
-				}
-				else if constexpr (activationFunction == ActivationFunction::TANH)
-				{
-					inputs[inputVector] = _mm256_tanh_ps(inputs[inputVector]);
-				}
+				inputs[inputVector] = SimdLoad(&input[inputIndex]);
+				inputs[inputVector] = ApplyActivation<activationFunction>(inputs[inputVector]);
 			}
 
 			for (int outputNode = 0; outputNode < outputNeurons; outputNode++)
 			{
-				SimdVector outputSum = _mm256_setzero_ps();
-				for (int inputVector = 0; inputVector < actualVectorsParsedCount; inputVector++)
+				SimdVector outputSum = SimdSetZero();
+				for (int inputVector = 0; inputVector < inputPacksPerPass; inputVector++)
 				{
-					outputSum = _mm256_fmadd_ps(inputs[inputVector],
-						_mm256_load_ps((const float*)&Weights[outerIteration * actualVectorsParsedCount + inputVector][outputNode]),
-						outputSum);
+					const int weightsIndex = inputPass * inputPacksPerPass + inputVector;
+					SimdVector weights = SimdLoad((const float*)&Weights[weightsIndex][outputNode]);
+					outputSum = SimdFusedMultiplyAdd(inputs[inputVector], weights, outputSum);
 				}
 				// horizontal sum
 				// although doing horizontal sums in the innermost loop is not really good
@@ -115,12 +97,11 @@ private:
 				// due to the memory accesses we save by reversing the loops
 				// I benchmarked that I promise!!!!! this is really better !!!!!! (on my machine)
 
-				Output[outputNode] += simd_horizontal_sum(outputSum);
+				Output[outputNode] += SimdHorizontalSum(outputSum);
 			}
 		}
 		return Output;
 	}
-#else
 	// in case the output layer has at least 4 neurons, we can optimize in a neat little way
 	forceinline float* forwardMulti(const float* input)
 	{
@@ -128,15 +109,7 @@ private:
 		{
 			// load 4 inputs into one register
 			__m128 currInputPack = _mm_load_ps(input + inputNeuronIndex);
-			// apply activation function on input first
-			if constexpr (activationFunction == ActivationFunction::RELU)
-			{
-				currInputPack = _mm_max_ps(currInputPack, _mm_setzero_ps());
-			}
-			else if constexpr (activationFunction == ActivationFunction::TANH)
-			{
-				currInputPack = _mm_tanh_ps(currInputPack);
-			}
+			currInputPack = ApplyActivation<activationFunction>(currInputPack);
 
 			// 4 output values are calculated in one iteration
 			static constexpr int numOutputPacks = outputNeurons / 4;
@@ -196,18 +169,8 @@ private:
 			// load 4 inputs into one register twice
 			__m128 firstInputPack = _mm_load_ps(input + inputNeuronIndex);
 			__m128 secondInputPack = _mm_load_ps(input + inputNeuronIndex + 4);
-
-			// apply activation function on input first
-			if constexpr (activationFunction == ActivationFunction::RELU)
-			{
-				firstInputPack = _mm_max_ps(firstInputPack, _mm_setzero_ps());
-				secondInputPack = _mm_max_ps(secondInputPack, _mm_setzero_ps());
-			}
-			else if constexpr (activationFunction == ActivationFunction::TANH)
-			{
-				firstInputPack = _mm_tanh_ps(firstInputPack);
-				secondInputPack = _mm_tanh_ps(secondInputPack);
-			}
+			firstInputPack = ApplyActivation<activationFunction>(firstInputPack);
+			secondInputPack = ApplyActivation<activationFunction>(secondInputPack);
 
 			// load weights of these packs
 			__m128 firstInputPackWeights = _mm_load_ps((float*)&Weights[inputPack][outputNeuronIndex]);
@@ -225,7 +188,6 @@ private:
 		}
 		return Output;
 	}
-#endif
 };
 
 template<int inputNeurons, int outputNeurons, ActivationFunction activationFunction>

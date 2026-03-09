@@ -3,10 +3,10 @@
 #include "utils.h"
 #include <immintrin.h>
 
-forceinline float simd_horizontal_sum(const SimdVector& input);
+forceinline float SimdHorizontalSum(const SimdVector& input);
 
 #ifdef __AVX512F__
-forceinline float simd_horizontal_sum(const SimdVector& input)
+forceinline float SimdHorizontalSum(const SimdVector& input)
 {
 	// based on pretty limited benchmarking this is better than _mm512_reduce_add_ps on MSVC but who knows
 	// maybe this sucks and I will never know because that's not the highest priority thing in my life
@@ -48,7 +48,7 @@ forceinline float simd_horizontal_sum(const SimdVector& input)
 	return _mm_cvtss_f32(higherHalf);
 }
 #elifdef __AVX2__
-forceinline float simd_horizontal_sum(const SimdVector& input)
+forceinline float SimdHorizontalSum(const SimdVector& input)
 {
 	// this is really good even though people say horizontal sums are not really that amazing
 
@@ -84,7 +84,7 @@ forceinline float simd_horizontal_sum(const SimdVector& input)
 	return _mm_cvtss_f32(higherHalf);
 }
 #else
-forceinline float simd_horizontal_sum(const SimdVector& input)
+forceinline float SimdHorizontalSum(const SimdVector& input)
 {
 	// input = [x0,x1,x2,x3]
 	
