@@ -140,7 +140,7 @@
     <ClInclude Include="position.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="avx2_utils.h">
+    <ClInclude Include="avx_utils.h">
       <Filter>Header Files\Hardware</Filter>
     </ClInclude>
     <ClInclude Include="move_gen.h">
@@ -205,6 +205,12 @@
     </ClInclude>
     <ClInclude Include="game_generation_test.h">
       <Filter>Header Files\GameGeneration</Filter>
+    </ClInclude>
+    <ClInclude Include="dense_layer.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="activation_function.h">
+      <Filter>Header Files\NN</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

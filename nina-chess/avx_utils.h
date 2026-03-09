@@ -1,13 +1,57 @@
 #pragma once
 #include "simd.h"
 #include "utils.h"
+#include <immintrin.h>
 
 forceinline float simd_horizontal_sum(const SimdVector& input);
 
-
-#ifdef __AVX2__
+#ifdef __AVX512F__
 forceinline float simd_horizontal_sum(const SimdVector& input)
 {
+	// based on pretty limited benchmarking this is better than _mm512_reduce_add_ps on MSVC but who knows
+	// maybe this sucks and I will never know because that's not the highest priority thing in my life
+
+	// input = [x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15]
+	// castps512_ps256 is a free cast, no instruction emitted
+	// low = [x0,x1,x2,x3,x4,x5,x6,x7]
+	__m256 low = _mm512_castps512_ps256(input);
+	// extractf32x8 imm8 argument is either 1 or 0
+	// 0 extracts the lower half, 1 extracts the upper half
+	// high = [x8,x9,x10,x11,x12,x13,x14,x15]
+	__m256 high = _mm512_extractf32x8_ps(input, 1);
+
+	// sum256 = [x0+x8,x1+x9,x2+x10,x3+x11,x4+x12,x5+x13,x6+x14,x7+x15]
+	__m256 sum256 = _mm256_add_ps(low, high);
+
+	// from here on the reduction is the same as the AVX2 path
+	// lower_half = [x0+x8,x1+x9,x2+x10,x3+x11]
+	// higher_half = [x4+x12,x5+x13,x6+x14,x7+x15]
+	__m128 lowerHalf = _mm256_extractf128_ps(sum256, 0);
+	__m128 higherHalf = _mm256_extractf128_ps(sum256, 1);
+
+	// higher_half = [x0+x4+x8+x12,x1+x5+x9+x13,x2+x6+x10+x14,x3+x7+x11+x15]
+	higherHalf = _mm_add_ps(higherHalf, lowerHalf);
+
+	// lower_half = [x2+x6+x10+x14,x3+x7+x11+x15 ...]
+	lowerHalf = _mm_movehl_ps(higherHalf, higherHalf);
+
+	// higher_half = [x0+x2+x4+x6+x8+x10+x12+x14,x1+x3+x5+x7+x9+x11+x13+x15 ...]
+	higherHalf = _mm_add_ps(lowerHalf, higherHalf);
+
+	// lower_half = [x1+x3+x5+x7+x9+x11+x13+x15 ...]
+	lowerHalf = _mm_shuffle_ps(higherHalf, higherHalf, _MM_SHUFFLE(0, 0, 0, 1));
+
+	// scalar add of the two remaining partial sums
+	higherHalf = _mm_add_ss(higherHalf, lowerHalf);
+
+	// return the scalar value
+	return _mm_cvtss_f32(higherHalf);
+}
+#elifdef __AVX2__
+forceinline float simd_horizontal_sum(const SimdVector& input)
+{
+	// this is really good even though people say horizontal sums are not really that amazing
+
 	// input = [x0,x1,x2,x3,x4,x5,x6,x7]
 	// extractf imm8 argument is either 1 or 0
 	// 0 extracts the lower half, 1 extracts the upper half
@@ -39,9 +83,7 @@ forceinline float simd_horizontal_sum(const SimdVector& input)
 	// return the scalar value 
 	return _mm_cvtss_f32(higherHalf);
 }
-#endif
-
-#ifndef __AVX2__
+#else
 forceinline float simd_horizontal_sum(const SimdVector& input)
 {
 	// input = [x0,x1,x2,x3]

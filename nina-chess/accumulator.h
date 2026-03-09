@@ -1,7 +1,15 @@
 #pragma once
 #include "architecture.h"
+#include "avx_utils.h"
+#include "bit_manip.h"
 #include "utils.h"
 #include "weights.h"
+#include <cmath>
+#include <cstdint>
+#include <fstream>
+#include <random>
+#include <stdexcept>
+#include <string.h>
 
 template<typename BitboardFeatureIterator, size_t outputSize>
 class BitboardFeatureAccumulator

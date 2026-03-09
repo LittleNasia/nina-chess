@@ -1,10 +1,12 @@
 #pragma once
-#include "utils.h"
 
+#include "utils.h"
 #include <immintrin.h>
 #include <xmmintrin.h>
 
-#ifdef __AVX2__
+#ifdef __AVX512F__
+using SimdVector = __m512;
+#elifdef __AVX2__
 using SimdVector = __m256;
 #else
 using SimdVector = __m128;
@@ -12,7 +14,7 @@ using SimdVector = __m128;
 
 inline constexpr int FLOATS_PER_REGISTER = sizeof(SimdVector) / sizeof(float);
 
-struct simd_pack
+struct SimdPack
 {
 public:
 	forceinline constexpr float& operator[] (const size_t index) { return m_Values[index]; }

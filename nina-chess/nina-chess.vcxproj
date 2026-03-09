@@ -303,7 +303,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions102</EnableEnhancedInstructionSet>
       <FloatingPointModel>Strict</FloatingPointModel>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
@@ -336,7 +336,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions102</EnableEnhancedInstructionSet>
       <FloatingPointModel>Strict</FloatingPointModel>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
@@ -416,10 +416,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="accumulator.h" />
+    <ClInclude Include="activation_function.h" />
     <ClInclude Include="alpha_beta.h" />
     <ClInclude Include="architecture.h" />
     <ClInclude Include="attacks.h" />
-    <ClInclude Include="avx2_utils.h" />
+    <ClInclude Include="avx_utils.h" />
     <ClInclude Include="bitmasks.h" />
     <ClInclude Include="bit_manip.h" />
     <ClInclude Include="board_features.h" />
@@ -428,6 +429,7 @@
     <ClInclude Include="chess_bitboard_feature_iterator.h" />
     <ClInclude Include="chess_constants.h" />
     <ClInclude Include="color.h" />
+    <ClInclude Include="dense_layer.h" />
     <ClInclude Include="evaluator.h" />
     <ClInclude Include="game_generation.h" />
     <ClInclude Include="game_generation_test.h" />
