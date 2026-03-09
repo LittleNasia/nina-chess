@@ -1,6 +1,5 @@
 #pragma once
 #include "piece_type.h"
-#include "utils.h"
 
 enum class MoveType
 {

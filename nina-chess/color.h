@@ -1,5 +1,6 @@
 #pragma once
 #include "utils.h"
+#include <cstdint>
 
 enum Color : uint8_t
 {

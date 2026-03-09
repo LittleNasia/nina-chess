@@ -1,5 +1,7 @@
 #pragma once
 #include "utils.h"
+#include <cstdint>
+#include <ostream>
 
 enum class Score : int32_t
 {

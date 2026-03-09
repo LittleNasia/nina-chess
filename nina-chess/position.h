@@ -1,10 +1,23 @@
 #pragma once
 #include "attacks.h"
+#include "bit_manip.h"
+#include "bitmasks.h"
 #include "castling.h"
+#include "chess_constants.h"
+#include "color.h"
+#include "intrinsics.h"
 #include "move.h"
+#include "move_type.h"
+#include "piece.h"
+#include "piece_type.h"
 #include "side.h"
 #include "utils.h"
 #include "zobrist.h"
+#include <cstdint>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <string_view>
 
 struct Position
 {

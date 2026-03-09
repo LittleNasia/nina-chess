@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.13)
 project(nina-chess)
 set(CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "ON")
 set(CMAKE_CXX_STANDARD 26)
+
+set(SIMD_ARCH "AVX2" CACHE STRING "SIMD architecture: SSE3, AVX2, or AVX512")
+set_property(CACHE SIMD_ARCH PROPERTY STRINGS SSE3 AVX2 AVX512)
+
 set(SOURCE_FILES ./nina-chess/bench_main.cpp
         ./nina-chess/nina-chess.cpp
         ./nina-chess/test_main.cpp
@@ -30,7 +34,15 @@ target_compile_definitions(gamegen PUBLIC
         _GAMEGEN)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(ALL_TARGET_GCC_FLAGS -mavx2 -mbmi -mbmi2 -static -Wno-return-type -Wno-switch)
+    if(SIMD_ARCH STREQUAL "SSE3")
+        set(SIMD_FLAGS -msse3)
+    elseif(SIMD_ARCH STREQUAL "AVX2")
+        set(SIMD_FLAGS -mavx2 -mbmi -mbmi2)
+    elseif(SIMD_ARCH STREQUAL "AVX512")
+        set(SIMD_FLAGS -mavx512f -mbmi -mbmi2)
+    endif()
+
+    set(ALL_TARGET_GCC_FLAGS ${SIMD_FLAGS} -static -Wno-return-type -Wno-switch)
     set(RELEASE_GCC_FLAGS ${ALL_TARGET_GCC_FLAGS} -Ofast -finline-limit=500000 )
 
     target_compile_options(nina-chess PRIVATE ${RELEASE_GCC_FLAGS})
@@ -39,7 +51,15 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(debug PRIVATE ${ALL_TARGET_GCC_FLAGS})
     target_compile_options(gamegen PRIVATE ${RELEASE_GCC_FLAGS})
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(ALL_TARGET_CLANG_FLAGS -mavx2 -mbmi -mbmi2 -static -Wno-return-type -Wno-switch)
+    if(SIMD_ARCH STREQUAL "SSE3")
+        set(SIMD_FLAGS -msse3)
+    elseif(SIMD_ARCH STREQUAL "AVX2")
+        set(SIMD_FLAGS -mavx2 -mbmi -mbmi2)
+    elseif(SIMD_ARCH STREQUAL "AVX512")
+        set(SIMD_FLAGS -mavx512f -mbmi -mbmi2)
+    endif()
+
+    set(ALL_TARGET_CLANG_FLAGS ${SIMD_FLAGS} -static -Wno-return-type -Wno-switch)
     set(RELEASE_CLANG_FLAGS ${ALL_TARGET_CLANG_FLAGS} -O3 -ffast-math)
 
 
@@ -49,5 +69,17 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(debug PRIVATE ${ALL_TARGET_CLANG_FLAGS})
     target_compile_options(gamegen PRIVATE ${RELEASE_CLANG_FLAGS})
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    if(SIMD_ARCH STREQUAL "AVX2")
+        set(SIMD_FLAGS /arch:AVX2)
+    elseif(SIMD_ARCH STREQUAL "AVX512")
+        set(SIMD_FLAGS /arch:AVX512)
+    else()
+        set(SIMD_FLAGS "")
+    endif()
 
+    target_compile_options(nina-chess PRIVATE ${SIMD_FLAGS})
+    target_compile_options(bench PRIVATE ${SIMD_FLAGS})
+    target_compile_options(test PRIVATE ${SIMD_FLAGS})
+    target_compile_options(debug PRIVATE ${SIMD_FLAGS})
+    target_compile_options(gamegen PRIVATE ${SIMD_FLAGS})
 endif()

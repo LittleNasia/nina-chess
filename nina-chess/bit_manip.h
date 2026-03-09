@@ -1,6 +1,7 @@
 #pragma once
 #include "intrinsics.h"
 #include "utils.h"
+#include <cstdint>
 
 forceinline Bitboard PopBit(Bitboard& bitboard);
 forceinline uint32_t BitIndex(const Bitboard bitboard);

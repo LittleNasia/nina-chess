@@ -1,9 +1,12 @@
 #pragma once
 #include "accumulator.h"
+#include "architecture.h"
+#include "board_features.h"
 #include "chess_bitboard_feature_iterator.h"
 #include "move_list.h"
 #include "position.h"
 #include "utils.h"
+#include <fstream>
 
 class PSQT
 {
@@ -34,7 +37,6 @@ private:
 	int m_Depth;
 };
 
-#include "psqt.h"
 
 forceinline PSQT::PSQT(std::ifstream&& weightsFile) :
 	PSQT(weightsFile)

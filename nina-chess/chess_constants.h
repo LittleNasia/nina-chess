@@ -1,5 +1,6 @@
 #pragma once
 #include "utils.h"
+#include <cstdint>
 
 inline constexpr uint32_t BOARD_ROWS = 8;
 inline constexpr uint32_t BOARD_COLUMNS = 8;

@@ -1,5 +1,6 @@
 #pragma once
 #include "utils.h"
+#include <cstdint>
 
 enum PieceType : uint32_t
 {

@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.4.11519.219
@@ -7,38 +7,53 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nina-chess", "nina-chess\ni
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Bench|x64 = Bench|x64
-		Bench|x86 = Bench|x86
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Gamegen|x64 = Gamegen|x64
-		Gamegen|x86 = Gamegen|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-		Test|x64 = Test|x64
-		Test|x86 = Test|x86
+		Bench|x64-AVX2 = Bench|x64-AVX2
+		Bench|x64-AVX512 = Bench|x64-AVX512
+		Bench|x64-SSE3 = Bench|x64-SSE3
+		Debug|x64-AVX2 = Debug|x64-AVX2
+		Debug|x64-AVX512 = Debug|x64-AVX512
+		Debug|x64-SSE3 = Debug|x64-SSE3
+		Gamegen|x64-AVX2 = Gamegen|x64-AVX2
+		Gamegen|x64-AVX512 = Gamegen|x64-AVX512
+		Gamegen|x64-SSE3 = Gamegen|x64-SSE3
+		Release|x64-AVX2 = Release|x64-AVX2
+		Release|x64-AVX512 = Release|x64-AVX512
+		Release|x64-SSE3 = Release|x64-SSE3
+		Test|x64-AVX2 = Test|x64-AVX2
+		Test|x64-AVX512 = Test|x64-AVX512
+		Test|x64-SSE3 = Test|x64-SSE3
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x64.ActiveCfg = Bench|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x64.Build.0 = Bench|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x86.ActiveCfg = Bench|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x86.Build.0 = Bench|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x64.ActiveCfg = Debug|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x64.Build.0 = Debug|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x86.ActiveCfg = Debug|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x86.Build.0 = Debug|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x64.ActiveCfg = Gamegen|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x64.Build.0 = Gamegen|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x86.ActiveCfg = Gamegen|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x86.Build.0 = Gamegen|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x64.ActiveCfg = Release|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x64.Build.0 = Release|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x86.ActiveCfg = Release|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x86.Build.0 = Release|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x64.ActiveCfg = Test|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x64.Build.0 = Test|x64
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x86.ActiveCfg = Test|Win32
-		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x86.Build.0 = Test|Win32
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x64-AVX2.ActiveCfg = Bench-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x64-AVX2.Build.0 = Bench-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x64-AVX512.ActiveCfg = Bench-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x64-AVX512.Build.0 = Bench-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x64-SSE3.ActiveCfg = Bench-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Bench|x64-SSE3.Build.0 = Bench-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x64-AVX2.ActiveCfg = Debug-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x64-AVX2.Build.0 = Debug-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x64-AVX512.ActiveCfg = Debug-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x64-AVX512.Build.0 = Debug-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x64-SSE3.ActiveCfg = Debug-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Debug|x64-SSE3.Build.0 = Debug-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x64-AVX2.ActiveCfg = Gamegen-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x64-AVX2.Build.0 = Gamegen-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x64-AVX512.ActiveCfg = Gamegen-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x64-AVX512.Build.0 = Gamegen-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x64-SSE3.ActiveCfg = Gamegen-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Gamegen|x64-SSE3.Build.0 = Gamegen-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x64-AVX2.ActiveCfg = Release-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x64-AVX2.Build.0 = Release-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x64-AVX512.ActiveCfg = Release-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x64-AVX512.Build.0 = Release-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x64-SSE3.ActiveCfg = Release-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Release|x64-SSE3.Build.0 = Release-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x64-AVX2.ActiveCfg = Test-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x64-AVX2.Build.0 = Test-AVX2|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x64-AVX512.ActiveCfg = Test-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x64-AVX512.Build.0 = Test-AVX512|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x64-SSE3.ActiveCfg = Test-SSE3|x64
+		{E7CC01F0-8C40-46AB-A809-D0197E315243}.Test|x64-SSE3.Build.0 = Test-SSE3|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,9 @@
 #pragma once
 #include "board_features.h"
 #include "move_list.h"
+#include "piece_type.h"
 #include "utils.h"
+#include <stdexcept>
 
 class ChessBitboardFeatureIterator
 {

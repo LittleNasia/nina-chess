@@ -2,6 +2,7 @@
 #include "color.h"
 #include "piece_type.h"
 #include "utils.h"
+#include <cstdint>
 
 enum Piece : uint32_t
 {

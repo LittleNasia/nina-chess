@@ -11,6 +11,8 @@ import sys
 
 cwd = os.getcwd()
 
+SIMD_LEVELS = ["SSE3", "AVX2", "AVX512"]
+
 PREV_VERSION_CLONE_DEST = "./test/clone"
 
 NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION = "tested"
@@ -24,9 +26,9 @@ OLD_EXECUTABLE_PDB_NAME = f"{OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION}.exe"
 NEW_EXECUTABLE_PATH = f"./test/{NEW_EXECUTABLE_NAME}"
 OLD_EXECUTABLE_PATH = f"./test/{OLD_EXECUTABLE_NAME}"
 
-def createBuildExecutableCommand(solutionPath, outputPath, outputExecutableName, target, isRebuild, parameters = ()):
+def createBuildExecutableCommand(solutionPath, outputPath, outputExecutableName, target, isRebuild, simd="AVX2", parameters = ()):
     command  = f"msbuild {solutionPath} "
-    command += f"/p:Platform=x64 "
+    command += f'/p:Platform="x64-{simd}" '
     command += f"/p:Configuration={target} "
 
     if(outputPath != ""):
@@ -48,13 +50,13 @@ def deleteReadOnlyFile(action, name, exc):
     os.chmod(name, stat.S_IWRITE)
     os.remove(name)
 
-def prepareExecutables():
+def prepareExecutables(simd="AVX2"):
 
     if not os.path.exists(PREV_VERSION_CLONE_DEST):
         os.mkdir(PREV_VERSION_CLONE_DEST)
     subprocess.run("git clone . " + PREV_VERSION_CLONE_DEST)
-    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath=f"{cwd}/test", outputExecutableName=NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION, target="Bench", isRebuild=False))
-    subprocess.run(createBuildExecutableCommand(solutionPath="./test/clone/nina-chess.sln", outputPath=f"{cwd}/test", outputExecutableName=OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION, target="Bench", isRebuild=True))
+    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath=f"{cwd}/test", outputExecutableName=NEW_EXECUTABLE_NAME_WITHOUT_EXTENSION, target="Bench", isRebuild=False, simd=simd))
+    subprocess.run(createBuildExecutableCommand(solutionPath="./test/clone/nina-chess.sln", outputPath=f"{cwd}/test", outputExecutableName=OLD_EXECUTABLE_NAME_WITHOUT_EXTENSION, target="Bench", isRebuild=True, simd=simd))
 
 def cleanEnvironment():
     if os.path.exists(PREV_VERSION_CLONE_DEST):
@@ -64,9 +66,9 @@ def cleanEnvironment():
         if file.endswith(".exe") or file.endswith(".pdb"):
             os.remove(f"{cwd}/test/{file}")
 
-def runBenchmark(numRuns = NUM_BENCHMARK_RUNS):
+def runBenchmark(numRuns = NUM_BENCHMARK_RUNS, simd="AVX2"):
     cleanEnvironment()
-    prepareExecutables()
+    prepareExecutables(simd)
 
     try:
         bench_results = bench_executables.benchmarkFiles(NUM_BENCHMARK_RUNS, OLD_EXECUTABLE_PATH, [NEW_EXECUTABLE_PATH])
@@ -79,17 +81,17 @@ def runBenchmark(numRuns = NUM_BENCHMARK_RUNS):
 
     cleanEnvironment()
 
-def runTests():
+def runTests(simd="AVX2"):
     # run in release all tests
-    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath="", outputExecutableName="", target="Test", isRebuild=True))
-    subprocess.run(f'"{cwd}/x64/Test/nina-chess.exe"', check=True)
+    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath="", outputExecutableName="", target="Test", isRebuild=True, simd=simd))
+    subprocess.run(f'"{cwd}/x64/Test-{simd}/nina-chess.exe"', check=True)
     # run in debug with assertions, with a node limit so it doesn't take forever
-    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath="", outputExecutableName="", target="Test", isRebuild=True,
+    subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath="", outputExecutableName="", target="Test", isRebuild=True, simd=simd,
                                                 parameters=(("RunAssertions", "true"), ("TestPerftNodeLimit", 1000000))))
-    subprocess.run(f'"{cwd}/x64/Test/nina-chess.exe"', check=True)
+    subprocess.run(f'"{cwd}/x64/Test-{simd}/nina-chess.exe"', check=True)
 
 
-def benchCompilerOptions():
+def benchCompilerOptions(simd="AVX2"):
 	compilerOptions = [
         "",
         "/EHc- /EHs-",
@@ -136,7 +138,7 @@ def benchCompilerOptions():
 			fileName = "default"
 		additionalCompilerOptions = [("CompilerAdditionalOptions", f'"{compilerOption}"')]
 		msBuildCommand = createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath=f"{cwd}/test",
-		 				outputExecutableName=fileName, target="Bench", isRebuild=False, parameters=additionalCompilerOptions)
+		 				outputExecutableName=fileName, target="Bench", isRebuild=False, simd=simd, parameters=additionalCompilerOptions)
 		subprocess.run(msBuildCommand, check=True)
 		filenamesForBench.append(f"./test/{fileName}")
 
@@ -151,7 +153,7 @@ def benchCompilerOptions():
 		fileName = callingConvention
 		additionalCompilerOptions = [("CustomCallingConvention", f'"{callingConvention}"')]
 		msBuildCommand = createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath=f"{cwd}/test",
-		 				outputExecutableName=fileName, target="Bench", isRebuild=False, parameters=additionalCompilerOptions)
+		 				outputExecutableName=fileName, target="Bench", isRebuild=False, simd=simd, parameters=additionalCompilerOptions)
 		subprocess.run(msBuildCommand, check=True)
 		filenamesForBench.append(f"./test/{fileName}")
 
