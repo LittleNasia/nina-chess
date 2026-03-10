@@ -71,145 +71,145 @@
     <ClInclude Include="uci.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="search_nodes_cancellation_policy.h">
+    <ClInclude Include="Search/SearchContext/SearchCancellationPolicies/search_nodes_cancellation_policy.h">
       <Filter>Header Files\Search\SearchContext\SearchCancellationPolicies</Filter>
     </ClInclude>
-    <ClInclude Include="search_time_cancellation_policy.h">
+    <ClInclude Include="Search/SearchContext/SearchCancellationPolicies/search_time_cancellation_policy.h">
       <Filter>Header Files\Search\SearchContext\SearchCancellationPolicies</Filter>
     </ClInclude>
-    <ClInclude Include="search_cancellation_policy.h">
+    <ClInclude Include="Search/SearchContext/SearchCancellationPolicies/search_cancellation_policy.h">
       <Filter>Header Files\Search\SearchContext\SearchCancellationPolicies</Filter>
     </ClInclude>
-    <ClInclude Include="shared_search_context.h">
+    <ClInclude Include="Search/SearchContext/shared_search_context.h">
       <Filter>Header Files\Search\SearchContext</Filter>
     </ClInclude>
-    <ClInclude Include="individual_search_context.h">
+    <ClInclude Include="Search/SearchContext/individual_search_context.h">
       <Filter>Header Files\Search\SearchContext</Filter>
     </ClInclude>
-    <ClInclude Include="color.h">
+    <ClInclude Include="Chess/color.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="piece.h">
+    <ClInclude Include="Chess/piece.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="piece_type.h">
+    <ClInclude Include="Chess/piece_type.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="evaluator.h">
+    <ClInclude Include="Eval/evaluator.h">
       <Filter>Header Files\Eval</Filter>
     </ClInclude>
-    <ClInclude Include="psqt.h">
+    <ClInclude Include="Eval/psqt.h">
       <Filter>Header Files\Eval</Filter>
     </ClInclude>
-    <ClInclude Include="score.h">
+    <ClInclude Include="Eval/score.h">
       <Filter>Header Files\Eval</Filter>
     </ClInclude>
-    <ClInclude Include="chess.h">
+    <ClInclude Include="Chess/chess.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="castling.h">
+    <ClInclude Include="Chess/castling.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="chess_constants.h">
+    <ClInclude Include="Chess/chess_constants.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="search_core.h">
+    <ClInclude Include="Search/search_core.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
-    <ClInclude Include="search_result.h">
+    <ClInclude Include="Search/search_result.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
-    <ClInclude Include="search.h">
+    <ClInclude Include="Search/search.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
-    <ClInclude Include="move.h">
+    <ClInclude Include="Chess/move.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="board_features.h">
+    <ClInclude Include="Chess/board_features.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="position_stack.h">
+    <ClInclude Include="Search/position_stack.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
-    <ClInclude Include="chess_bitboard_feature_iterator.h">
+    <ClInclude Include="Eval/chess_bitboard_feature_iterator.h">
       <Filter>Header Files\Eval</Filter>
     </ClInclude>
-    <ClInclude Include="search_constraints.h">
+    <ClInclude Include="Search/search_constraints.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
-    <ClInclude Include="position.h">
+    <ClInclude Include="Chess/position.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="avx_utils.h">
+    <ClInclude Include="Hardware/avx_utils.h">
       <Filter>Header Files\Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="move_gen.h">
+    <ClInclude Include="MoveGen/move_gen.h">
       <Filter>Header Files\MoveGen</Filter>
     </ClInclude>
-    <ClInclude Include="move_list.h">
+    <ClInclude Include="MoveGen/move_list.h">
       <Filter>Header Files\MoveGen</Filter>
     </ClInclude>
-    <ClInclude Include="attacks.h">
+    <ClInclude Include="MoveGen/attacks.h">
       <Filter>Header Files\MoveGen</Filter>
     </ClInclude>
-    <ClInclude Include="side.h">
+    <ClInclude Include="Chess/side.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="simd.h">
+    <ClInclude Include="Hardware/simd.h">
       <Filter>Header Files\Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="architecture.h">
+    <ClInclude Include="Hardware/architecture.h">
       <Filter>Header Files\Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="transposition_table.h">
+    <ClInclude Include="Search/transposition_table.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
-    <ClInclude Include="accumulator.h">
+    <ClInclude Include="NN/accumulator.h">
       <Filter>Header Files\NN</Filter>
     </ClInclude>
-    <ClInclude Include="weights.h">
+    <ClInclude Include="NN/weights.h">
       <Filter>Header Files\NN</Filter>
     </ClInclude>
-    <ClInclude Include="perft.h">
+    <ClInclude Include="Search/perft.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
-    <ClInclude Include="bitmasks.h">
+    <ClInclude Include="Core/Engine/bitmasks.h">
       <Filter>Header Files\Core\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="utils.h">
+    <ClInclude Include="Core/Engine/utils.h">
       <Filter>Header Files\Core\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="targets.h">
+    <ClInclude Include="Core/Build/targets.h">
       <Filter>Header Files\Core\Build</Filter>
     </ClInclude>
-    <ClInclude Include="intrinsics.h">
+    <ClInclude Include="Hardware/intrinsics.h">
       <Filter>Header Files\Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="bit_manip.h">
+    <ClInclude Include="Core/Engine/bit_manip.h">
       <Filter>Header Files\Core\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="zobrist.h">
+    <ClInclude Include="Chess/zobrist.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="move_type.h">
+    <ClInclude Include="Chess/move_type.h">
       <Filter>Header Files\Chess</Filter>
     </ClInclude>
-    <ClInclude Include="alpha_beta.h">
+    <ClInclude Include="Search/alpha_beta.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
     <ClInclude Include="rng.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="game_generation.h">
+    <ClInclude Include="GameGeneration/game_generation.h">
       <Filter>Header Files\GameGeneration</Filter>
     </ClInclude>
-    <ClInclude Include="game_generation_test.h">
+    <ClInclude Include="GameGeneration/game_generation_test.h">
       <Filter>Header Files\GameGeneration</Filter>
     </ClInclude>
-    <ClInclude Include="dense_layer.h">
+    <ClInclude Include="NN/dense_layer.h">
       <Filter>Header Files\NN</Filter>
     </ClInclude>
-    <ClInclude Include="activation_function.h">
+    <ClInclude Include="NN/activation_function.h">
       <Filter>Header Files\NN</Filter>
     </ClInclude>
   </ItemGroup>

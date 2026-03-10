@@ -1,7 +1,7 @@
-#include "targets.h"
+#include "Core/Build/targets.h"
 #ifdef _GAMEGEN
 
-#include "game_generation.h"
+#include "GameGeneration/game_generation.h"
 #include <iostream>
 #include <string>
 

@@ -1,6 +1,6 @@
-#include "targets.h"
+#include "Core/Build/targets.h"
 #ifdef _BENCH
-#include "perft.h"
+#include "Search/perft.h"
 
 #include <thread>
 

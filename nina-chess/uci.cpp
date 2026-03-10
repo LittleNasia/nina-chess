@@ -1,4 +1,4 @@
-#include "targets.h"
+#include "Core/Build/targets.h"
 #if _UCI
 
 #include "uci.h"
@@ -6,11 +6,11 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
-#include "evaluator.h"
-#include "move_gen.h"
-#include "position.h"
-#include "search.h"
-#include "transposition_table.h"
+#include "Eval/evaluator.h"
+#include "MoveGen/move_gen.h"
+#include "Chess/position.h"
+#include "Search/search.h"
+#include "Search/transposition_table.h"
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -19,18 +19,18 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include "castling.h"
-#include "chess_constants.h"
-#include "color.h"
-#include "move.h"
-#include "move_list.h"
-#include "piece_type.h"
-#include "position_stack.h"
-#include "search_constraints.h"
-#include "search_time_cancellation_policy.h"
-#include "shared_search_context.h"
-#include "side.h"
-#include "utils.h"
+#include "Chess/castling.h"
+#include "Chess/chess_constants.h"
+#include "Chess/color.h"
+#include "Chess/move.h"
+#include "MoveGen/move_list.h"
+#include "Chess/piece_type.h"
+#include "Search/position_stack.h"
+#include "Search/search_constraints.h"
+#include "Search/SearchContext/SearchCancellationPolicies/search_time_cancellation_policy.h"
+#include "Search/SearchContext/shared_search_context.h"
+#include "Chess/side.h"
+#include "Core/Engine/utils.h"
 
 using namespace uci;
 

@@ -1,7 +1,4 @@
 #pragma once
 #include "Core/Engine/utils.h"
 
-namespace uci
-{
-	void Loop();
-}
+inline constexpr size_t CACHE_LINE_SIZE = 64;

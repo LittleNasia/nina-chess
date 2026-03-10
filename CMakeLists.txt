@@ -11,6 +11,8 @@ set(SOURCE_FILES ./nina-chess/bench_main.cpp
         ./nina-chess/test_main.cpp
         ./nina-chess/uci.cpp
         ./nina-chess/game_generation_main.cpp )
+include_directories(${CMAKE_SOURCE_DIR}/nina-chess)
+
 add_executable(nina-chess ${SOURCE_FILES})
 add_executable(bench ${SOURCE_FILES})
 add_executable(test ${SOURCE_FILES})

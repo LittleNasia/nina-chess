@@ -1,8 +1,8 @@
-#include "targets.h"
+#include "Core/Build/targets.h"
 #ifdef _TEST
-#include "dense_layer_test.h"
-#include "game_generation_test.h"
-#include "perft.h"
+#include "NN/dense_layer_test.h"
+#include "GameGeneration/game_generation_test.h"
+#include "Search/perft.h"
 
 int main()
 {
