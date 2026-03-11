@@ -17,6 +17,7 @@
 mono_crash.*
 
 # Build results
+.artifacts/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -412,3 +413,4 @@ FodyWeavers.xsd
 /nina-chess/weights
 /.claude
 /nina-chess/data.bin
+/build/AVX2

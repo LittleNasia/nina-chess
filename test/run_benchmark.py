@@ -84,11 +84,11 @@ def runBenchmark(numRuns = NUM_BENCHMARK_RUNS, simd="AVX2"):
 def runTests(simd="AVX2"):
     # run in release all tests
     subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath="", outputExecutableName="", target="Test", isRebuild=True, simd=simd))
-    subprocess.run(f'"{cwd}/x64/Test-{simd}/nina-chess.exe"', check=True)
+    subprocess.run(f'"{cwd}/.artifacts/vs/Test-{simd}/nina-chess.exe"', check=True)
     # run in debug with assertions, with a node limit so it doesn't take forever
     subprocess.run(createBuildExecutableCommand(solutionPath="nina-chess.sln", outputPath="", outputExecutableName="", target="Test", isRebuild=True, simd=simd,
                                                 parameters=(("RunAssertions", "true"), ("TestPerftNodeLimit", 1000000))))
-    subprocess.run(f'"{cwd}/x64/Test-{simd}/nina-chess.exe"', check=True)
+    subprocess.run(f'"{cwd}/.artifacts/vs/Test-{simd}/nina-chess.exe"', check=True)
 
 
 def benchCompilerOptions(simd="AVX2"):

@@ -1,5 +1,4 @@
 #pragma once
-#include "Core/Engine/utils.h"
 
 inline constexpr float HARDCODED_PSQT_WEIGHTS[25][64] =
 {

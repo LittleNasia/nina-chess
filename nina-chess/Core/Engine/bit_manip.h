@@ -1,6 +1,6 @@
 #pragma once
-#include "Hardware/intrinsics.h"
 #include "Core/Engine/utils.h"
+#include "Hardware/intrinsics.h"
 #include <cstdint>
 
 forceinline Bitboard PopBit(Bitboard& bitboard);

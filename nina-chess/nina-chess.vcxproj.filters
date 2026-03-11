@@ -49,28 +49,31 @@
     <Filter Include="Header Files\GameGeneration">
       <UniqueIdentifier>{58a3b764-684a-4ec6-8add-0f431debf543}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\UCI">
+      <UniqueIdentifier>{b67e282b-621b-41cf-8c4e-4516ac16ead0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SourceFiles">
+      <UniqueIdentifier>{ea048c5d-e49e-462d-bad1-fe3c8e8fd2a4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="nina-chess.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SourceFiles/bench_main.cpp">
+      <Filter>Source Files\SourceFiles</Filter>
     </ClCompile>
-    <ClCompile Include="test_main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SourceFiles/game_generation_main.cpp">
+      <Filter>Source Files\SourceFiles</Filter>
     </ClCompile>
-    <ClCompile Include="bench_main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SourceFiles/nina-chess.cpp">
+      <Filter>Source Files\SourceFiles</Filter>
     </ClCompile>
-    <ClCompile Include="uci.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SourceFiles/test_main.cpp">
+      <Filter>Source Files\SourceFiles</Filter>
     </ClCompile>
-    <ClCompile Include="game_generation_main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SourceFiles/uci.cpp">
+      <Filter>Source Files\SourceFiles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="uci.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Search/SearchContext/SearchCancellationPolicies/search_nodes_cancellation_policy.h">
       <Filter>Header Files\Search\SearchContext\SearchCancellationPolicies</Filter>
     </ClInclude>
@@ -197,9 +200,6 @@
     <ClInclude Include="Search/alpha_beta.h">
       <Filter>Header Files\Search</Filter>
     </ClInclude>
-    <ClInclude Include="rng.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GameGeneration/game_generation.h">
       <Filter>Header Files\GameGeneration</Filter>
     </ClInclude>
@@ -211,6 +211,12 @@
     </ClInclude>
     <ClInclude Include="NN/activation_function.h">
       <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="Core/Engine/rng.h">
+      <Filter>Header Files\Core\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="UCI/uci.h">
+      <Filter>Header Files\UCI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

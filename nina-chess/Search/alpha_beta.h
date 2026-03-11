@@ -1,6 +1,6 @@
 #pragma once
-#include "Eval/score.h"
 #include "Core/Engine/utils.h"
+#include "Eval/score.h"
 
 struct AlphaBeta
 {

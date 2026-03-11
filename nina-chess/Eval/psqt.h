@@ -1,11 +1,13 @@
 #pragma once
-#include "NN/accumulator.h"
-#include "Hardware/architecture.h"
 #include "Chess/board_features.h"
-#include "Eval/chess_bitboard_feature_iterator.h"
-#include "MoveGen/move_list.h"
 #include "Chess/position.h"
 #include "Core/Engine/utils.h"
+#include "Eval/chess_bitboard_feature_iterator.h"
+#include "Hardware/architecture.h"
+#include "MoveGen/move_list.h"
+#include "NN/accumulator.h"
+#include <Search/search_core.h>
+#include <cmath>
 #include <fstream>
 
 class PSQT

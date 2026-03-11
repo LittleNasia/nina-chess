@@ -1,4 +1,3 @@
-#include "Core/Build/targets.h"
 #ifdef _GAMEGEN
 
 #include "GameGeneration/game_generation.h"

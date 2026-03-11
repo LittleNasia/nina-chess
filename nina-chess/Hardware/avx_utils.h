@@ -1,6 +1,6 @@
 #pragma once
-#include "Hardware/simd.h"
 #include "Core/Engine/utils.h"
+#include "Hardware/simd.h"
 #include <immintrin.h>
 
 forceinline float SimdHorizontalSum(const SimdVector& input);

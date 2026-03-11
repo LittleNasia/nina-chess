@@ -1,8 +1,8 @@
 #pragma once
-#include "Core/Engine/bit_manip.h"
 #include "Chess/chess_constants.h"
 #include "Chess/move_type.h"
 #include "Chess/piece_type.h"
+#include "Core/Engine/bit_manip.h"
 #include "Core/Engine/utils.h"
 #include <cstdint>
 #include <string>

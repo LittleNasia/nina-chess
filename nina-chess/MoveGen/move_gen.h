@@ -1,9 +1,16 @@
 #pragma once
-#include "MoveGen/attacks.h"
-#include "Core/Engine/bitmasks.h"
-#include "MoveGen/move_list.h"
 #include "Chess/position.h"
+#include "Core/Engine/bitmasks.h"
 #include "Core/Engine/utils.h"
+#include "MoveGen/attacks.h"
+#include "MoveGen/move_list.h"
+#include <Chess/castling.h>
+#include <Chess/color.h>
+#include <Chess/move_type.h>
+#include <Chess/piece_type.h>
+#include <Core/Engine/bit_manip.h>
+#include <Hardware/intrinsics.h>
+#include <cstdint>
 
 template<Color color>
 forceinline constexpr Bitboard GetLegalPawnCapturesLeft(const Bitboard pawns, const Bitboard bishopPinmask, const Bitboard rookPinmask, const Bitboard enemyPieces);

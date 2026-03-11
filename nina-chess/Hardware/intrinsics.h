@@ -1,5 +1,8 @@
 #pragma once
 #include "Core/Engine/utils.h"
+#include <cstdint>
+#include <immintrin.h>
+#include <intrin0.inl.h>
 
 forceinline size_t Pext(const Bitboard b, const Bitboard mask);
 forceinline uint32_t Popcnt(const Bitboard bb);

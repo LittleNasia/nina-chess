@@ -1,7 +1,7 @@
 #pragma once
+#include "Core/Engine/utils.h"
 #include <cstdint>
 #include <limits>
-#include "Core/Engine/utils.h"
 
 struct Xorshift64
 {

@@ -2,7 +2,8 @@
 #include "Chess/move.h"
 #include "Eval/score.h"
 #include "Search/search_core.h"
-#include "Core/Engine/utils.h"
+#include <cstdint>
+#include <ostream>
 
 struct SearchResult
 {

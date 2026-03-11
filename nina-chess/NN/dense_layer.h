@@ -1,11 +1,11 @@
-#pragma once
+﻿#pragma once
 
-#include "NN/activation_function.h"
+#include "Core/Engine/rng.h"
+#include "Core/Engine/utils.h"
 #include "Hardware/architecture.h"
 #include "Hardware/avx_utils.h"
-#include "rng.h"
 #include "Hardware/simd.h"
-#include "Core/Engine/utils.h"
+#include "NN/activation_function.h"
 #include <cmath>
 #include <cstring>
 #include <fstream>

@@ -1,8 +1,8 @@
 #pragma once
 #include "Chess/board_features.h"
-#include "MoveGen/move_list.h"
 #include "Chess/piece_type.h"
 #include "Core/Engine/utils.h"
+#include "MoveGen/move_list.h"
 #include <stdexcept>
 
 class ChessBitboardFeatureIterator

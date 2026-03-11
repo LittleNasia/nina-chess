@@ -1,8 +1,8 @@
 #pragma once
-#include "Hardware/architecture.h"
-#include "Hardware/avx_utils.h"
 #include "Core/Engine/bit_manip.h"
 #include "Core/Engine/utils.h"
+#include "Hardware/architecture.h"
+#include "Hardware/avx_utils.h"
 #include "NN/weights.h"
 #include <cmath>
 #include <cstdint>

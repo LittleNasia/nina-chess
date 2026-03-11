@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Hardware/simd.h"
 #include "Core/Engine/utils.h"
+#include "Hardware/simd.h"
 
 enum class ActivationFunction
 {

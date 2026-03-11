@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug-SSE3|x64">
@@ -203,7 +203,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <!-- All build outputs go to .artifacts at solution root -->
   <PropertyGroup>
+    <OutDir>$(SolutionDir).artifacts\vs\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir).artifacts\vs\$(Configuration)\obj\</IntDir>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <!-- ============================================================ -->
@@ -383,11 +386,11 @@
   <!-- Source files              -->
   <!-- ======================== -->
   <ItemGroup>
-    <ClCompile Include="bench_main.cpp" />
-    <ClCompile Include="game_generation_main.cpp" />
-    <ClCompile Include="nina-chess.cpp" />
-    <ClCompile Include="test_main.cpp" />
-    <ClCompile Include="uci.cpp" />
+    <ClCompile Include="SourceFiles/bench_main.cpp" />
+    <ClCompile Include="SourceFiles/game_generation_main.cpp" />
+    <ClCompile Include="SourceFiles/nina-chess.cpp" />
+    <ClCompile Include="SourceFiles/test_main.cpp" />
+    <ClCompile Include="SourceFiles/uci.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NN/accumulator.h" />
@@ -421,7 +424,7 @@
     <ClInclude Include="Chess/position.h" />
     <ClInclude Include="MoveGen/move_gen.h" />
     <ClInclude Include="Eval/psqt.h" />
-    <ClInclude Include="rng.h" />
+    <ClInclude Include="Core/Engine/rng.h" />
     <ClInclude Include="Search/search.h" />
     <ClInclude Include="Search/SearchContext/SearchCancellationPolicies/search_cancellation_policy.h" />
     <ClInclude Include="Search/search_constraints.h" />
@@ -434,7 +437,7 @@
     <ClInclude Include="Search/SearchContext/individual_search_context.h" />
     <ClInclude Include="Core/Build/targets.h" />
     <ClInclude Include="Search/transposition_table.h" />
-    <ClInclude Include="uci.h" />
+    <ClInclude Include="UCI/uci.h" />
     <ClInclude Include="Core/Engine/utils.h" />
     <ClInclude Include="NN/weights.h" />
     <ClInclude Include="Chess/zobrist.h" />

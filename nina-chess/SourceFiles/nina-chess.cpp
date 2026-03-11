@@ -1,6 +1,6 @@
-#include "Core/Build/targets.h"
+﻿#include "Core/Build/targets.h"
 #if _UCI
-#include "uci.h"
+#include "UCI/uci.h"
 
 #include <iostream>
 #include <random>

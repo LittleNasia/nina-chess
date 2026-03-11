@@ -1,5 +1,6 @@
 #pragma once
 #include "Core/Engine/utils.h"
+#include <cstdint>
 
 struct SearchConstraints
 {

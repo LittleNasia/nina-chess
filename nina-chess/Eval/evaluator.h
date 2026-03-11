@@ -1,11 +1,11 @@
 #pragma once
 #include "Chess/color.h"
-#include "MoveGen/move_list.h"
 #include "Chess/position.h"
-#include "Search/position_stack.h"
+#include "Core/Engine/utils.h"
 #include "Eval/psqt.h"
 #include "Eval/score.h"
-#include "Core/Engine/utils.h"
+#include "MoveGen/move_list.h"
+#include "Search/position_stack.h"
 #include <cstdint>
 #include <fstream>
 #include <string_view>

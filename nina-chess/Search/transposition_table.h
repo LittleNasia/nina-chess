@@ -1,7 +1,8 @@
 #pragma once
 #include "Chess/move.h"
-#include "Eval/score.h"
 #include "Core/Engine/utils.h"
+#include "Eval/score.h"
+#include <cstdint>
 
 enum class TTFlag
 {

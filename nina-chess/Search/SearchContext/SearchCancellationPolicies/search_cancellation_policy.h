@@ -1,7 +1,10 @@
 #pragma once
+#include "Core/Engine/utils.h"
 #include "Search/SearchContext/SearchCancellationPolicies/search_nodes_cancellation_policy.h"
 #include "Search/SearchContext/SearchCancellationPolicies/search_time_cancellation_policy.h"
-#include "Core/Engine/utils.h"
+#include <Search/search_constraints.h>
+#include <atomic>
+#include <cstdint>
 
 class SearchCancellationPolicy
 {

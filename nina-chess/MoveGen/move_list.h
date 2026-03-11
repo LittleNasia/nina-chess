@@ -1,8 +1,10 @@
 #pragma once
-#include "Hardware/architecture.h"
-#include "Hardware/intrinsics.h"
 #include "Chess/move.h"
 #include "Core/Engine/utils.h"
+#include "Hardware/architecture.h"
+#include <Chess/piece_type.h>
+#include <cstdint>
+#include <string.h>
 
 struct MoveListMiscellaneous
 {

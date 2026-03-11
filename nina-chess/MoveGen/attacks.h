@@ -1,8 +1,11 @@
 #pragma once
+#include "Chess/side.h"
 #include "Core/Engine/bit_manip.h"
 #include "Core/Engine/bitmasks.h"
-#include "Chess/side.h"
 #include "Core/Engine/utils.h"
+#include <Chess/color.h>
+#include <Hardware/intrinsics.h>
+#include <cstdint>
 
 template<Color color>
 forceinline Bitboard GetAllAttacks(const Side& pieces, const Bitboard occupiedBitmask);

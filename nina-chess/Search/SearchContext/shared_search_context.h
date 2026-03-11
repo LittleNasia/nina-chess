@@ -1,8 +1,13 @@
 #pragma once
-#include "Search/SearchContext/SearchCancellationPolicies/search_cancellation_policy.h"
-#include "Search/transposition_table.h"
-#include "Search/search_core.h"
 #include "Core/Engine/utils.h"
+#include "Search/SearchContext/SearchCancellationPolicies/search_cancellation_policy.h"
+#include "Search/search_core.h"
+#include "Search/transposition_table.h"
+#include "SearchCancellationPolicies/search_time_cancellation_policy.h"
+#include <Search/search_constraints.h>
+#include <algorithm>
+#include <cstdint>
+#include <limits>
 
 class SharedSearchContext
 {

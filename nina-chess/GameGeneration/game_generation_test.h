@@ -1,8 +1,10 @@
 #pragma once
 #include "GameGeneration/game_generation.h"
 #include <cstdio>
+#include <exception>
 #include <filesystem>
 #include <iostream>
+#include <string>
 
 inline bool TestGameGeneration()
 {

@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 
 #include "NN/activation_function.h"
 #include "Hardware/architecture.h"
 #include "NN/dense_layer.h"
-#include "rng.h"
+#include "Core/Engine/rng.h"
 #include "Hardware/simd.h"
 #include <algorithm>
 #include <cstring>

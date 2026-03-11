@@ -1,11 +1,11 @@
 #pragma once
 #include "Chess/color.h"
 #include "Chess/move.h"
+#include "Chess/position.h"
+#include "Core/Engine/utils.h"
 #include "MoveGen/move_gen.h"
 #include "MoveGen/move_list.h"
-#include "Chess/position.h"
 #include "Search/search_core.h"
-#include "Core/Engine/utils.h"
 #include <cstdint>
 
 struct PositionStack

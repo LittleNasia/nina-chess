@@ -1,6 +1,6 @@
 #pragma once
-#include "Search/SearchContext/shared_search_context.h"
 #include "Core/Engine/utils.h"
+#include "Search/SearchContext/shared_search_context.h"
 #include <cstdint>
 
 class IndividualSearchContext

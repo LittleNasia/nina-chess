@@ -1,11 +1,12 @@
 #pragma once
 #include "Chess/color.h"
-#include "Eval/evaluator.h"
 #include "Chess/position.h"
+#include "Eval/evaluator.h"
 #include "Search/position_stack.h"
 #include "Search/search.h"
 #include "Search/search_constraints.h"
 #include "Search/transposition_table.h"
+#include "SearchContext/shared_search_context.h"
 #include <chrono>
 #include <cstdint>
 #include <exception>

@@ -6,11 +6,11 @@ set(CMAKE_CXX_STANDARD 26)
 set(SIMD_ARCH "AVX2" CACHE STRING "SIMD architecture: SSE3, AVX2, or AVX512")
 set_property(CACHE SIMD_ARCH PROPERTY STRINGS SSE3 AVX2 AVX512)
 
-set(SOURCE_FILES ./nina-chess/bench_main.cpp
-        ./nina-chess/nina-chess.cpp
-        ./nina-chess/test_main.cpp
-        ./nina-chess/uci.cpp
-        ./nina-chess/game_generation_main.cpp )
+set(SOURCE_FILES ./nina-chess/SourceFiles/bench_main.cpp
+        ./nina-chess/SourceFiles/nina-chess.cpp
+        ./nina-chess/SourceFiles/test_main.cpp
+        ./nina-chess/SourceFiles/uci.cpp
+        ./nina-chess/SourceFiles/game_generation_main.cpp )
 include_directories(${CMAKE_SOURCE_DIR}/nina-chess)
 
 add_executable(nina-chess ${SOURCE_FILES})
