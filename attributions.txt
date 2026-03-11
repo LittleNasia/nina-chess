@@ -1,0 +1,7 @@
+Gigantua https://github.com/Gigantua/Gigantua - move generation based on the general idea of templated everything and forceinlining
+
+https://web.archive.org/web/20071026090003/http://www.brucemo.com/compchess/programming/index.htm - alphabeta search, transposition table
+
+accumulator idea from NNUE (but avx code 100% original)
+
+AI generated code - Game generation baseline (about 50/50 my code/AI), game generation tests, scripts/sync_filters.py script to match visual studio filters to filesystem. 
