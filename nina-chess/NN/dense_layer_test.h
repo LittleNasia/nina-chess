@@ -91,6 +91,10 @@ inline bool TestDenseLayer()
 	allPassed &= TestDenseLayerShape<16, 4, ActivationFunction::RELU>("DenseLayer<16,4,RELU>");
 	allPassed &= TestDenseLayerShape<64, 8, ActivationFunction::RELU>("DenseLayer<64,8,RELU>");
 	allPassed &= TestDenseLayerShape<32, 1, ActivationFunction::TANH>("DenseLayer<32,1,TANH>");
+	allPassed &= TestDenseLayerShape<256, 8, ActivationFunction::RELU>("DenseLayer<256,8,RELU>");
+	allPassed &= TestDenseLayerShape<256, 1, ActivationFunction::TANH>("DenseLayer<256,1,TANH>");
+	allPassed &= TestDenseLayerShape<512, 16, ActivationFunction::RELU>("DenseLayer<512,16,RELU>");
+	allPassed &= TestDenseLayerShape<176, 8, ActivationFunction::RELU>("DenseLayer<176,8,RELU>");
 
 	if (!allPassed)
 		std::cout << "DenseLayer test FAILED\n";

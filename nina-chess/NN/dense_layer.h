@@ -62,44 +62,57 @@ public:
 	}
 
 private:
+	template<int packsInPass>
+	forceinline void forwardAvxPass(const float* input, const int weightsBaseIndex)
+	{
+		SimdVector inputs[packsInPass];
+		for (int inputVector = 0, inputIndex = 0; inputVector < packsInPass;
+			inputVector++, inputIndex += FLOATS_PER_REGISTER)
+		{
+			inputs[inputVector] = SimdLoad(&input[inputIndex]);
+			inputs[inputVector] = ApplyActivation<activationFunction>(inputs[inputVector]);
+		}
+
+		for (int outputNode = 0; outputNode < outputNeurons; outputNode++)
+		{
+			SimdVector outputSum = SimdSetZero();
+			for (int inputVector = 0; inputVector < packsInPass; inputVector++)
+			{
+				const int weightsIndex = weightsBaseIndex + inputVector;
+				SimdVector weights = SimdLoad((const float*)&Weights[weightsIndex][outputNode]);
+				outputSum = SimdFusedMultiplyAdd(inputs[inputVector], weights, outputSum);
+			}
+			// horizontal sum
+			// although doing horizontal sums in the innermost loop is not really good
+			// the important thing to note is that the iterations of the outermost loop
+			// are divided by the num_input_vectors
+			// that means the innermost loop executes way less often
+			// this outperforms doing it in the outer loop
+			// due to the memory accesses we save by reversing the loops
+			// I benchmarked that I promise!!!!! this is really better !!!!!! (on my machine)
+
+			Output[outputNode] += SimdHorizontalSum(outputSum);
+		}
+	}
+
 	forceinline float* forwardAvx(const float* input)
 	{
 		static constexpr int inputPacksPerPass = ((NUM_INPUT_PACKS < INPUT_VECTORS_PARSED) ? NUM_INPUT_PACKS : INPUT_VECTORS_PARSED);
-		static constexpr int numInputPasses = NUM_INPUT_PACKS / inputPacksPerPass;
+		static constexpr int numFullPasses = NUM_INPUT_PACKS / inputPacksPerPass;
+		static constexpr int remainderPacks = NUM_INPUT_PACKS % inputPacksPerPass;
 
 		int flatInputIndex = 0;
-		for (int inputPass = 0; inputPass < numInputPasses; inputPass++,
+		for (int inputPass = 0; inputPass < numFullPasses; inputPass++,
 			flatInputIndex += FLOATS_PER_REGISTER * inputPacksPerPass)
 		{
-			SimdVector inputs[inputPacksPerPass];
-			for (int inputVector = 0, inputIndex = flatInputIndex; inputVector < inputPacksPerPass;
-				inputVector++, inputIndex += FLOATS_PER_REGISTER)
-			{
-				inputs[inputVector] = SimdLoad(&input[inputIndex]);
-				inputs[inputVector] = ApplyActivation<activationFunction>(inputs[inputVector]);
-			}
-
-			for (int outputNode = 0; outputNode < outputNeurons; outputNode++)
-			{
-				SimdVector outputSum = SimdSetZero();
-				for (int inputVector = 0; inputVector < inputPacksPerPass; inputVector++)
-				{
-					const int weightsIndex = inputPass * inputPacksPerPass + inputVector;
-					SimdVector weights = SimdLoad((const float*)&Weights[weightsIndex][outputNode]);
-					outputSum = SimdFusedMultiplyAdd(inputs[inputVector], weights, outputSum);
-				}
-				// horizontal sum
-				// although doing horizontal sums in the innermost loop is not really good
-				// the important thing to note is that the iterations of the outermost loop
-				// are divided by the num_input_vectors
-				// that means the innermost loop executes way less often
-				// this outperforms doing it in the outer loop
-				// due to the memory accesses we save by reversing the loops
-				// I benchmarked that I promise!!!!! this is really better !!!!!! (on my machine)
-
-				Output[outputNode] += SimdHorizontalSum(outputSum);
-			}
+			forwardAvxPass<inputPacksPerPass>(&input[flatInputIndex], inputPass * inputPacksPerPass);
 		}
+
+		if constexpr (remainderPacks > 0)
+		{
+			forwardAvxPass<remainderPacks>(&input[flatInputIndex], numFullPasses * inputPacksPerPass);
+		}
+
 		return Output;
 	}
 	// in case the output layer has at least 4 neurons, we can optimize in a neat little way
