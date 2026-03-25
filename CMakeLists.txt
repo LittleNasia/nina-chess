@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 26)
 set(SIMD_ARCH "AVX2" CACHE STRING "SIMD architecture: SSE3, AVX2, or AVX512")
 set_property(CACHE SIMD_ARCH PROPERTY STRINGS SSE3 AVX2 AVX512)
 
+set(ARTIFACTS_DIR ${CMAKE_SOURCE_DIR}/.artifacts/cmake/${SIMD_ARCH})
+
 set(SOURCE_FILES ./nina-chess/SourceFiles/bench_main.cpp
         ./nina-chess/SourceFiles/nina-chess.cpp
         ./nina-chess/SourceFiles/test_main.cpp
@@ -18,6 +20,15 @@ add_executable(bench ${SOURCE_FILES})
 add_executable(test ${SOURCE_FILES})
 add_executable(debug ${SOURCE_FILES})
 add_executable(gamegen ${SOURCE_FILES})
+
+foreach(target nina-chess bench test debug gamegen)
+    foreach(config DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+        set_target_properties(${target} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY_${config} ${ARTIFACTS_DIR}/${target})
+    endforeach()
+    set_target_properties(${target} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${ARTIFACTS_DIR}/${target})
+endforeach()
 
 target_compile_definitions(nina-chess PUBLIC
         ADD_DEBUG_CODE=false)

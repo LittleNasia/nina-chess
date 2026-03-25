@@ -413,5 +413,5 @@ FodyWeavers.xsd
 /nina-chess/weights
 /.claude
 /nina-chess/data.bin
-/build/AVX2
+/build/
 /CLAUDE.md

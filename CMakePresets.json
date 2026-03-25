@@ -1,0 +1,26 @@
+{
+	"version": 3,
+	"configurePresets": [
+		{
+			"name": "SSE3",
+			"binaryDir": "${sourceDir}/.artifacts/cmake/SSE3",
+			"cacheVariables": {
+				"SIMD_ARCH": "SSE3"
+			}
+		},
+		{
+			"name": "AVX2",
+			"binaryDir": "${sourceDir}/.artifacts/cmake/AVX2",
+			"cacheVariables": {
+				"SIMD_ARCH": "AVX2"
+			}
+		},
+		{
+			"name": "AVX512",
+			"binaryDir": "${sourceDir}/.artifacts/cmake/AVX512",
+			"cacheVariables": {
+				"SIMD_ARCH": "AVX512"
+			}
+		}
+	]
+}
