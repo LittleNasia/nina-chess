@@ -415,3 +415,6 @@ FodyWeavers.xsd
 /nina-chess/data.bin
 /build/
 /CLAUDE.md
+/book.bin
+/data.bin
+/shuffled.bin

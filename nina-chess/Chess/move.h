@@ -40,6 +40,7 @@ public:
 	forceinline constexpr bool		  IsKingsideCastling()			const { return GetMoveType() == MoveType::KINGSIDE_CASTLING; }
 	forceinline constexpr bool		  IsQueensideCastling()			const { return GetMoveType() == MoveType::QUEENSIDE_CASTLING; }
 	forceinline constexpr bool		  operator==(const Move& other) const { return m_EncodedMove == other.m_EncodedMove; }
+	forceinline constexpr explicit	  operator bool()				const;
 
 private:
 	uint32_t m_EncodedMove;
@@ -58,7 +59,7 @@ forceinline constexpr Move::Move(const uint32_t from, const uint32_t to, const P
 	}
 {}
 
-constexpr std::string Move::GetUciPromotionPiece() const
+forceinline constexpr std::string Move::GetUciPromotionPiece() const
 {
 	switch (PromotionPieceType())
 	{
@@ -68,4 +69,11 @@ constexpr std::string Move::GetUciPromotionPiece() const
 	case KNIGHT:	return "n";
 	default:		return "";
 	}
+}
+
+inline static constexpr Move NULL_MOVE = Move();
+
+forceinline constexpr Move::operator bool() const
+{
+	return !(*this == NULL_MOVE);
 }

@@ -62,6 +62,7 @@ struct UciState
 
 	std::atomic_flag SearchRunning = ATOMIC_FLAG_INIT;
 	std::thread SearchThread;
+	std::exception_ptr SearchException;
 
 	std::unique_ptr<Evaluator> UciEvaluator;
 	std::unique_ptr<PositionStack> UciPositionStack;
@@ -100,8 +101,15 @@ void Ucinewgame()
 void SearchThreadFunction(const TimePoint& search_start_timepoint, const SearchConstraints& search_constraints)
 {
 	currentState.SearchRunning.test_and_set();
-	SharedSearchContext search_context(search_constraints, search_start_timepoint, &currentState.GetTranspositionTable());
-	StartSearch<true>(*currentState.UciPositionStack, *currentState.UciEvaluator, search_context);
+	try
+	{
+		SharedSearchContext search_context(search_constraints, search_start_timepoint, &currentState.GetTranspositionTable());
+		StartSearch<true>(*currentState.UciPositionStack, *currentState.UciEvaluator, search_context);
+	}
+	catch (...)
+	{
+		currentState.SearchException = std::current_exception();
+	}
 	currentState.SearchRunning.clear();
 }
 
@@ -140,6 +148,13 @@ void Go(const GoState& state)
 
 	currentState.SearchThread = std::thread(SearchThreadFunction, search_start_timepoint, constraints);
 	currentState.SearchThread.join();
+
+	if (currentState.SearchException)
+	{
+		auto exception = currentState.SearchException;
+		currentState.SearchException = nullptr;
+		std::rethrow_exception(exception);
+	}
 }
 
 GoState ParseGo(std::stringstream& input)

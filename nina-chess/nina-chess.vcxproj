@@ -345,7 +345,7 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
       <DisableSpecificWarnings>4324;4061;4820;4514;4355;4626;5027;4625;5026;4623;4710;4711;4714;5045;4715;4062;4530;4577;4007</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>

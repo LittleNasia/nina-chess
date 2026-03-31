@@ -7,6 +7,7 @@
 #include "Eval/chess_bitboard_feature_iterator.h"
 #include "Eval/evaluator.h"
 #include "Eval/score.h"
+#include "GameGeneration/book.h"
 #include "MoveGen/move_list.h"
 #include "Search/SearchContext/SearchCancellationPolicies/search_time_cancellation_policy.h"
 #include "Search/SearchContext/shared_search_context.h"
@@ -21,7 +22,9 @@
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <iomanip>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <random>
 #include <stdexcept>
@@ -29,12 +32,12 @@
 #include <thread>
 #include <vector>
 
-enum GameResult : uint32_t
+enum class GameResult : uint32_t
 {
 	BLACK_WIN = 0,
-	GAME_DRAW = 1,
+	DRAW = 1,
 	WHITE_WIN = 2,
-	RESULT_UNKNOWN = 255
+	UNKNOWN = 255
 };
 
 struct PositionEntry
@@ -50,18 +53,20 @@ using Game = std::vector<PositionEntry>;
 
 struct GameGenerationSettings
 {
-	int NumThreads = 1;
-	int NumGames = 1000;
+	int NumThreads = 12;
+	int NumGames = 100000;
 	int MaxDepth = 3;
 	int MaxMovetime = 0;
-	int NumRandomMovesInOpening = 8;
+	int NumRandomMovesInOpening = 0;
 	int MaxRandomMoves = 10;
-	float RandomMoveChance = 0.5f;
-	float RandomMoveChanceDecay = 0.0f;
-	bool ReplyRandomWithRandom = false;
-	int MaxGameLength = 100;
+	float RandomMoveChance = 0.15f;
+	float RandomMoveChanceDecay = 0.01f;
+	bool ReplyRandomWithRandom = true;
+	int MaxGameLength = 200;
 	bool ScoreBySearchEval = true;
 	std::string OutputFile = "data.bin";
+	std::string BookFile = "D:\\source\\nina-chess\\book.bin";
+	int BookPly = 0; // 0 = random from available plies
 };
 
 struct MoveDecision
@@ -97,7 +102,7 @@ forceinline PositionEntry PackPosition(const Position& position, const MoveListM
 	entry.SearchScore = score;
 	entry.BestMove = bestMove;
 	entry.SideToMove = static_cast<uint32_t>(position.SideToMove);
-	entry.Result = RESULT_UNKNOWN;
+	entry.Result = static_cast<uint32_t>(GameResult::UNKNOWN);
 
 	return entry;
 }
@@ -114,16 +119,16 @@ forceinline SearchConstraints BuildSearchConstraints(const GameGenerationSetting
 forceinline GameResult IsGameOver(const Position& position, const PositionStack& positionStack, const MoveList& moveList)
 {
 	if (position.IsDrawn() || positionStack.IsThreefoldRepetition())
-		return GAME_DRAW;
+		return GameResult::DRAW;
 
 	if (moveList.GetNumMoves() == 0)
 	{
 		if (moveList.MoveListMisc.Checkers)
-			return (position.SideToMove == WHITE) ? BLACK_WIN : WHITE_WIN;
-		return GAME_DRAW;
+			return (position.SideToMove == WHITE) ? GameResult::BLACK_WIN : GameResult::WHITE_WIN;
+		return GameResult::DRAW;
 	}
 
-	return RESULT_UNKNOWN;
+	return GameResult::UNKNOWN;
 }
 
 forceinline Move GetRandomMoveIfNeeded(const MoveList& moveList, Xorshift64& rng,
@@ -140,7 +145,7 @@ forceinline Move GetRandomMoveIfNeeded(const MoveList& moveList, Xorshift64& rng
 		(randomBudgetRemaining && (forceRandomReply || (!isInOpening && chanceRoll)));
 
 	if (!useRandom)
-		return Move();
+		return NULL_MOVE;
 
 	std::uniform_int_distribution<uint32_t> moveDist(0, moveList.GetNumMoves() - 1);
 	return moveList[moveDist(rng)];
@@ -148,8 +153,8 @@ forceinline Move GetRandomMoveIfNeeded(const MoveList& moveList, Xorshift64& rng
 
 forceinline MoveDecision DecideOnMove(PositionStack& positionStack, Evaluator& evaluator,
 	TranspositionTable& transpositionTable, const MoveList& moveList, Xorshift64& rng,
-	const GameGenerationSettings& settings, const int ply, const int randomMovesAfterOpening,
-	const bool lastMoveWasRandom, const float currentRandomChance)
+	const GameGenerationSettings& settings, const int ply, int& randomMovesAfterOpening,
+	const bool lastMoveWasRandom, float& currentRandomChance)
 {
 	const SearchConstraints constraints = BuildSearchConstraints(settings);
 	const TimePoint searchStart = std::chrono::high_resolution_clock::now();
@@ -166,21 +171,21 @@ forceinline MoveDecision DecideOnMove(PositionStack& positionStack, Evaluator& e
 	const Move randomMove = GetRandomMoveIfNeeded(moveList, rng, settings, ply,
 		randomMovesAfterOpening, lastMoveWasRandom, currentRandomChance);
 
-	const bool isRandom = !(randomMove == Move());
-	return MoveDecision{ isRandom ? randomMove : bestMove, searchScore, isRandom };
-}
+	const bool isRandom = static_cast<bool>(randomMove);
 
-forceinline void UpdateRandomMoveState(const GameGenerationSettings& settings, const int ply,
-	int& randomMovesAfterOpening, float& currentRandomChance)
-{
-	const bool isInOpening = ply < settings.NumRandomMovesInOpening;
-	if (!isInOpening)
+	if (isRandom)
 	{
-		randomMovesAfterOpening++;
-		currentRandomChance -= settings.RandomMoveChanceDecay;
-		if (currentRandomChance < 0.0f)
-			currentRandomChance = 0.0f;
+		const bool isInOpening = ply < settings.NumRandomMovesInOpening;
+		if (!isInOpening)
+		{
+			randomMovesAfterOpening++;
+			currentRandomChance -= settings.RandomMoveChanceDecay;
+			if (currentRandomChance < 0.0f)
+				currentRandomChance = 0.0f;
+		}
 	}
+
+	return MoveDecision{ isRandom ? randomMove : bestMove, searchScore, isRandom };
 }
 
 forceinline void MakeMoveAndUpdate(PositionStack& positionStack, Evaluator& evaluator, const Move& move, const Color sideToMove)
@@ -193,19 +198,36 @@ forceinline void MakeMoveAndUpdate(PositionStack& positionStack, Evaluator& eval
 		evaluator.IncrementalUpdate<BLACK>(positionStack.GetCurrentPosition(), newMoveList);
 }
 
-inline Game PlayOneGame(const GameGenerationSettings& settings, const uint64_t seed)
+inline Game PlayOneGame(const GameGenerationSettings& settings, const uint64_t seed,
+	PositionStack& positionStack, Evaluator& evaluator, TranspositionTable& transpositionTable,
+	const Book* book = nullptr)
 {
 	Xorshift64 rng(seed);
 
-	PositionStack positionStack;
-	positionStack.Reset(Position());
-	Evaluator evaluator;
+	int startPly = 0;
+	Position startPosition;
+
+	if (book != nullptr)
+	{
+		if (settings.BookPly > 0)
+		{
+			startPly = settings.BookPly;
+		}
+		else
+		{
+			const auto availablePlies = book->GetAvailablePlies();
+			std::uniform_int_distribution<size_t> plyDist(0, availablePlies.size() - 1);
+			startPly = availablePlies[plyDist(rng)];
+		}
+		startPosition = book->GetRandomPosition(startPly, rng);
+	}
+
+	positionStack.Reset(startPosition);
 	evaluator.Reset(positionStack);
-	TranspositionTable transpositionTable(16);
 
 	Game game;
-	GameResult result = RESULT_UNKNOWN;
-	int ply = 0;
+	GameResult result = GameResult::UNKNOWN;
+	int ply = startPly;
 	int randomMovesAfterOpening = 0;
 	float currentRandomChance = settings.RandomMoveChance;
 	bool lastMoveWasRandom = false;
@@ -216,8 +238,12 @@ inline Game PlayOneGame(const GameGenerationSettings& settings, const uint64_t s
 		MoveList& moveList = positionStack.GetMoveList();
 
 		const GameResult gameOver = IsGameOver(currentPosition, positionStack, moveList);
-		if (gameOver != RESULT_UNKNOWN)
+		if (gameOver != GameResult::UNKNOWN)
 		{
+			const Score terminalScore = (gameOver == GameResult::DRAW) ? Score::DRAW : Score::LOSS;
+			const PositionEntry entry = PackPosition(currentPosition, moveList.MoveListMisc, terminalScore, NULL_MOVE);
+			game.push_back(entry);
+
 			result = gameOver;
 			break;
 		}
@@ -231,18 +257,15 @@ inline Game PlayOneGame(const GameGenerationSettings& settings, const uint64_t s
 
 		MakeMoveAndUpdate(positionStack, evaluator, decision.ChosenMove, currentPosition.SideToMove);
 
-		if (decision.IsRandom)
-			UpdateRandomMoveState(settings, ply, randomMovesAfterOpening, currentRandomChance);
-
 		lastMoveWasRandom = decision.IsRandom;
 		ply++;
 	}
 
-	if (result == RESULT_UNKNOWN)
-		result = GAME_DRAW;
+	if (result == GameResult::UNKNOWN)
+		result = GameResult::DRAW;
 
 	for (auto& entry : game)
-		entry.Result = result;
+		entry.Result = static_cast<uint32_t>(result);
 
 	return game;
 }
@@ -252,56 +275,100 @@ struct SharedGameGenState
 	std::mutex Mutex;
 	std::ofstream OutputFile;
 	std::atomic<int> GamesCompleted{ 0 };
+	std::atomic<int> TotalPositions{ 0 };
 	int TotalGames;
 	std::exception_ptr Exception;
+	TimePoint StartTime;
 };
 
+inline void PrintProgress(const SharedGameGenState& shared, const int completed)
+{
+	const auto now = std::chrono::high_resolution_clock::now();
+	const double elapsedSeconds = std::chrono::duration<double>(now - shared.StartTime).count();
+	const int positions = shared.TotalPositions.load();
+	const double gamesPerSecond = completed / elapsedSeconds;
+	const double positionsPerSecond = positions / elapsedSeconds;
+	const int remainingGames = shared.TotalGames - completed;
+	const int etaSeconds = gamesPerSecond > 0 ? static_cast<int>(remainingGames / gamesPerSecond) : 0;
+	const int etaMinutes = etaSeconds / 60;
+	const int etaRemainderSeconds = etaSeconds % 60;
+	const int percent = completed * 100 / shared.TotalGames;
+
+	const int barWidth = 30;
+	const int filledWidth = percent * barWidth / 100;
+	std::string progressBar(static_cast<size_t>(filledWidth), '#');
+	progressBar += std::string(static_cast<size_t>(barWidth - filledWidth), '-');
+
+	std::cout << "\r[" << progressBar << "] "
+		<< percent << "% | "
+		<< completed << "/" << shared.TotalGames << " | "
+		<< std::fixed << std::setprecision(1) << gamesPerSecond << " g/s | "
+		<< std::setprecision(0) << positionsPerSecond << " pos/s | "
+		<< "ETA " << etaMinutes << "m" << std::setw(2) << std::setfill('0') << etaRemainderSeconds << "s"
+		<< std::setfill(' ') << "    " << std::flush;
+}
+
+inline constexpr int PROGRESS_UPDATE_INTERVAL = 10;
+inline constexpr size_t WRITE_BUFFER_CAPACITY = 4096 * 1024;
+
+forceinline bool ShouldPrintProgress(const int completed, const int totalGames)
+{
+	return completed % PROGRESS_UPDATE_INTERVAL == 0 || completed == totalGames;
+}
+
+forceinline bool ShouldFlushBuffer(const std::vector<PositionEntry>& buffer)
+{
+	return buffer.size() >= WRITE_BUFFER_CAPACITY;
+}
+
+inline void FlushBuffer(std::vector<PositionEntry>& buffer, SharedGameGenState& shared)
+{
+	const std::lock_guard<std::mutex> lock(shared.Mutex);
+	shared.OutputFile.write(reinterpret_cast<const char*>(buffer.data()),
+		static_cast<std::streamsize>(buffer.size() * sizeof(PositionEntry)));
+	buffer.clear();
+}
+
 inline void GameGenThreadWorker(const GameGenerationSettings& settings, const int threadId, const int gamesForThread,
-	SharedGameGenState& shared)
+	SharedGameGenState& sharedGameState, const Book* book)
 {
 	try
 	{
 		std::vector<PositionEntry> buffer;
-		buffer.reserve(4096);
+		buffer.reserve(WRITE_BUFFER_CAPACITY);
+
+		PositionStack positionStack;
+		Evaluator evaluator;
+		TranspositionTable transpositionTable(16);
 
 		for (int gameIndex = 0; gameIndex < gamesForThread; gameIndex++)
 		{
-			if (shared.Exception)
+			if (sharedGameState.Exception)
 				return;
 
 			uint64_t seed = static_cast<uint64_t>(threadId) * 1000000ULL + static_cast<uint64_t>(gameIndex);
 			seed ^= std::chrono::high_resolution_clock::now().time_since_epoch().count();
 
-			const Game game = PlayOneGame(settings, seed);
+			const Game game = PlayOneGame(settings, seed, positionStack, evaluator, transpositionTable, book);
 			buffer.insert(buffer.end(), game.begin(), game.end());
 
-			const int completed = shared.GamesCompleted.fetch_add(1) + 1;
-			if (completed % 100 == 0 || completed == shared.TotalGames)
-			{
-				std::cout << "Games: " << completed << "/" << shared.TotalGames << std::endl;
-			}
+			sharedGameState.TotalPositions.fetch_add(static_cast<int>(game.size()));
+			const int completed = sharedGameState.GamesCompleted.fetch_add(1) + 1;
+			if (ShouldPrintProgress(completed, sharedGameState.TotalGames))
+				PrintProgress(sharedGameState, completed);
 
-			if (buffer.size() >= 4096)
-			{
-				const std::lock_guard<std::mutex> lock(shared.Mutex);
-				shared.OutputFile.write(reinterpret_cast<const char*>(buffer.data()),
-					static_cast<std::streamsize>(buffer.size() * sizeof(PositionEntry)));
-				buffer.clear();
-			}
+			if (ShouldFlushBuffer(buffer))
+				FlushBuffer(buffer, sharedGameState);
 		}
 
 		if (!buffer.empty())
-		{
-			const std::lock_guard<std::mutex> lock(shared.Mutex);
-			shared.OutputFile.write(reinterpret_cast<const char*>(buffer.data()),
-				static_cast<std::streamsize>(buffer.size() * sizeof(PositionEntry)));
-		}
+			FlushBuffer(buffer, sharedGameState);
 	}
 	catch (...)
 	{
-		const std::lock_guard<std::mutex> lock(shared.Mutex);
-		if (!shared.Exception)
-			shared.Exception = std::current_exception();
+		const std::lock_guard<std::mutex> lock(sharedGameState.Mutex);
+		if (!sharedGameState.Exception)
+			sharedGameState.Exception = std::current_exception();
 	}
 }
 
@@ -321,17 +388,26 @@ inline void RunGameGeneration(const GameGenerationSettings& settings)
 	std::cout << "  Score by eval: " << (settings.ScoreBySearchEval ? "yes" : "no") << std::endl;
 	std::cout << "  Output: " << settings.OutputFile << std::endl;
 	std::cout << "  Entry size: " << sizeof(PositionEntry) << " bytes" << std::endl;
+	if (!settings.BookFile.empty())
+	{
+		std::cout << "  Book: " << settings.BookFile << std::endl;
+		std::cout << "  Book ply: " << (settings.BookPly > 0 ? std::to_string(settings.BookPly) : "random") << std::endl;
+	}
 
-	SharedGameGenState shared;
-	shared.TotalGames = settings.NumGames;
-	shared.OutputFile.open(settings.OutputFile, std::ios::binary);
-	if (!shared.OutputFile.is_open())
+	// Load book if specified
+	std::unique_ptr<Book> book;
+	if (!settings.BookFile.empty())
+		book = std::make_unique<Book>(settings.BookFile);
+
+	SharedGameGenState sharedGameState;
+	sharedGameState.TotalGames = settings.NumGames;
+	sharedGameState.StartTime = std::chrono::high_resolution_clock::now();
+	sharedGameState.OutputFile.open(settings.OutputFile, std::ios::binary);
+	if (!sharedGameState.OutputFile.is_open())
 	{
 		std::cerr << "Failed to open output file: " << settings.OutputFile << std::endl;
 		return;
 	}
-
-	const auto startTime = std::chrono::high_resolution_clock::now();
 
 	const int gamesPerThread = settings.NumGames / settings.NumThreads;
 	const int remainder = settings.NumGames % settings.NumThreads;
@@ -340,18 +416,24 @@ inline void RunGameGeneration(const GameGenerationSettings& settings)
 	for (int threadIndex = 0; threadIndex < settings.NumThreads; threadIndex++)
 	{
 		const int gamesForThread = gamesPerThread + (threadIndex < remainder ? 1 : 0);
-		threads.emplace_back(GameGenThreadWorker, std::cref(settings), threadIndex, gamesForThread, std::ref(shared));
+		threads.emplace_back(GameGenThreadWorker, std::cref(settings), threadIndex, gamesForThread, std::ref(sharedGameState), book.get());
 	}
 
 	for (auto& thread : threads)
 		thread.join();
 
-	shared.OutputFile.close();
+	sharedGameState.OutputFile.close();
 
-	if (shared.Exception)
-		std::rethrow_exception(shared.Exception);
+	if (sharedGameState.Exception)
+		std::rethrow_exception(sharedGameState.Exception);
 
 	const auto endTime = std::chrono::high_resolution_clock::now();
-	const auto duration = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
-	std::cout << "Done. " << settings.NumGames << " games in " << duration << "s" << std::endl;
+	const double totalSeconds = std::chrono::duration<double>(endTime - sharedGameState.StartTime).count();
+	const int totalPositions = sharedGameState.TotalPositions.load();
+	const double finalGamesPerSecond = settings.NumGames / totalSeconds;
+	const double finalPositionsPerSecond = totalPositions / totalSeconds;
+	std::cout << std::endl;
+	std::cout << "Done. " << settings.NumGames << " games, " << totalPositions << " positions in "
+		<< std::fixed << std::setprecision(1) << totalSeconds << "s"
+		<< " (" << finalGamesPerSecond << " g/s, " << std::setprecision(0) << finalPositionsPerSecond << " pos/s)" << std::endl;
 }

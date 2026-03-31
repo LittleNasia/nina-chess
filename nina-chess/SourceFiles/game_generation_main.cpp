@@ -37,6 +37,10 @@ inline GameGenerationSettings ParseArgs(const int argc, char* argv[])
 			settings.ScoreBySearchEval = (value == "eval");
 		else if (arg == "--output")
 			settings.OutputFile = value;
+		else if (arg == "--book")
+			settings.BookFile = value;
+		else if (arg == "--book-ply")
+			settings.BookPly = std::stoi(value);
 	}
 
 	return settings;
@@ -44,8 +48,16 @@ inline GameGenerationSettings ParseArgs(const int argc, char* argv[])
 
 int main(const int argc, char* argv[])
 {
-	const GameGenerationSettings settings = ParseArgs(argc, argv);
-	RunGameGeneration(settings);
+	try
+	{
+		const GameGenerationSettings settings = ParseArgs(argc, argv);
+		RunGameGeneration(settings);
+	}
+	catch (const std::exception& exception)
+	{
+		std::cerr << "Error: " << exception.what() << std::endl;
+		return 1;
+	}
 	return 0;
 }
 
